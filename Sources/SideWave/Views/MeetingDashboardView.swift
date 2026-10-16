@@ -78,9 +78,6 @@ struct MeetingDashboardView: View {
                         try await appState.meetingService.startRecording(
                             deviceUID: appState.audioDeviceManager.selectedDeviceUID
                         )
-                        // Agent TTS through the speakers would play straight
-                        // into the meeting mic.
-                        appState.meetingCaptureBegan()
                     } catch {
                         // Surface the failure instead of dropping the user back
                         // on the idle view with no feedback. The service already
@@ -416,7 +413,6 @@ struct MeetingDashboardView: View {
                     HStack(spacing: Spacing.sm) {
                         Button("Stop & Keep") {
                             appState.meetingService.stopRecording()
-                            appState.meetingCaptureEnded()
                             appState.meetingService.keepForLater()
                         }
                         .actionButton()
@@ -429,7 +425,6 @@ struct MeetingDashboardView: View {
                         Spacer(minLength: Spacing.sm)
                         Button("Stop & Transcribe", systemImage: "stop.fill") {
                             appState.meetingService.stopRecording()
-                            appState.meetingCaptureEnded()
                             appState.meetingService.processRecording()
                         }
                         .prominentActionButton()
@@ -460,7 +455,6 @@ struct MeetingDashboardView: View {
                             titleVisibility: .visible) {
             Button("Discard Recording", role: .destructive) {
                 appState.meetingService.reset(discardAudio: true)
-                appState.meetingCaptureEnded()
             }
             Button("Keep Recording", role: .cancel) {}
         } message: {

@@ -49,27 +49,6 @@ final class AppState {
     enum NextDictationTarget { case auto, document, askBar }
     var nextDictationTarget: NextDictationTarget = .auto
     var documentRevision = 0
-
-    /// Mutes agent speech while a meeting records, since the speakers would feed the meeting mic.
-    /// Call after a successful start or resume. Dictation and meetings can't record at the same
-    /// time.
-    func meetingCaptureBegan() {
-        mcpServer.speechSuppressed = true
-        ttsService.stopSpeaking()
-    }
-
-    func meetingCaptureEnded() {
-        clearSpeechSuppressionIfSafe()
-    }
-
-    /// The only place agent-speech suppression is cleared. Dictation and meeting starts set it;
-    /// clearing here keeps one capture's teardown from unmuting agents while the other is still
-    /// recording.
-    func clearSpeechSuppressionIfSafe() {
-        if transcriptionService.isRecording { return }
-        if meetingService.isCaptureActive { return }
-        mcpServer.speechSuppressed = false
-    }
     var dictationFormatter = DictationFormatterService()
     var hotkeyManager = HotkeyManager()
     let audioDeviceManager = AudioDeviceManager()
@@ -516,14 +495,6 @@ final class AppState {
     /// again at paste.
     var assignedFieldFingerprint: TextFieldFingerprint? = nil
     let borderOverlay = BorderOverlayController()
-    let mcpServer = MCPServerManager()
-    let ttsService = TTSService()
-    let draftResponseManager = DraftResponseManager()
-
-    /// Task that starts the initial relay session.
-    var relayStartTask: Task<Void, Never>?
-    /// Task that periodically sends transcript updates to the agent during relay mode dictation.
-    var relayUpdateTask: Task<Void, Never>?
 
     var overlayController: DictationOverlayController { .shared }
 
@@ -597,9 +568,8 @@ final class AppState {
         appendTrailingSpace = defaults.bool(forKey: "appendTrailingSpace")
         keepMicOnStandby = defaults.bool(forKey: "keepMicOnStandby")
         dictationTargetMode = defaults.string(forKey: "dictationTargetMode") ?? DictationTargetMode.focusedWindow.rawValue
-        // With Experimental Features off, turn relay mode and the MCP server off at launch whatever
-        // was stored, since their switches would be hidden and relay's auto-submit couldn't be
-        // turned off.
+        // With Experimental Features off, turn relay mode off at launch whatever was stored, since
+        // its switch would be hidden and its auto-submit couldn't be turned off.
         let experimentalOn = defaults.bool(forKey: "experimentalFeatures")
         // One-time default for Advanced view: users who already had Experimental Features on start
         // in Advanced view. Everyone else starts in Simple view. Written only if the key was never
@@ -613,9 +583,6 @@ final class AppState {
             relayModeEnabled = false
             if defaults.bool(forKey: "relayModeEnabled") {
                 defaults.set(false, forKey: "relayModeEnabled")
-            }
-            if defaults.bool(forKey: "mcpServerEnabled") {
-                defaults.set(false, forKey: "mcpServerEnabled")
             }
         }
         pasteTargetTiming = defaults.string(forKey: "pasteTargetTiming") ?? "start"

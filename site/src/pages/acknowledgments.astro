@@ -51,7 +51,7 @@ import DocLayout from '../layouts/DocLayout.astro';
   <h2>Frameworks and SDKs</h2>
 
   <h3>FluidAudio</h3>
-  <p>The Swift SDK that makes all of this possible on Apple Silicon. FluidAudio supplies model loading, CoreML inference, voice activity detection, diarization, and speech synthesis. SideWave owns microphone routing, capture, and its vocabulary-boosting integration. It's the backbone of SideWave's entire speech recognition pipeline. FluidInference also maintains the CoreML conversions of the Parakeet and Silero models used by this app.</p>
+  <p>The Swift SDK that makes all of this possible on Apple Silicon. FluidAudio supplies model loading, CoreML inference, voice activity detection, and diarization. SideWave owns microphone routing, capture, and its vocabulary-boosting integration. It's the backbone of SideWave's entire speech recognition pipeline. FluidInference also maintains the CoreML conversions of the Parakeet and Silero models used by this app.</p>
   <ul>
     <li><strong>Author</strong>: FluidInference</li>
     <li><strong>License</strong>: <a href="https://github.com/FluidInference/FluidAudio/blob/main/LICENSE">Apache License 2.0</a></li>
@@ -85,10 +85,6 @@ import DocLayout from '../layouts/DocLayout.astro';
 
   <h3>Swift Markdown</h3>
   <p>Apple and Swift contributors maintain the Markdown parser used for document and meeting output. It uses Apache 2.0 with the Swift Runtime Library Exception; its cmark dependency retains its BSD notices. Full notices are bundled with the app. See <a href="https://github.com/swiftlang/swift-markdown">Swift Markdown</a>.</p>
-
-  <h2>Speech Synthesis</h2>
-  <h3>PocketTTS</h3>
-  <p>Kyutai's local streaming speech model, converted to CoreML by FluidInference. The <a href="https://github.com/kyutai-labs/pocket-tts">model and runtime</a> use the MIT license. Voice sources have separate terms: the VoiceZero samples used by SideWave are CC0; Alba uses CC-BY-4.0. See <a href="https://huggingface.co/kyutai/tts-voices">voice sources and attribution</a> and the bundled ACKNOWLEDGMENTS file.</p>
 
   <h2>Language Models</h2>
 

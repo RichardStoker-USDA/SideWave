@@ -15,7 +15,7 @@ import DocLayout from '../layouts/DocLayout.astro';
     <li><code>Transcription/</code>: <code>TranscriptionService</code>, which owns capture, the speech models, segments, and the staged transcript.</li>
     <li><code>Refine/</code>: <code>DictationFormatterService</code>, which runs Apple Intelligence and Gemma.</li>
     <li><code>Paste/</code>: <code>TypingService</code> and window targeting.</li>
-    <li><code>Vocabulary/</code>, <code>History/</code>, <code>Documents/</code>, <code>Meetings/</code>, <code>Models/</code>, and <code>Agents/</code> (MCP and voice output).</li>
+    <li><code>Vocabulary/</code>, <code>History/</code>, <code>Documents/</code>, <code>Meetings/</code>, and <code>Models/</code>.</li>
   </ul>
   <p><code>SideWave2</code> and <code>SideWaveKit</code> are a smaller rebuild around one explicit session state machine. Apart from the Refine output checks in <code>Sources/Shared</code>, they're separate from the main app and serve as a reference for moving its engine one tested boundary at a time.</p>
 
@@ -60,9 +60,6 @@ import DocLayout from '../layouts/DocLayout.astro';
   <p>Speech models download from Hugging Face into <code>~/Library/Application Support/FluidAudio/Models/</code>; Gemma uses the shared Hugging Face cache. Before loading, SideWave checks tokenizer and template files, shard indexes, and weight headers, and it repairs missing small files without replacing weights. Core ML compiles each model on first load, which takes longer than later launches.</p>
   <p>App-managed requests go through an observer that records host, path, size, and time for the Data Transparency window. It rejects request bodies and uploads, and it never logs transcript text.</p>
 
-  <h2>Voice agents (experimental)</h2>
-  <p>With experimental features on, the bundled <code>sidewave-mcp</code> helper speaks MCP over stdio and connects to an owner-only Unix socket in the app. Connected clients can read the live transcript and ask SideWave to speak a reply with PocketTTS. There's no network listener. A client may send what it reads to a remote service, so connect only clients you trust.</p>
-
   <h2>Releases</h2>
   <p><code>scripts/release.sh</code> builds the Release configuration, signs the nested code and the app with Developer ID and a secure timestamp, notarizes and staples the app, and packages <code>SideWave.dmg</code>, which is notarized too. It signs the DMG for Sparkle and writes the appcast entry. <code>scripts/validate_release.py</code> checks signatures, entitlements, and the published feed. Sparkle reads <code>https://sidewave.dev/appcast.xml</code> and verifies each update's EdDSA signature.</p>
 
@@ -70,13 +67,12 @@ import DocLayout from '../layouts/DocLayout.astro';
   <table>
     <thead><tr><th>Package</th><th>Used for</th><th>License</th></tr></thead>
     <tbody>
-      <tr><td><a href="https://github.com/FluidInference/FluidAudio">FluidAudio</a></td><td>Parakeet, Silero VAD, CTC rescoring, Nemotron speaker labels, PocketTTS</td><td>Apache 2.0</td></tr>
+      <tr><td><a href="https://github.com/FluidInference/FluidAudio">FluidAudio</a></td><td>Parakeet, Silero VAD, CTC rescoring, Nemotron speaker labels</td><td>Apache 2.0</td></tr>
       <tr><td><a href="https://github.com/ml-explore/mlx-swift-lm">MLX Swift LM</a></td><td>Gemma inference</td><td>MIT</td></tr>
       <tr><td><a href="https://github.com/huggingface/swift-transformers">Swift Transformers</a></td><td>Tokenizers and chat templates</td><td>Apache 2.0</td></tr>
       <tr><td><a href="https://github.com/huggingface/swift-huggingface">Swift Hugging Face</a></td><td>Model downloads</td><td>Apache 2.0</td></tr>
       <tr><td><a href="https://github.com/swiftlang/swift-markdown">Swift Markdown</a></td><td>Meeting notes</td><td>Apache 2.0</td></tr>
       <tr><td><a href="https://github.com/sparkle-project/Sparkle">Sparkle</a></td><td>Updates</td><td>MIT</td></tr>
-      <tr><td><a href="https://github.com/modelcontextprotocol/swift-sdk">MCP Swift SDK</a></td><td>Voice agent server</td><td>MIT</td></tr>
     </tbody>
   </table>
   <p>Model licenses are listed in the <a href="/acknowledgments">acknowledgments</a>.</p>

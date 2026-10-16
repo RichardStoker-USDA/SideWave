@@ -110,8 +110,8 @@ struct AppSettingsView: View {
         case .settingsSound: "sound effects chime start stop tone"
         case .settingsOverlay: "overlay live text waveform animation motion opacity size font"
         case .settingsPrivacy: "privacy history retention network downloads telemetry clipboard local"
-        case .settingsAdvanced: "pipeline runtime performance refine timing expert hold threshold push talk diagnostics reset experimental mcp tts voice agent relay speech synthesis"
-        case .settingsExperimental: "experimental developer mcp tts voice agent relay speech synthesis fixed interval"
+        case .settingsAdvanced: "pipeline runtime performance refine timing expert hold threshold push talk diagnostics reset experimental relay"
+        case .settingsExperimental: "experimental developer relay press return submit fixed interval"
         case .settingsAbout: "about version update license"
         default: ""
         }

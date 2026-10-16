@@ -31,7 +31,7 @@ struct HelpRefineContent: View {
                 Text("Refine runs on your Mac as recognition segments finish. It removes hesitations and repairs punctuation and grammar according to the chosen template. Finishing may wait for the remaining audio or Refine work; the session shows that state. If Refine fails or times out, recognition text remains available. Enable Hold to rewrite and finish in Advanced view > Settings > General for an optional full-session pass.")
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Choose the Template, Refine model, and Output language directly on Home. Formatting rules is available on Home and in the document header. Settings > Refine manages model preparation and expert options.")
+                Text("Choose the Template, Refine model, and Output language on Home. Formatting Rules is on Home and in the document header. Settings > Refine manages model preparation and expert options.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -61,9 +61,9 @@ struct HelpRefineContent: View {
                 HelpSettingLocationRow(icon: "text.badge.checkmark", title: "Refine model", valueMock: "Gemma 4", location: "Home > Refine model, Dictation tab > Refine, or Settings > Refine")
                 HelpSettingLocationRow(icon: "text.badge.checkmark", title: "Template", valueMock: "Standard", location: "Home > Template, or Dictation tab > Refine")
                 HelpSettingLocationRow(icon: "globe", title: "Output language", valueMock: "As spoken", location: "Home > Output language, or Dictation tab > Refine")
-                HelpSettingLocationRow(icon: "pencil", title: "Custom instructions", valueMock: "Edit", location: "Home > Formatting rules, or the document header")
+                HelpSettingLocationRow(icon: "pencil", title: "Custom instructions", valueMock: "Edit", location: "Home > Formatting Rules, or the document header")
 
-                HelpAdvancedNote(text: "Formatting rules is available in both view modes. Advanced adds the short-session bypass, final-pass strategy, and optional Gemma thinking under Dictation > Refine > Advanced. Refine cadence is in Settings > Refine > Expert.")
+                HelpAdvancedNote(text: "Formatting Rules is available in both views. Advanced adds the short-session bypass, final-pass strategy, and optional Gemma thinking under Dictation > Refine > Advanced. Refine cadence is in Settings > Refine > Expert.")
             }
         }
 
@@ -103,7 +103,7 @@ struct HelpRefineContent: View {
                 .font(.callout).foregroundStyle(.secondary)
             Text("Apple Intelligence. Available on supported Macs with macOS 26 or later. macOS manages its model assets. Availability and context capacity are checked at runtime.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Switch models on the Dictation tab under Refine, or in Settings > Refine.")
+            Text("Switch models with Refine model on Home, on the Dictation tab under Refine, or in Settings > Refine.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -119,7 +119,7 @@ struct HelpRefineContent: View {
                 Text("Concise. Same meaning, fewer words. Removes redundancy aggressively.")
             }
             .font(.callout)
-            Text("Email, Instructions, AI Prompt, and Custom are document templates that reformat the whole dictation in one post-recording pass. Select them in Home > Template or the Dictation template picker. Start dictating or choose Open document to open the document preview. It shares the live overlay's text rendering and waveform, then shows the formatted document for editing and copying. Custom hands the model your instructions directly, with no built-in style layer on top.")
+            Text("Email, Instructions, AI Prompt, and Custom are document templates that reformat the whole dictation in one post-recording pass. Select them in Home > Template or the Dictation template picker. Start dictating or choose Open Document to open the document preview. It shares the live overlay's text rendering and waveform, then shows the formatted document for editing and copying. Custom hands the model your instructions directly, with no built-in style layer on top.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -129,7 +129,7 @@ struct HelpRefineContent: View {
                 .font(.title3.weight(.semibold))
             Text("Use the template menu at the top to change document type. Each template keeps a current draft. Recents preserves previous documents, including manual edits, pending additions, and unfinished instructions. Read shows formatted text; Edit text lets you change it directly. AI Prompt keeps its XML visible.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Your hotkey starts a new document and saves the previous one in Recents. Choose Add dictation to continue the open document, or New for a blank page. Live dictation fills the page while recording; Show document lets you review the saved draft. After you finish, the same window shows processing feedback and then the result. Type a change under Change this document and choose Apply, or use Speak change. Stop edit restores the previous document and keeps the instruction for another attempt.")
+            Text("Your hotkey starts a new document and saves the previous one in Recents. Choose Add dictation to continue the open document, or New for a blank page. Live dictation fills the page while recording; Show document lets you review the saved draft. After you finish, the same window shows processing feedback and then the result. Type a change under Change this document and choose Apply, or use Speak change. Stop Edit restores the previous document and keeps the instruction for another attempt.")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             Text("Activity holds pending additions when automatic appending is off. Append adds a saved segment to the page. Copy copies the finished document, and Undo restores the document before the last applied model edit. If a model cannot apply a change, the message stays in this window and your instruction is preserved.")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -138,9 +138,9 @@ struct HelpRefineContent: View {
         HelpCard {
             Text("Output language")
                 .font(.title3.weight(.semibold))
-            Text("Match input asks Refine to keep the dictated language. Pick a language instead to translate while cleaning up, such as speaking English and pasting Spanish. Refine is instructed to preserve meaning, names, technical terms, code, and numbers. Review translations before sending, especially names, figures, idioms, and technical content.")
+            Text("As spoken keeps the language you dictate in. Pick a language instead to translate while cleaning up, such as speaking English and pasting Spanish. Refine is instructed to preserve meaning, names, technical terms, code, and numbers. Review translations before sending, especially names, figures, idioms, and technical content.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Nine languages are offered: English, Spanish, French, German, Italian, Portuguese, Japanese, Korean, and Simplified Chinese. On Apple Intelligence the list is filtered to what your macOS build supports. Larger Gemma models can be useful for complex multilingual text, with more memory use and processing time. Find the picker on Home or the Dictation tab under Refine; a small globe pill on the live panel reminds you when translation is on.")
+            Text("Nine languages are offered: English, Spanish, French, German, Italian, Portuguese, Japanese, Korean, and Chinese (Simplified). On Apple Intelligence the list is filtered to what your macOS build supports. Larger Gemma models can be useful for complex multilingual text, with more memory use and processing time. Find the picker on Home or the Dictation tab under Refine; a small globe pill on the live panel reminds you when translation is on.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -153,7 +153,7 @@ struct HelpRefineContent: View {
         HelpCard {
             Text("Custom instructions")
                 .font(.title3.weight(.semibold))
-            Text("Formatting rules is a shared instructions field capped at 1000 characters. It applies across templates. Add project jargon, tone rules, or specific formatting preferences. For the Custom template, your instructions are the primary directive and the model follows them directly with no built-in style layer on top.")
+            Text("Formatting Rules is a shared instructions field of up to 1,000 characters. It applies across templates. Add project jargon, tone rules, or specific formatting preferences. For the Custom template, your instructions are the primary directive and the model follows them directly with no built-in style layer on top.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -192,7 +192,7 @@ struct HelpRefineContent: View {
         HelpCard {
             Text("Prompt preview")
                 .font(.title3.weight(.semibold))
-            Text("Preview Prompt on the Dictation tab, or Preview in Settings > Refine, shows a sample request with your instructions, Vocabulary hints, and term descriptions. Apple Intelligence uses template instructions and, for some formats, a response schema. Use the preview to check your wording.")
+            Text("Preview on the Dictation tab or in Settings > Refine shows a sample request with your instructions, Vocabulary hints, and term descriptions. Apple Intelligence uses template instructions and, for some formats, a response schema. Use the preview to check your wording.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -206,9 +206,9 @@ struct HelpRefineContent: View {
         HelpCard {
             Text("Vocabulary and Refine")
                 .font(.title3.weight(.semibold))
-            Text("Refine reads from the Vocabulary tab. Each enabled glossary feeds canonical spellings, aliases, and any description text into the Refine prompt so the model knows your terms. The feed is budgeted (roughly 30 terms and 600 chars of description across every active glossary) to leave room for your text within the selected model's context. Entries set to Auto-correct only stay out of this feed.")
+            Text("Refine reads from the Vocabulary tab. Each enabled glossary feeds canonical spellings, aliases, and any description text into the Refine prompt so the model knows your terms. The feed is limited to 30 terms and 600 characters of glossary context across all enabled glossaries, to leave room for your text in the model's context. Words with Send hint to Refine off stay out of it.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Glossaries can be linked to specific templates so they auto-enable when you switch. This keeps your prompt budget tight: work jargon loads for Professional, but not for Standard or Concise. Link glossaries from the ellipsis menu on the Vocabulary tab.")
+            Text("Glossaries can be linked to specific templates so they auto-enable when you switch. This keeps your prompt budget tight: work jargon loads for Professional, but not for Standard or Concise. Link glossaries from a glossary's \u{2026} menu on the Vocabulary tab.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -231,21 +231,21 @@ struct HelpRefineContent: View {
         HelpCard {
             Text("Privacy")
                 .font(.title3.weight(.semibold))
-            Text("Both models process text on your Mac. Gemma 4 uses the GPU through MLX; Apple Intelligence uses Apple's Foundation Models framework. Refine does not send prompts or transcripts to a server. Text you paste into another app or share through the optional voice-agent bridge follows that app's data policy.")
+            Text("Both models process text on your Mac. Gemma 4 uses the GPU through MLX; Apple Intelligence uses Apple's Foundation Models framework. Refine does not send prompts or transcripts to a server. Text you paste into another app follows that app's data policy.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
         HelpCard {
-            Text("Visual Startup Warmup")
+            Text("Getting ready")
                 .font(.title3.weight(.semibold))
-            Text("When dictation is first triggered, SideWave may take a moment to initialize the underlying models. The overlay shows Preparing while the microphone and engines become ready. Wait for Listening before speaking. Device startup and first-use model preparation can take longer on some Macs.")
+            Text("When you press the shortcut, a small panel says Ready to speak in a moment while the microphone and models start. The full preview appears when SideWave is listening; speak then. A cold first start can take a minute while the speech models compile, and the panel says so after five seconds.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
         HelpCard {
             Text("Dual-Stage Refinement")
                 .font(.title3.weight(.semibold))
-            Text("When live Refine is enabled, document templates first clean speech as ordinary prose while you dictate. After you stop, the chosen template formats the complete text. The document window keeps showing progress until that pass finishes. With Refine enabled, this also runs for short dictations and when the ordinary final pass is off. Use Formatting rules in the document header to set instructions, or Change this document for a follow-up edit.")
+            Text("When live Refine is enabled, document templates first clean speech as ordinary prose while you dictate. After you stop, the chosen template formats the complete text. The document window keeps showing progress until that pass finishes. With Refine enabled, this also runs for short dictations and when the ordinary final pass is off. Use Formatting Rules in the document header to set instructions, or Change this document for a follow-up edit.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -348,54 +348,6 @@ struct HelpTextNormalizationContent: View {
                 .font(.callout.weight(.medium))
             Text(detail)
                 .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-// MARK: - Meeting Transcription
-
-// MARK: - Voice Agent (MCP)
-
-struct HelpVoiceAgentContent: View {
-    var body: some View {
-        HelpCard {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("What it does")
-                    .font(.title3.weight(.semibold))
-                Text("The voice agent bridge lets an AI coding agent (Claude Code, Codex, or any MCP client) speak to you through SideWave and hear you through your dictation. The agent gets a set of tools: speak text aloud, queue or replace what's coming next, stop, check status, and read your live transcript while you dictate so it can start thinking before you finish talking.")
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("The bridge and speech synthesis run on this Mac. The agent connects through the stdio helper and a private Unix socket (no listening network ports or HTTP). PocketTTS produces the voice locally. A connected client can read the live transcript and may use a cloud service. Enable the bridge only for clients you intend to share your dictation with.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-
-        HelpCard {
-            Text("Setup")
-                .font(.title3.weight(.semibold))
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("1. Turn on Advanced View (SideWave menu, or Settings > General), then Experimental Features in Settings > Advanced, then enable MCP Server in the Experimental section.")
-                Text("2. Copy the registration command shown there and run it in your terminal. It points your agent at the helper bundled inside SideWave at its current location; if you move the app later, copy and run it again.")
-                Text("3. Ask the agent to speak. The first request downloads the voice model (a one-time download; progress shows in Settings and in the agent's check_status tool).")
-            }
-            .font(.callout)
-            .fixedSize(horizontal: false, vertical: true)
-            Text("SideWave must be running for the agent to connect. If the agent reports it can't connect, check that the MCP Server toggle is on.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-
-        HelpCard {
-            Text("Voices and multiple agents")
-                .font(.title3.weight(.semibold))
-            Text("Pick the voice in Settings. When more than one agent connects at the same time, each gets its own distinct voice automatically, alternating between male and female voices so you always know who's talking.")
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Starting dictation or a meeting stops agent speech. Speech requests during recording are rejected with a suppressed status; the client can resend afterward. The status tools distinguish model preparation, queued speech, and actual playback. This is turn-taking, not simultaneous listening and speaking.")
-                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }

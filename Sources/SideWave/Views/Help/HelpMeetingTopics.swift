@@ -78,12 +78,12 @@ struct HelpMeetingTranscriptionContent: View {
                 Text("If Something Interrupts the Meeting")
                     .font(.headline)
 
-                Text("SideWave writes audio during recording and offers interrupted meetings at the next launch. Continue adds more audio; Transcribe processes saved audio; Keep for Later leaves it on this Mac; Discard deletes it. Audio still in memory, disk errors, or damaged storage can leave gaps. A recovered partial transcript is labeled and its recording is kept.")
+                Text("SideWave writes audio during recording and offers interrupted meetings at the next launch. Continue Recording adds more audio; Transcribe processes saved audio; Keep for Later leaves it on this Mac; Discard Recording deletes it. Audio still in memory, disk errors, or damaged storage can leave gaps. A recovered partial transcript is labeled and its recording is kept.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Quitting during a recording asks first, and Stop & Keep preserves the meeting for next launch the same way. Closing the window doesn't stop anything: open the SideWave menu bar menu and you'll find a red recording row with the running time and a stop control.")
+                Text("Quitting during a recording asks first, and Stop & Keep preserves the meeting for next launch the same way. Closing the window doesn't stop the recording: the SideWave menu bar menu shows the recording time and Stop and Transcribe.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -145,7 +145,7 @@ struct HelpMeetingTranscriptionContent: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Audio is deleted when you dismiss a complete, saved transcript. Interrupted meetings, partial transcripts, and failed saves keep their audio for recovery. Unfinished audio is kept until you process or discard it, regardless of history retention. Keep for Later asks again at the next launch. Delete Audio or Discard Recording removes it explicitly. A partial transcript is labeled because some speech may be missing.")
+                Text("Audio is deleted when you dismiss a complete, saved transcript. Interrupted meetings, partial transcripts, and failed saves keep their audio for recovery. Unfinished audio is kept until you process or discard it, regardless of history retention. Keep for Later asks again at the next launch. Delete Audio & Close or Discard Recording removes it. A partial transcript is labeled because some speech may be missing.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -244,7 +244,7 @@ struct HelpVADContent: View {
                 Text("How pauses are found")
                     .font(.headline)
                 
-                Text("Here's how SideWave's local voice activity detector classifies live audio. By default, segments finalize at the 14.8-second ceiling, not on pauses. Switch to the Faster or Aggressive cadence (Settings > Refine > Expert) and a pause ends the segment instead: Faster after about 3 seconds of silence, Aggressive after about 2. The timeline below shows the Faster cadence closing a segment on a 3-second pause:")
+                Text("SideWave's local voice activity detector marks speech and pauses in the live audio. With live Refine on, the refine cadence decides whether a pause ends a segment: Standard waits for the 14.8-second ceiling, Faster ends it after about 3 seconds of silence, and Aggressive after about 2. Macs with 16 GB of memory or more start on Faster. Without live Refine, pauses of about 3 seconds end segments. The timeline below shows a segment closing on a 3-second pause:")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -268,7 +268,7 @@ struct HelpVADContent: View {
                     
                     HStack {
                         Spacer()
-                        Text("On the Faster cadence, a segment splits after about 3 seconds of silence. The Standard default skips pause splits and waits for the 14.8-second ceiling.")
+                        Text("On the Faster cadence, a segment splits after about 3 seconds of silence. Standard skips pause splits and waits for the 14.8-second ceiling.")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -283,7 +283,7 @@ struct HelpVADContent: View {
                 Text("Why Silence Detection Matters")
                     .font(.headline)
 
-                Text("SideWave runs Voice Activity Detection (VAD) locally on your Mac's CPU so it doesn't compete with the speech models on the Neural Engine. VAD watches the audio for speech and marks where you pause. Under the default Standard cadence those pauses don't split the segment; each one runs to the 14.8-second ceiling before it hands off to the Parakeet TDT transcriber and then Refine (Gemma 4 or Apple Intelligence). Switch to the Faster or Aggressive cadence and a pause closes the segment early, after about 3 or 2 seconds of silence, so shorter thoughts get refined sooner. Document templates use a 5-second pause.")
+                Text("SideWave runs Voice Activity Detection (VAD) locally on your Mac's CPU so it doesn't compete with the speech models on the Neural Engine. VAD watches the audio for speech and marks where you pause. Under the Standard cadence those pauses don't split the segment; each one runs to the 14.8-second ceiling before it goes to the Parakeet TDT transcriber and then Refine (Gemma 4 or Apple Intelligence). Faster and Aggressive close a segment after about 3 or 2 seconds of silence, so shorter thoughts get refined sooner. Document templates use a 5-second pause. Change the cadence in Settings > Refine > Expert, shown in Advanced view.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

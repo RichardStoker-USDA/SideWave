@@ -98,7 +98,6 @@ sign "$app/Contents/Frameworks/Sparkle.framework"
 while IFS= read -r -d '' nested; do
     sign "$nested"
 done < <(find "$app/Contents/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) ! -name 'Sparkle.framework' -print0)
-sign "$app/Contents/MacOS/sidewave-mcp"
 sign --entitlements "$ROOT/SideWave.entitlements" "$app"
 codesign --verify --deep --strict "$app"
 python3 scripts/validate_release.py "$app" > "$out/validation.json"

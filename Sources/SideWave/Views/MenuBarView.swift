@@ -79,7 +79,6 @@ struct MenuBarView: View {
             Text("Recording meeting \u{00B7} \(Self.duration(duration))")
             Button("Stop and Transcribe", systemImage: "stop.circle") {
                 appState.meetingService.stopRecording()
-                appState.meetingCaptureEnded()
                 appState.meetingService.processRecording()
                 appState.showMainWindow = true
                 NSApp.activate()

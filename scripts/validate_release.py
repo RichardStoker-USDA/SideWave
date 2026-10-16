@@ -87,8 +87,7 @@ def main():
     entitlements = inspect_code(app)
     require(entitlements.get("com.apple.security.device.audio-input") is True, "Audio-input entitlement is missing.")
     require(entitlements.get("com.apple.security.automation.apple-events") is True, "Automation entitlement is missing.")
-    nested = {app / "Contents/MacOS/sidewave-mcp",
-              app / "Contents/Frameworks/Sparkle.framework/Autoupdate"}
+    nested = {app / "Contents/Frameworks/Sparkle.framework/Autoupdate"}
     for pattern in ("*.app", "*.xpc", "*.framework"):
         nested.update(app.rglob(pattern))
     nested = {path.resolve() for path in nested}

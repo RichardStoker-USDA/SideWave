@@ -89,7 +89,6 @@ extension AppState {
         isCleaningUp = false
         cleanupStreamingText = ""
         isOverlayVisible = false
-        clearSpeechSuppressionIfSafe()
         let cancelledAppName = targetAppName
         targetPID = nil
         targetAppName = "Unknown"
@@ -141,15 +140,9 @@ extension AppState {
         pendingStart?.cancel()
         await pendingStart?.value
         restoreDictationVolumeControl()
-        relayStartTask?.cancel()
-        relayStartTask = nil
-        relayUpdateTask?.cancel()
-        relayUpdateTask = nil
         resetRecordingStats()
-        draftResponseManager.cancelPending()
         let historySaved = historyStore.flush()
         await transcriptionService.cancelRecording(preserveRecovery: !historySaved)
-        clearSpeechSuppressionIfSafe()
         isOverlayVisible = false
         overlayMessage = ""
         targetPID = nil
@@ -194,19 +187,12 @@ extension AppState {
         pendingStopAfterStart = false
         captureStart.cancel()
         restoreDictationVolumeControl()
-
-        relayStartTask?.cancel()
-        relayStartTask = nil
-        relayUpdateTask?.cancel()
-        relayUpdateTask = nil
         resetRecordingStats()
-        draftResponseManager.cancelPending()
 
         SoundEffectService.play(.recordingStop)
 
         let finalText = await transcriptionService.stopRecording()
 
-        clearSpeechSuppressionIfSafe()
         isOverlayVisible = false
         overlayMessage = ""
 

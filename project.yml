@@ -51,9 +51,6 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     exactVersion: "2.10.0"
-  MCP:
-    url: https://github.com/modelcontextprotocol/swift-sdk.git
-    exactVersion: "0.12.1"
   MLXLM:
     url: https://github.com/ml-explore/mlx-swift-lm.git
     exactVersion: "3.32.3"
@@ -85,7 +82,6 @@ targets:
         product: Markdown
       - package: FluidAudio
       - package: Sparkle
-      - package: MCP
       - package: MLXLM
         product: MLXLLM
       - package: MLXLM
@@ -96,11 +92,6 @@ targets:
         product: HuggingFace
       - package: SwiftTransformers
         product: Tokenizers
-      - target: sidewave-mcp
-        embed: true
-        codeSign: true
-        copy:
-          destination: executables
     settings:
       base:
         SWIFT_STRICT_CONCURRENCY: complete
@@ -213,20 +204,6 @@ targets:
       properties:
         com.apple.security.device.audio-input: true
         com.apple.security.network.client: true
-
-  sidewave-mcp:
-    type: tool
-    platform: macOS
-    sources:
-      - path: Sources/SideWaveMCP
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.mcp
-        SWIFT_VERSION: "5.0"
-        MACOSX_DEPLOYMENT_TARGET: "26.0"
-        ARCHS: arm64
-        ENABLE_HARDENED_RUNTIME: YES
-        SKIP_INSTALL: YES
 
   # SideWave2's engine: session state machine, audio, recognition, Refine, and paste, with no UI.
   SideWaveKit:

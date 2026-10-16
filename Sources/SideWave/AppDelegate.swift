@@ -104,11 +104,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         switch alert.runModal() {
         case .alertFirstButtonReturn:
             appState.meetingService.stopRecording()
-            appState.meetingCaptureEnded()
             return .terminateNow
         case .alertSecondButtonReturn:
             appState.meetingService.reset(discardAudio: true)
-            appState.meetingCaptureEnded()
             return .terminateNow
         default:
             return .terminateCancel

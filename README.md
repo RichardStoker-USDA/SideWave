@@ -39,9 +39,6 @@ adds the expert controls; it changes what's shown, not the engine.
 - **Meetings** (optional): record a conversation, label up to eight speakers, and write local
   meeting notes.
 
-Experimental features, off by default, add an MCP server so AI agents connected to SideWave can
-read your live transcript and speak replies with a local voice.
-
 ## Privacy
 
 Recognition, Refine, and meeting notes run on your Mac. SideWave has no accounts and no analytics.
@@ -101,13 +98,12 @@ The site in `site/` is built with Astro into `docs/`, which GitHub Pages serves 
 
 | Package | Version | Used for | License |
 |---|---|---|---|
-| [FluidAudio](https://github.com/FluidInference/FluidAudio) | 0.17.7 | Speech recognition, VAD, speaker labels, voice output | Apache 2.0 |
+| [FluidAudio](https://github.com/FluidInference/FluidAudio) | 0.17.7 | Speech recognition, VAD, speaker labels | Apache 2.0 |
 | [MLX Swift LM](https://github.com/ml-explore/mlx-swift-lm) | 3.32.3 | Gemma inference | MIT |
 | [Swift Transformers](https://github.com/huggingface/swift-transformers) | 1.3.5 | Tokenizers and chat templates | Apache 2.0 |
 | [Swift Hugging Face](https://github.com/huggingface/swift-huggingface) | 0.9.0 | Model downloads | Apache 2.0 |
 | [Swift Markdown](https://github.com/swiftlang/swift-markdown) | 0.8.0 | Meeting notes | Apache 2.0 |
 | [Sparkle](https://github.com/sparkle-project/Sparkle) | 2.10.0 | Updates | MIT |
-| [MCP Swift SDK](https://github.com/modelcontextprotocol/swift-sdk) | 0.12.1 | Voice agent server | MIT |
 
 Model weights have their own licenses: Parakeet TDT and Parakeet Ultra use CC-BY-4.0, the live
 preview model (Parakeet Realtime EOU) uses the NVIDIA Open Model License, the CTC vocabulary model

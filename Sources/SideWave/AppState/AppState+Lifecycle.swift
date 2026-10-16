@@ -49,12 +49,6 @@ extension AppState {
             break
         }
 
-        // Stop MCP server (closes socket, cancels DispatchSource -- all synchronous)
-        mcpServer.stop()
-
-        // Stop TTS engine (synchronous: stops player, stops AVAudioEngine, nils refs)
-        ttsService.cleanup()
-
         // Write pending history now. Saves are batched over 0.5 s, and quit could otherwise drop
         // the last entry.
         HistoryStore.shared.flush()
@@ -81,9 +75,8 @@ extension AppState {
         if !pendingMeetingRecovery.isEmpty {
             print("[AppState] Found \(pendingMeetingRecovery.count) interrupted meeting(s) to recover")
         }
-        // Remove the old MCP bearer-token credential from earlier builds; the server now uses a
-        // Unix socket. Safe to repeat.
-        MCPServerManager.purgeLegacyAuthCredential()
+        // Remove settings and files left by the voice agent server in earlier versions.
+        LegacyStateCleanup.run()
 
         // Crash recovery: restore volume if the app was killed during dictation
         if let crashVolume = UserDefaults.standard.object(forKey: "sidewave_savedVolume") as? Float {
@@ -94,76 +87,6 @@ extension AppState {
             UserDefaults.standard.removeObject(forKey: "sidewave_savedVolume")
             UserDefaults.standard.removeObject(forKey: "sidewave_savedWasMuted")
         }
-
-        // Wire MCP speak tool to TTS (connectionID used for per-agent voice assignment)
-        mcpServer.onSpeak = { [weak self] text, connectionID in
-            guard let self else { return }
-            if !self.ttsService.isInitialized {
-                Task {
-                    await self.ttsService.initialize()
-                    self.ttsService.speak(text, connectionID: connectionID)
-                }
-            } else {
-                self.ttsService.speak(text, connectionID: connectionID)
-            }
-        }
-
-        // Wire MCP speech queue callbacks
-        mcpServer.onQueueSpeech = { [weak self] text, connectionID in
-            guard let self else { return }
-            if !self.ttsService.isInitialized {
-                Task {
-                    await self.ttsService.initialize()
-                    self.ttsService.queueSpeech(text, connectionID: connectionID)
-                }
-            } else {
-                self.ttsService.queueSpeech(text, connectionID: connectionID)
-            }
-        }
-        mcpServer.onReplaceSpeech = { [weak self] text, connectionID in
-            guard let self else { return }
-            if !self.ttsService.isInitialized {
-                Task {
-                    await self.ttsService.initialize()
-                    self.ttsService.replacePending(with: text, connectionID: connectionID)
-                }
-            } else {
-                self.ttsService.replacePending(with: text, connectionID: connectionID)
-            }
-        }
-        mcpServer.onStopSpeaking = { [weak self] in
-            self?.ttsService.stopSpeaking()
-        }
-        mcpServer.onConnectionClosed = { [weak self] connectionID in
-            self?.ttsService.releaseConnection(connectionID)
-        }
-        mcpServer.getPlaybackStatus = { [weak self] in
-            guard let self else { return ("", "", []) }
-            return (self.ttsService.currentlyPlayingText,
-                    self.ttsService.preBufferedText,
-                    self.ttsService.pendingSentences.map(\.text))
-        }
-
-        // Wire MCP status callbacks for check_status and get_live_transcript tools
-        mcpServer.getTtsState = { [weak self] in
-            guard let self else { return (false, false, "unknown") }
-            return (self.ttsService.isInitialized, self.ttsService.isSpeaking, self.ttsService.selectedVoice)
-        }
-        mcpServer.getTranscriptState = { [weak self] in
-            guard let self else { return ("", "", false) }
-            // Only explicitly connected MCP clients can request the transcript.
-            return (self.transcriptionService.confirmedText,
-                    self.transcriptionService.volatileText,
-                    self.transcriptionService.isRecording)
-        }
-
-        // Wire draft response manager for speculative triggering v2
-        mcpServer.draftManager = draftResponseManager
-
-        // Direct TTS reference so tool results carry precise speech outcomes
-        // (started/queued/pending-model + download fraction) instead of the
-        // coarse "accepted" fallback the callback-only path can report.
-        mcpServer.ttsService = ttsService
 
         // Register for app termination to clean up resources
         NotificationCenter.default.addObserver(
@@ -209,12 +132,10 @@ extension AppState {
                     self.transcriptionService.teardownEngineForShutdown()
                     self.restoreDictationVolumeControl()
                     self.hotkeyManager.isRecording = false
-                    self.clearSpeechSuppressionIfSafe()
                 }
                 if case .recording = self.meetingService.state {
                     print("[AppState] System sleeping during meeting recording, stopping and queuing for transcription")
                     self.meetingService.stopRecording()
-                    self.meetingCaptureEnded()
                     // Process the recording instead of leaving it: the task pauses during sleep and
                     // finishes after wake, saving the transcript to meeting history.
                     self.meetingService.processRecording()
@@ -239,12 +160,6 @@ extension AppState {
                 self.meetingStoppedBySleep = false
                 self.showToast("Meeting recording stopped by sleep. Transcribing now", icon: "moon.zzz")
             }
-        }
-
-        // Start the MCP server if it was on last session. The Unix socket doesn't trigger a privacy
-        // prompt.
-        if UserDefaults.standard.bool(forKey: "mcpServerEnabled") {
-            Task { await mcpServer.start() }
         }
 
         // Load CoreML models now so the first dictation is fast. Skipped in tests: the Neural

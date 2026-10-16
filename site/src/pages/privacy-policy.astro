@@ -4,7 +4,7 @@ import DocLayout from '../layouts/DocLayout.astro';
 
 <DocLayout title="Privacy Policy - SideWave" description="Local processing, storage, permissions, downloads, and optional client access in SideWave.">
   <h1>Privacy Policy</h1>
-  <p class="doc-lead">SideWave processes dictation and meeting recordings on your Mac. It stores local history and recovery data. Optional delivery to other apps and voice-agent clients has a separate privacy boundary.</p>
+  <p class="doc-lead">SideWave processes dictation and meeting recordings on your Mac. It stores local history and recovery data. Text you deliver to other apps follows those apps' privacy terms.</p>
 
   <h2>Local Processing and Storage</h2>
   <ul>
@@ -22,10 +22,9 @@ import DocLayout from '../layouts/DocLayout.astro';
   <p>Recognition uses CoreML. Refine, meeting formatting, vocabulary assistance, and speech-profile generation use Apple Intelligence or a local Gemma 4 model through MLX. These processing steps do not send their prompts to a SideWave cloud inference service. After the required assets are available, local inference can run offline.</p>
   <p>Generated text can be inaccurate. Review output before sending it elsewhere.</p>
 
-  <h2>Other Apps and Voice-Agent Clients</h2>
+  <h2>Other Apps</h2>
   <p>Pasting into a browser, chat app, document service, or terminal sends text to that application. Its storage and network behavior are outside SideWave's control.</p>
-  <p>The optional MCP integration exposes a Unix socket to processes running under your macOS account. Connected clients can read the live transcript and submit speech or draft responses. A client may forward transcript text to a remote model or service. Keep MCP disabled when it is not needed, and connect only clients you intend to trust.</p>
-  <p>Owner-only file permissions protect against other local users. They do not prevent software running under your own account from accessing the same files or socket.</p>
+  <p>Owner-only file permissions protect against other local users. They do not prevent software running under your own account from accessing the same files.</p>
 
   <h2>Network Activity</h2>
   <ul>

@@ -104,13 +104,6 @@ extension AppState {
 
         guard prepareDocumentCapture(target: requestedTarget, resuming: pendingSessionText != nil) else { return }
 
-        // Stop any speech playback before starting the mic, so SideWave doesn't record its own
-        // voice, and hold pending speech until recording ends.
-        if ttsService.hasPendingSpeech {
-            ttsService.stopSpeaking()
-        }
-        mcpServer.speechSuppressed = true
-
         guard let startAttempt = captureStart.begin() else { return }
         dictationFormatter.beginDictation()
         if pendingSessionText?.isEmpty != false {
@@ -129,7 +122,6 @@ extension AppState {
         preserveRawOnCleanupCancel = false
         pendingSoftStopAfterStart = false
         resetRecordingStats()
-        draftResponseManager.resetForNewSession()
         // Unlock Electron app AX trees (Teams, Slack, etc.) before capture.
         if let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier {
             WindowTargetingService.unlockElectronAXTree(pid: frontPID)
@@ -282,7 +274,6 @@ extension AppState {
             if !captureStart.accepts(startAttempt) || Task.isCancelled {
                 await transcriptionService.cancelRecording()
                 hotkeyManager.clearEngineLive()
-                clearSpeechSuppressionIfSafe()
                 restoreDictationVolumeControl()
                 isOverlayVisible = false
                 pendingStopAfterStart = false
@@ -302,7 +293,6 @@ extension AppState {
                 showToast(message, icon: "exclamationmark.triangle")
                 hotkeyManager.isRecording = false
                 hotkeyManager.clearEngineLive()
-                clearSpeechSuppressionIfSafe()
                 isOverlayVisible = false
                 pendingStopAfterStart = false
                 restoreDictationVolumeControl()

@@ -14,24 +14,12 @@ struct HelpOverlayContent: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 Text("The preview while you dictate")
                     .font(.headline)
-                Text("What the floating preview shows while you speak:")
+                Text("Confirmed words are solid; the live draft after them is gray and can still change:")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "mic.fill")
-                            .foregroundStyle(.green)
-                        Text("Dictation Active")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Image(systemName: "text.badge.checkmark")
-                            .font(.caption)
-                            .foregroundStyle(Color.accentColor)
-                    }
-                    
                     let confirmed = Text("We should use SCINet for scientific research ")
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
@@ -76,10 +64,10 @@ struct HelpOverlayContent: View {
                     .fixedSize(horizontal: false, vertical: true)
                 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    bulletRow("Drag to Move", "Drag the preview's background or waveform to any connected display. SideWave remembers where you put it for the next session.")
+                    bulletRow("Drag to Move", "Drag the preview to any connected display. SideWave remembers where you put it for the next session.")
                     bulletRow("Lock Position", "Right-click the overlay and choose Lock Position to pin it in place. While locked, dragging is disabled until you unlock it.")
                     bulletRow("Reset Position", "Right-click the preview or open Settings > Overlay and choose Reset Position to return it to the bottom center of your main display.")
-                    bulletRow("Size Controls", "Choose an overlay size and display mode in Settings > Overlay. Text size follows the selected overlay preset.")
+                    bulletRow("Size and style", "Settings > Overlay sets the size, the text style (Standard or Cinematic), the wave color, wave sensitivity, and the Liquid Glass background. Text size follows the size you choose. Right-click the preview to expand it.")
                 }
             }
         }
@@ -107,7 +95,7 @@ struct HelpAudioDevicesContent: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 Text("Microphone Selection")
                     .font(.headline)
-                Text("SideWave accesses all recording hardware connected to your Mac, listing built-in, USB-wired, and wireless inputs dynamically. Choose your microphone before recording in Settings > Microphone or on Home.")
+                Text("SideWave lists the built-in, USB, and wireless inputs connected to your Mac and updates the list as devices come and go. Choose your microphone on Home or in Settings > Microphone.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -146,7 +134,7 @@ struct HelpAudioDevicesContent: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                Text("For the best results, capture the mic through your Mac's built-in microphone (or a wired USB mic) and keep output on your Bluetooth headphones. SideWave watches for this and shows a warning during setup if a low-bandwidth Bluetooth input is selected.")
+                Text("For the best results, record with your Mac's built-in microphone or a wired USB mic and keep output on your Bluetooth headphones. Setup, Home, and Settings > Microphone show a note when a Bluetooth microphone is selected.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -157,7 +145,7 @@ struct HelpAudioDevicesContent: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 Text("Visualizer Levels")
                     .font(.headline)
-                Text("The overlay wave is driven by your live audio level, measured in decibels relative to full scale (dBFS). If the wave looks too flat or too jumpy for your room, tune the Visualizer Sensitivity knob in Settings > Overlay.")
+                Text("The preview's wave follows your live audio level, measured in decibels relative to full scale (dBFS). If it looks too flat or too jumpy for your room, change Wave sensitivity in Settings > Overlay. It doesn't affect recognition.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -260,7 +248,7 @@ struct HelpHistoryContent: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text("Processing / audio 0.14x")
+                        Text("26 words")
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.tertiary)
                     }
@@ -301,7 +289,7 @@ struct HelpHistoryContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("Search & Filter")
                     .font(.headline)
-                Text("The History search bar filters titles, target apps, model names, final text, and available earlier stages. Use Copy on a row or its menu to copy a particular stage or delete that entry.")
+                Text("The History search field filters titles, target apps, model names, final text, and available earlier stages. Use Copy on a row, or its menu to copy the recognized text or live draft, or to delete the entry.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -312,7 +300,7 @@ struct HelpHistoryContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("Storage & Retention")
                     .font(.headline)
-                Text("History lives in SideWave's local Application Support folder. Set how long entries are kept with the Retention picker in Settings > Privacy; older entries are pruned automatically. Copy any entry's text from the History tab, and save meeting transcripts as a Markdown (.md) file from the meeting view.")
+                Text("History lives in SideWave's local Application Support folder. Set how long entries are kept with Keep history in Settings > Privacy or at the bottom of History; older entries are removed automatically. Copy any entry's text from the History tab, and save meeting transcripts as a Markdown (.md) file from the meeting view.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -68,7 +68,7 @@ struct AdvancedSettingsPane: View {
 
         SettingsCard("Experimental features") {
             SettingsToggleRow("Show experimental features",
-                              caption: "Adds an Experimental section to this sidebar with the MCP voice server, agent voice, and pipeline tuning. These features may change, crash, or be removed.",
+                              caption: "Adds an Experimental section to this sidebar with Relay and pipeline tuning. These features may change, crash, or be removed.",
                               isOn: Binding(get: { experimentalFeatures }, set: { enabled in
                                   if enabled { showExperimentalConfirmation = true } else { turnOffExperimentalFeatures() }
                               }))
@@ -121,8 +121,6 @@ struct AdvancedSettingsPane: View {
     /// the settings whose only control is about to disappear.
     private func turnOffExperimentalFeatures() {
         appState.relayModeEnabled = false
-        UserDefaults.standard.set(false, forKey: "mcpServerEnabled")
-        appState.mcpServer.stop()
         // removeObject lets the hardware-tier default registered at launch apply again.
         UserDefaults.standard.removeObject(forKey: "refineFixedIntervalEnabled")
         UserDefaults.standard.set(false, forKey: "perWordTransitionAnimation")

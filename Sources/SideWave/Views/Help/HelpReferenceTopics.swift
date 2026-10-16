@@ -134,15 +134,15 @@ struct HelpKeyboardShortcutsContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Main Window Navigation")
+                Text("Menu Commands")
                     .font(.headline)
 
-                HelpShortcutRow(action: "Open SideWave Mini", keys: "Cmd + Shift + M", isAlternate: false)
-                HelpShortcutRow(action: "Toggle Paste Destination", keys: "Cmd + Shift + T", isAlternate: true)
-                HelpShortcutRow(action: "Toggle Trailing Space", keys: "Cmd + Shift + Space", isAlternate: false)
-                HelpShortcutRow(action: "Light / Dark / System Theme", keys: "Cmd + Option + 1 / 2 / 0", isAlternate: true)
-                HelpShortcutRow(action: "Open Help & Documentation", keys: "Cmd + ?", isAlternate: false)
-                HelpShortcutRow(action: "Open Preferences / Settings", keys: "Cmd + ,", isAlternate: true)
+                HelpShortcutRow(action: "SideWave Mini", keys: "Cmd + Shift + M", isAlternate: false)
+                HelpShortcutRow(action: "Send to Chosen App", keys: "Cmd + Shift + T", isAlternate: true)
+                HelpShortcutRow(action: "Add Trailing Space", keys: "Cmd + Shift + Space", isAlternate: false)
+                HelpShortcutRow(action: "Light / Dark / System Appearance", keys: "Cmd + Option + 1 / 2 / 0", isAlternate: true)
+                HelpShortcutRow(action: "SideWave Help", keys: "Cmd + ?", isAlternate: false)
+                HelpShortcutRow(action: "Settings", keys: "Cmd + ,", isAlternate: true)
             }
         }
     }
@@ -235,7 +235,7 @@ struct HelpPrivacyContent: View {
                     Text("Local Processing and Storage")
                         .font(.headline)
                 }
-                Text("Speech recognition, Refine, meeting formatting, and vocabulary assistance run on your Mac. History and recovery data are stored locally. Pasting into another app gives that app your text. Optional MCP clients can read the live transcript and may use remote services; connect only clients you intend to trust.")
+                Text("Speech recognition, Refine, meeting formatting, and vocabulary assistance run on your Mac. History and recovery data are stored locally. Pasting into another app gives that app your text.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -273,14 +273,13 @@ struct HelpTechnologyAndCreditsContent: View {
                     .font(.headline)
                 
                 VStack(alignment: .leading, spacing: Spacing.md) {
-                    moduleRow("FluidAudio SDK", "On-device speech recognition, voice activity detection, speaker diarization, and speech synthesis. SideWave manages microphone routing, capture, and level meters.")
+                    moduleRow("FluidAudio SDK", "On-device speech recognition, voice activity detection, and speaker diarization. SideWave manages microphone routing, capture, and level meters.")
                     moduleRow("NVIDIA Parakeet TDT 0.6B", "NVIDIA's speech recognition model. Uses a Token-and-Duration Transducer architecture with bidirectional encoders, compiled for the Apple Neural Engine.")
-                    moduleRow("NVIDIA Parakeet Realtime EOU 120M", "Streaming recognizer that paints the live gray draft and detects end of utterance, processing 160ms audio chunks on the Neural Engine.")
-                    moduleRow("Silero VAD v6", "Lightweight, highly accurate voice activity detection model running on the CPU to segment speech at natural pauses.")
-                    moduleRow("MLX Swift LM", "Apple Silicon machine learning framework. Powers high-speed, local Gemma 4 language model inference directly on the GPU.")
-                    moduleRow("NVIDIA NeMo ITN", "Inverse text normalization library compiled as a high-performance Rust static bridge to translate spoken forms into written formatting.")
-                    moduleRow("Sparkle Framework", "The optional macOS updater. It checks the release feed and verifies signed updates without sending a usage profile.")
-                    moduleRow("PocketTTS", "Kyutai's local streaming speech model, converted to CoreML by FluidInference, reads responses supplied by connected MCP clients.")
+                    moduleRow("NVIDIA Parakeet Realtime EOU 120M", "Streaming recognizer that writes the live gray draft and detects the end of an utterance, in 160 ms audio chunks.")
+                    moduleRow("Silero VAD v6", "Voice activity detection on the CPU, used to find pauses in speech.")
+                    moduleRow("MLX Swift LM", "Runs the Gemma 4 language models on the Apple silicon GPU.")
+                    moduleRow("NVIDIA NeMo Text Processing", "Turns spoken numbers, dates, and amounts into written form. Included through FluidAudio.")
+                    moduleRow("Sparkle", "Checks the release feed for updates and verifies their signatures, without sending a usage profile.")
                     moduleRow("Swift Markdown", "Parses document and meeting text into readable lists, tables, and code blocks without loading remote content.")
                 }
             }
@@ -290,7 +289,7 @@ struct HelpTechnologyAndCreditsContent: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 Text("Open-Source Licensing")
                     .font(.headline)
-                Text("SideWave is built on open-source work. Licenses include Apache License 2.0 (FluidAudio, NeMo, CTC 110M, Gemma 4, swift-transformers), MIT License (Silero, Sparkle, MCP SDK, MLX Swift LM, PocketTTS), and Creative Commons Attribution 4.0 (Parakeet TDT and the Alba voice). VoiceZero samples use CC0. Swift Markdown uses Apache 2.0 with the Swift Runtime Library Exception; cmark retains its BSD notices. Detailed license texts can be viewed in the ACKNOWLEDGMENTS file bundled inside the application.")
+                Text("SideWave is built on open-source work. Apache License 2.0 covers FluidAudio, NeMo Text Processing, CTC 110M, Gemma 4, swift-huggingface, and swift-transformers. MIT covers Silero VAD, Sparkle, and MLX Swift LM. Parakeet TDT and Parakeet Ultra use CC-BY-4.0, Parakeet Realtime EOU uses the NVIDIA Open Model License, and Nemotron 3 Diarization uses OpenMDW-1.1. Swift Markdown uses Apache 2.0 with the Swift Runtime Library Exception; cmark-gfm keeps its BSD-2-Clause and MIT notices. Settings > About > Acknowledgments lists each one.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

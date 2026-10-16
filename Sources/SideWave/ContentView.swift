@@ -151,7 +151,6 @@ struct ContentView: View {
     private func stopMeetingCaptureOnDisable() {
         if case .recording = appState.meetingService.state {
             appState.meetingService.stopRecording()
-            appState.meetingCaptureEnded()
             appState.meetingService.processRecording()
             appState.showToast("Meeting mode off. Recording stopped and transcribing", icon: "waveform.slash")
         }
@@ -239,7 +238,6 @@ struct ContentView: View {
                         Task {
                             do {
                                 try await appState.meetingService.resumeRecording(orphan: orphan)
-                                appState.meetingCaptureBegan()
                                 // Pop only on success so a failed resume keeps
                                 // the orphan recoverable in this session.
                                 if appState.pendingMeetingRecovery.first?.id == orphan.id {

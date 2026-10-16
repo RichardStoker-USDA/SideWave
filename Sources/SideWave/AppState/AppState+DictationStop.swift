@@ -96,7 +96,6 @@ extension AppState {
             }
             restoreDictationVolumeControl()
             hotkeyManager.isRecording = false
-            clearSpeechSuppressionIfSafe()
             isOverlayVisible = false
             captureStart.cancel()
             pendingStopAfterStart = false
@@ -126,23 +125,12 @@ extension AppState {
         forceRefineThisCapture = false
         let shouldThoroughRefine = thoroughRefineThisCapture
         thoroughRefineThisCapture = false
-        // Recording has stopped, so agent speech should be re-enabled on every exit, including the
-        // early returns that skip the normal path's reset. After the reentrancy check, so a
-        // deferred stop isn't affected.
-        defer { clearSpeechSuppressionIfSafe() }
-
         captureStart.cancel()
         hotkeyManager.isRecording = false
         SoundEffectService.play(.recordingStop)
 
         // Restore system volume after dictation ends
         restoreDictationVolumeControl()
-
-        // Stop the relay tasks
-        relayStartTask?.cancel()
-        relayStartTask = nil
-        relayUpdateTask?.cancel()
-        relayUpdateTask = nil
 
         // Capture target before any async work -- stopRecording() can take time.
         // In "finish window" mode, capture the currently focused window now.
@@ -409,32 +397,12 @@ extension AppState {
         // TranscriptionService.lastSessionOriginalText (unrefined spans plus the live tail) is the
         // better original; fall back to assembledRaw.
 
-
-        // Headless relay session disabled (see startRecording comment).
-        // The paste+Enter auto-submit below handles relay mode.
-
         guard !finalText.isEmpty else {
-            draftResponseManager.cancelPending()
-            clearSpeechSuppressionIfSafe()
             isOverlayVisible = false
             targetPID = nil
             targetAppName = "Unknown"
             targetFocusedElement = nil
             return
-        }
-
-        // Speculative triggering v2: check if the agent pre-submitted a draft response.
-        // If valid, fire TTS immediately -- this runs concurrently with the paste flow
-        // below, giving the user an instant voice response with zero latency.
-        if let draftText = draftResponseManager.consumeIfValid(finalTranscript: finalText) {
-            if !ttsService.isInitialized {
-                Task {
-                    await ttsService.initialize()
-                    ttsService.speak(draftText)
-                }
-            } else {
-                ttsService.speak(draftText)
-            }
         }
 
         // Optionally copy to clipboard
@@ -475,7 +443,6 @@ extension AppState {
             targetPID = nil
             targetAppName = "Unknown"
             targetFocusedElement = nil
-            clearSpeechSuppressionIfSafe()
             return
         }
 
@@ -672,9 +639,6 @@ extension AppState {
             targetAppName = "Unknown"
             targetFocusedElement = nil
         }
-
-        // Recording is done and the text submitted, so agent speech can play again.
-        clearSpeechSuppressionIfSafe()
     }
 
     /// Posts a mouse-moved event at the cursor position, which makes the window server update focus

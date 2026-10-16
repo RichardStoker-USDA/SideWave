@@ -15,7 +15,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
     case refine
     case textNormalization
     case meetingTranscription
-    case voiceAgent
     case voiceActivityDetection
     case overlay
     case audioDevices
@@ -39,7 +38,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
         case .refine: return "Refine"
         case .textNormalization: return "Text Normalization"
         case .meetingTranscription: return "Meeting Transcription"
-        case .voiceAgent: return "Voice Agent (MCP)"
         case .voiceActivityDetection: return "Speech Detection"
         case .overlay: return "Overlay"
         case .audioDevices: return "Audio Devices"
@@ -63,7 +61,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
         case .refine: return "text.badge.checkmark"
         case .textNormalization: return "textformat.123"
         case .meetingTranscription: return "person.3"
-        case .voiceAgent: return "waveform.and.person.filled"
         case .voiceActivityDetection: return "mic.badge.plus"
         case .overlay: return "rectangle.on.rectangle"
         case .audioDevices: return "speaker.wave.2"
@@ -87,7 +84,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
         case .refine: return "Models, templates, and the document editor."
         case .textNormalization: return "How spoken numbers, dates, and amounts become digits."
         case .meetingTranscription: return "Recording meetings, speaker labels, and notes."
-        case .voiceAgent: return "Let an AI agent talk to you through on-device speech."
         case .voiceActivityDetection: return "How SideWave finds pauses in your speech."
         case .overlay: return "The floating preview you see while dictating."
         case .audioDevices: return "Microphones, interfaces, Bluetooth, and input channels."
@@ -111,7 +107,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
         case .refine: "document editor instructions email prompt template formatting ask follow up undo"
         case .textNormalization: "numbers dates currency nemo itn"
         case .meetingTranscription: "meeting record recovery crash eight speakers diarization nemotron notes long audio"
-        case .voiceAgent: "mcp tts agent client local server"
         case .voiceActivityDetection: "voice activity detection vad pause silence threshold"
         case .overlay: "window text animation wave font size position motion"
         case .audioDevices: "microphone bluetooth usb airpods input channel test system default selection priority mixer interface standby"
@@ -134,7 +129,7 @@ enum HelpSection: String, CaseIterable, Identifiable {
     var group: HelpSidebarGroup {
         switch self {
         case .gettingStarted, .howDictationWorks, .audioWaveShowcase: return .basics
-        case .hotkeySetup, .models, .vocabulary, .refine, .textNormalization, .meetingTranscription, .voiceAgent, .voiceActivityDetection: return .features
+        case .hotkeySetup, .models, .vocabulary, .refine, .textNormalization, .meetingTranscription, .voiceActivityDetection: return .features
         case .overlay, .audioDevices, .history: return .interface
         case .settingsOverview, .keyboardShortcuts, .troubleshooting, .privacy, .technologyAndCredits: return .reference
         }
@@ -152,7 +147,6 @@ enum HelpSection: String, CaseIterable, Identifiable {
         case .refine: HelpRefineContent()
         case .textNormalization: HelpTextNormalizationContent()
         case .meetingTranscription: HelpMeetingTranscriptionContent()
-        case .voiceAgent: HelpVoiceAgentContent()
         case .voiceActivityDetection: HelpVADContent()
         case .overlay: HelpOverlayContent()
         case .audioDevices: HelpAudioDevicesContent()

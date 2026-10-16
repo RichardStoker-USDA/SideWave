@@ -32,12 +32,12 @@ struct HelpHotkeySetupContent: View {
 
                 HelpItem(
                     title: "Smart Push-to-Talk (Hold)",
-                    content: "With Tap or hold enabled, hold the hotkey, wait for Listening, speak, then release to finish. The default threshold is 500 ms after recording becomes ready, not after key-down. Smart Push-to-Talk uses the streaming recognizer for quick replies; optional held-dictation Refine can add processing time."
+                    content: "With Tap to Toggle, Hold to Talk selected on Home, hold the hotkey, wait for Listening, speak, then release to finish. The default threshold is 500 ms after recording becomes ready, not after key-down. Smart Push-to-Talk uses the streaming recognizer for quick replies; optional held-dictation Refine can add processing time."
                 )
 
                 HelpItem(
                     title: "Rewrite and finish (optional)",
-                    content: "Off by default. Enable Hold to rewrite and finish in Advanced view > Settings > General. Hold the stop press for half a second, then release to end recording, rewrite the whole dictation, and send it. A normal stop finishes pending text and checks the recent sentence boundary."
+                    content: "Off by default. In Advanced view, turn on Hold to rewrite and finish in Settings > General. Hold the stop press for half a second, then release to end recording, rewrite the whole dictation, and send it. A normal stop finishes pending text and checks the recent sentence boundary."
                 )
 
                 HelpItem(
@@ -45,7 +45,7 @@ struct HelpHotkeySetupContent: View {
                     content: "Double-tap your hotkey quickly (within 300ms) to paste your last result again without recording anything new. Handy for repeating an entry across forms or windows."
                 )
 
-                HelpAdvancedNote(text: "Choose Tap or hold beside Shortcut on Home to enable Smart Push-to-Talk. Advanced adds held-dictation refinement and auto-submit controls. The hold threshold is in Settings > Advanced.")
+                HelpAdvancedNote(text: "Choose Tap to Toggle, Hold to Talk beside Shortcut on Home to use Smart Push-to-Talk. Advanced view adds held-dictation Refine and auto-submit controls, and the hold threshold in Settings > Advanced.")
             }
         }
 
@@ -53,7 +53,7 @@ struct HelpHotkeySetupContent: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 Text("Your Current Hotkey")
                     .font(.headline)
-                Text("This is the trigger SideWave is listening for right now. To change it, open Settings > General > Hotkey, click the recorder field, and press the key or combination you want (Option, Cmd + Space, Shift + Tab, and so on):")
+                Text("This is the trigger SideWave is listening for right now. To change it, click Shortcut on Home or in Settings > General, then press the key or combination you want (Right Option, Shift + Tab, and so on):")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -89,7 +89,7 @@ struct HelpHotkeySetupContent: View {
                     tipRow("Modifier keys alone work great (Right Option, Right Command, etc.) since most apps don't bind them solo.")
                     tipRow("Avoid common shortcuts like Cmd+C, Cmd+V, or Cmd+Space that other apps or Spotlight already use.")
                     tipRow("Function keys (F5, F13, etc.) are another safe choice if your keyboard has them.")
-                    tipRow("If your hotkey conflicts with another app, just change it in Settings.")
+                    tipRow("If your hotkey conflicts with another app, change it on Home or in Settings > General.")
                 }
             }
         }
@@ -99,7 +99,7 @@ struct HelpHotkeySetupContent: View {
                 Text("Adding a Modifier")
                     .font(.headline)
 
-                Text("If you want a modifier key (Shift, Control, Command, Option) as part of your hotkey instead of using a single key alone, the recorder captures it automatically. Open Settings > General > Hotkey, click the field, then HOLD the modifier you want and press the key together. Examples include Shift + Tab, Right Shift + Right Option, and Option + grave (`). Check that the combination is not already assigned in macOS or another app. The recorded combination is shown back to you using the standard macOS glyphs (⇧ ⌃ ⌥ ⌘).")
+                Text("If you want a modifier key (Shift, Control, Command, Option) as part of your hotkey instead of a single key, the recorder captures it. Click Shortcut, then hold the modifier and press the key. Examples include Shift + Tab, Right Shift + Right Option, and Option + grave (`). Check that the combination is not already assigned in macOS or another app. The recorded combination is shown back to you using the standard macOS glyphs (⇧ ⌃ ⌥ ⌘).")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -160,7 +160,7 @@ struct HelpModelsContent: View {
                     modelVariant("v3 (Multilingual)", "Supports multiple languages. Default choice. Slightly slower than v2 but handles a wider range of accents and mixed-language input.")
                 }
 
-                Text("Settings > Speech Recognition shows the active model. Advanced view offers Parakeet v3, multilingual Ultra, and legacy v2. Each has its own download. V3 remains the default.")
+                Text("Settings > Speech Recognition shows the active model. In Advanced view you can switch between Parakeet v3, the multilingual Ultra model, and v2. Each has its own download, and v3 is the default.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -195,7 +195,7 @@ struct HelpModelsContent: View {
                         .font(.headline)
                 }
 
-                Text("A smaller 110-million parameter model used for vocabulary boosting during finalization. When you stop dictating, the CTC model re-scores the transcription with your enabled Vocabulary terms weighted more heavily. This catches proper nouns, abbreviations, and jargon that the main model might not get right on its own.")
+                Text("A smaller 110-million parameter model used for vocabulary boosting. It rescores the live preview about every 1.5 seconds and each segment as it finalizes, checking your enabled Vocabulary terms against the audio. This catches proper nouns, abbreviations, and jargon that the main model might not get right on its own.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -236,7 +236,7 @@ struct HelpModelsContent: View {
                         .font(.headline)
                 }
 
-                Text("Google DeepMind's Gemma 4 language model, about 3 GB on disk. Powers the Refine feature: as you dictate, this model fixes grammar, removes filler words, and applies your chosen template. One segment at a time, automatically. Runs on the GPU through MLX. E2B is the lighter Gemma option; speed and available memory depend on this Mac and other running apps.")
+                Text("Google DeepMind's Gemma 4 language model, about 3 GB on disk. As you dictate, it fixes grammar, removes filler words, and applies your chosen template, one segment at a time. Runs on the GPU through MLX. E2B is the lighter Gemma option; speed and available memory depend on this Mac and other running apps.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -435,12 +435,12 @@ struct HelpVocabularyContent: View {
 
                 HelpItem(
                     title: "Optional catalog",
-                    content: "SideWave starts without bundled glossaries. Browse bundles downloads the GitHub catalog; search stays local. Download a bundle to subscribe to its read-only words. Updates are manual unless you enable daily checks for that bundle. Make a personal copy to edit a glossary, or open a word to copy it or turn it off locally. Personal copies never sync, and locally disabled words stay disabled after updates. Manage bundle shows update history. Transfers appear in Data Transparency."
+                    content: "SideWave starts without glossaries. Browse Bundles downloads the catalog from GitHub; search stays local. Download a bundle to subscribe to its read-only words. Updates are manual unless you turn on Update automatically for that bundle, which checks once a day while SideWave is open. Make a Personal Copy to edit a glossary, or open a word to copy it or turn it off. Personal copies never sync, and words you turn off stay off after updates. Manage Bundle shows Update History. Transfers appear in Data Transparency."
                 )
 
                 HelpItem(
                     title: "Custom glossaries",
-                    content: "Use New glossary to create a collection, import a glossary file, or create words from a description with your selected local Refine model. Your existing custom glossaries are preserved."
+                    content: "Use New Glossary to start a collection, Import Glossary to load a file, or Create Words from a Description to have your local Refine model suggest terms. Your existing custom glossaries are kept."
                 )
 
                 HelpItem(
@@ -455,15 +455,14 @@ struct HelpVocabularyContent: View {
                 Text("Entry Scope")
                     .font(.headline)
 
-                Text("Click a word to edit it. Replace at dictation applies the pronunciation and mistranscriptions as replacements. Send hint to Refine gives the model the spelling and context. These switches are independent.")
+                Text("Click a word to edit it. Two switches control what it does, and new words start with both on.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    scopeRow("Auto-correct + Refine context", "Replaces the misheard word every time AND feeds it into the Refine prompt. The default for new entries.")
-                    scopeRow("Auto-correct only", "Applies the text replacement but doesn't get sent to the Refine model. Good for private aliases or snippet triggers.")
-                    scopeRow("Refine context only", "Skips the text replacement and only hints the Refine model. Useful when spelling is fine but the model needs to know about the term.")
+                    scopeRow("Replace at dictation", "Swaps the pronunciation and mistranscriptions you listed for your spelling in every dictation. On its own, good for private aliases or snippet triggers.")
+                    scopeRow("Send hint to Refine", "Gives the Refine model the spelling and context. On its own, useful when recognition spells the word right but Refine needs to know what it means.")
                 }
             }
         }
@@ -475,7 +474,7 @@ struct HelpVocabularyContent: View {
 
                 HelpItem(
                     title: "Always include in Refine",
-                    content: "Pins a high-value term so Refine always sees it, even when you didn't say it in that dictation. Keep this to a few key terms, since every enabled glossary shares one prompt budget. Needs Send hint to Refine turned on."
+                    content: "Pins a term so Refine always sees it, even when you didn't say it in that dictation. Keep this to a few key terms, since every enabled glossary shares one prompt budget. Needs Send hint to Refine turned on."
                 )
 
                 HelpItem(
@@ -496,13 +495,18 @@ struct HelpVocabularyContent: View {
                 )
 
                 HelpItem(
-                    title: "Bulk Import",
-                    content: "Paste or import many entries at once. CSV format with three columns: word, mistranscriptions (pipe-separated), and an optional description. Every imported word starts with both scopes on. Click a word afterward to edit its behavior."
+                    title: "Import Words from CSV",
+                    content: "Paste or import many words at once from a glossary's menu. Use up to three columns: the word, mistranscriptions separated by |, and an optional description. Imported words start with both switches on. Click a word afterward to change it."
                 )
 
                 HelpItem(
-                    title: "Describe (on-device generation)",
-                    content: "Write a plain-English paragraph about your work (\"I'm an agricultural data scientist at USDA focusing on wheat genetics with tools like SAS and R\"). A local model extracts candidate terms and shows them as a checklist. Review, edit, and save them into a new glossary. It runs on this Mac with the selected Gemma or Apple Intelligence model."
+                    title: "Describe Your Field",
+                    content: "Write a plain-English paragraph about your work (\"I'm an agricultural data scientist at USDA focusing on wheat genetics with tools like SAS and R\"). Your local Refine model suggests terms as a checklist. Review, edit, and save them into a new glossary. It runs on this Mac with the selected Gemma or Apple Intelligence model."
+                )
+
+                HelpItem(
+                    title: "Speech Profile",
+                    content: "Builds a short description of how you talk and write, up to 600 characters, from your dictation history with your local Refine model. Refine reads it to keep your voice. You can edit it, turn it off, or clear it. It stays on this Mac."
                 )
             }
         }
@@ -512,7 +516,7 @@ struct HelpVocabularyContent: View {
                 Text("How It Works Behind the Scenes")
                     .font(.headline)
 
-                Text("During dictation, the Parakeet TDT model drives the live overlay preview. Vocabulary boosting now runs in two places: throttled live-preview rescoring (about once every 1.5 seconds) so corrections appear in real time, and a final pass when each segment finalizes at a VAD pause or the 14.8s ceiling. The CTC rescorer is acoustic. It only replaces the model's output when your vocabulary term actually matches the audio frames better than the original word, to reduce false replacements. A large or ambiguous glossary can still reduce accuracy; keep only terms you use and check the result. If Refine is on, the canonical term plus its description is also included in the prompt sent to the Refine model, so it knows how to spell and use the term in output.")
+                Text("During dictation, the speech models drive the live preview. Vocabulary boosting runs in two places: throttled live-preview rescoring (about once every 1.5 seconds) so corrections appear in real time, and a final pass when each segment finalizes at a VAD pause or the 14.8s ceiling. The CTC rescorer is acoustic. It only replaces the model's output when your vocabulary term actually matches the audio frames better than the original word, to reduce false replacements. A large or ambiguous glossary can still reduce accuracy; keep only terms you use and check the result. If Refine is on, the canonical term plus its description is also included in the prompt sent to the Refine model, so it knows how to spell and use the term in output.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -529,7 +533,7 @@ struct HelpVocabularyContent: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Recommended approach for true homophones: add the term with the \"Refine context only\" scope. The Refine model gets told about your term, and it uses the surrounding sentence to pick the right form (\"We use SCINet for genome analysis\" reads as SCINet; \"I'll sign it tomorrow\" reads as sign it). Acoustic boosting still applies because every active vocabulary entry now feeds the CTC rescorer regardless of scope, but the rescorer only triggers when the audio matches the term. Acoustic scoring can still confuse similar sounds; review replacements and disable terms that cause errors.")
+                Text("Recommended approach for true homophones: add the term with only Send hint to Refine on. The Refine model gets told about your term, and it uses the surrounding sentence to pick the right form (\"We use SCINet for genome analysis\" reads as SCINet; \"I'll sign it tomorrow\" reads as sign it). Acoustic boosting still applies because every active vocabulary entry feeds the CTC rescorer, whatever its switches, but the rescorer only triggers when the audio matches the term. Acoustic scoring can still confuse similar sounds; review replacements and disable terms that cause errors.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -551,14 +555,14 @@ struct HelpVocabularyContent: View {
 
         HelpHint("Terms shorter than 3 characters are skipped by CTC boosting because very short strings cause too many false matches. They still count for Refine hints.")
 
-        HelpHint("Refine has a term and character budget (roughly 30 terms and 600 chars of description across every enabled glossary), so keep descriptions tight. Enable only glossaries that are relevant to your work.")
+        HelpHint("Refine reads up to 30 terms and 600 characters of glossary context across all enabled glossaries, so keep context short. Enable only glossaries that are relevant to your work.")
 
         HelpCard {
             Text("Template linking")
                 .font(.title3.weight(.semibold))
             Text("Each glossary can be linked to one or more Refine templates. When you switch templates on Home or the Dictation tab, linked glossaries auto-enable and glossaries linked to other templates auto-disable. Unlinked glossaries stay under manual control.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("To link a glossary, open its ellipsis menu and choose Link to Templates. Check the templates you want it active for. For example, link your work jargon glossary to Professional so it loads automatically when you switch to that style.")
+            Text("To link a glossary, open its \u{2026} menu and choose Link to Templates. Check the templates you want it active for. For example, link your work jargon glossary to Professional so it loads automatically when you switch to that style.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

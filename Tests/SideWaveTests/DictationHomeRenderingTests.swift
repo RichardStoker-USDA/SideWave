@@ -285,7 +285,6 @@ final class DictationHomeRenderingTests: XCTestCase {
                              name: "meeting_setup_details_\(suffix)", width: 500, height: 590)
         }
         XCTAssertFalse(state.isDictationBusy)
-        XCTAssertFalse(state.ttsService.initializationInFlight)
     }
 
     func testSubscribedGlossaryControlsAndChangeHistoryFit() async throws {
@@ -691,7 +690,7 @@ final class DictationHomeRenderingTests: XCTestCase {
         }
     }
 
-    func testVoiceAgentOnboardingRecoveryAndPrivacySurfaces() async throws {
+    func testOnboardingExperimentalRecoveryAndPrivacySurfaces() async throws {
         let appState = AppState()
         let defaults = UserDefaults.standard
         let keys = ["showAdvancedControls", "experimentalFeatures", "appearance", "lastSelectedSettingsTab"]
@@ -713,7 +712,7 @@ final class DictationHomeRenderingTests: XCTestCase {
             try await render(MenuBarView(appState: appState), scheme: scheme, name: "menu_bar_\(suffix)", width: 280, height: 390)
             try await render(DataTransparencyView(), scheme: scheme, name: "transparency_\(suffix)", width: 620, height: 720)
             try await render(SettingsContentView(category: .settingsExperimental, appState: appState).environment(appState),
-                       scheme: scheme, name: "experimental_\(suffix)", width: 540, height: 1_900)
+                       scheme: scheme, name: "experimental_\(suffix)", width: 540, height: 1_000)
             appState.isProcessingAgenticEdit = true
             try await render(ModelStorageSection(appState: appState), scheme: scheme,
                        name: "model_storage_busy_\(suffix)", width: 500, height: 560)
@@ -723,8 +722,6 @@ final class DictationHomeRenderingTests: XCTestCase {
                            scheme: scheme, name: "meeting_recovery_\(enabled)_\(suffix)", width: 560, height: 430)
             }
         }
-        XCTAssertFalse(appState.ttsService.initializationInFlight)
-        XCTAssertFalse(appState.mcpServer.isRunning)
     }
 
     func testTourAndBlockedMicrophoneFitTheSmallWindow() async throws {
@@ -743,7 +740,6 @@ final class DictationHomeRenderingTests: XCTestCase {
                        name: "microphone_busy_\(suffix)", width: 480, height: 460)
         }
         XCTAssertFalse(MicTestController.isCapturing)
-        XCTAssertFalse(appState.ttsService.initializationInFlight)
     }
 
     func testHomeShowsSpeechPreparationBeforeEnablingDictation() async throws {

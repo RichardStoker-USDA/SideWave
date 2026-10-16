@@ -45,14 +45,7 @@ https://github.com/sparkle-project/Sparkle
 https://github.com/sparkle-project/Sparkle/blob/2.x/LICENSE
 
 
-6. MCP Swift SDK
------------------
-Model Context Protocol server/client implementation for Swift.
-Licensed under the MIT License.
-https://github.com/modelcontextprotocol/swift-sdk
-
-
-7. MLX Swift LM
+6. MLX Swift LM
 -----------------
 On-device large language model inference for Apple Silicon via MLX. Powers
 Refine, document editing, vocabulary assistance, and meeting note formatting.
@@ -60,7 +53,7 @@ Licensed under the MIT License.
 https://github.com/ml-explore/mlx-swift-lm
 
 
-8. Gemma 4 (E2B, E4B, and 12B)
+7. Gemma 4 (E2B, E4B, and 12B)
 -----------------
 Open language models by Google DeepMind for local text processing.
 All three use 4-bit MLX quantizations from the mlx-community
@@ -69,7 +62,7 @@ Licensed under the Apache License, Version 2.0.
 https://ai.google.dev/gemma/docs/core/model_card_4
 
 
-9. Apple Foundation Models (Apple Intelligence)
+8. Apple Foundation Models (Apple Intelligence)
 -----------------
 On-device language model framework on macOS 26 Tahoe and later. Available as
 an alternative Refine backend. Managed by the operating system; no
@@ -77,7 +70,7 @@ model weights ship with SideWave. Use governed by Apple's SDK and OS terms.
 https://developer.apple.com/documentation/foundationmodels
 
 
-10. swift-huggingface / swift-transformers (Tokenizers)
+9. swift-huggingface / swift-transformers (Tokenizers)
 -----------------
 Swift bindings used by MLX Swift LM for HuggingFace Hub downloads and
 tokenizer loading.
@@ -85,14 +78,14 @@ Licensed under the Apache License, Version 2.0.
 https://github.com/huggingface/swift-transformers
 
 
-11. NeMo Text Processing
+10. NeMo Text Processing
 -----------------
 Inverse text normalization (numbers, dates, currency), included through FluidAudio.
 Licensed under the Apache License, Version 2.0.
 https://github.com/NVIDIA/NeMo-text-processing
 
 
-12. Swift Markdown and cmark-gfm
+11. Swift Markdown and cmark-gfm
 -----------------
 Markdown parsing for formatted meeting notes by the Swift project authors.
 Swift Markdown is licensed under Apache License 2.0 with Runtime Library Exception.
@@ -101,7 +94,7 @@ https://github.com/swiftlang/swift-markdown
 https://github.com/swiftlang/swift-cmark
 
 
-13. Parakeet Ultra
+12. Parakeet Ultra
 -----------------
 Optional speech recognition model based on NVIDIA Parakeet.
 Post-training by Moondream; CoreML conversion by FluidInference.
@@ -110,24 +103,14 @@ https://huggingface.co/FluidInference/parakeet-ultra-coreml
 https://creativecommons.org/licenses/by/4.0/
 
 
-14. NVIDIA Nemotron 3 Diarization
+13. NVIDIA Nemotron 3 Diarization
 -----------------
 Speaker diarization model by NVIDIA, with CoreML conversion by FluidInference.
 Licensed under OpenMDW-1.1.
 https://huggingface.co/FluidInference/nemotron-3-diarization-coreml
 
 
-15. PocketTTS and voice sources
------------------
-Streaming text-to-speech by Kyutai, using FluidAudio's CoreML implementation.
-PocketTTS code is licensed under the MIT License. Voice recordings carry their
-source licenses; the Voice-Zero voices are CC0 and Alba MacKenna is CC-BY-4.0.
-https://github.com/kyutai-labs/pocket-tts
-https://huggingface.co/FluidInference/pocket-tts-coreml
-https://huggingface.co/kyutai/tts-voices
-
-
-16. NVIDIA Parakeet Realtime EOU 120M
+14. NVIDIA Parakeet Realtime EOU 120M
 -----------------
 Streaming speech recognition for the live preview, by NVIDIA, with CoreML
 conversion by FluidInference.

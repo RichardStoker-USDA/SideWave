@@ -152,7 +152,7 @@ struct DataTransparencyView: View {
                 promiseRow(
                     icon: "mic.slash",
                     title: "Speech processing stays on this Mac",
-                    body: "Recognition, Refine, meeting notes, and speech synthesis run locally. Pasting or exporting shares text with the destination you choose. Optional MCP clients can read your live transcript and may use remote services."
+                    body: "Recognition, Refine, and meeting notes run locally. Pasting or exporting shares text with the destination you choose."
                 )
                 promiseRow(
                     icon: "arrow.down.circle",

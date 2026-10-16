@@ -40,8 +40,8 @@ extension AppState {
             "dictationCleanupBackend",
             // Meeting formatter
             "meetingFormatterBackend",
-            // Relay/MCP
-            "relayModeEnabled", "mcpServerEnabled",
+            // Relay
+            "relayModeEnabled",
             "mainWindowMode",
         ]
 

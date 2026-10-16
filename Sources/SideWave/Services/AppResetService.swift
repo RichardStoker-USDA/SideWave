@@ -67,12 +67,10 @@ enum AppResetService {
         "meetingFormatterBackend",
         // Experimental
         "experimentalFeatures", "meetingTranscriptionEnabled",
-        "enableSpecialtyTemplates", "relayModeEnabled", "mcpServerEnabled",
+        "enableSpecialtyTemplates", "relayModeEnabled",
         "devForceAFMGen1Profile",
         // History (the AI-title setting, NOT retention or the data)
         "historyAITitlesEnabled",
-        // Voice
-        "selectedTTSVoice",
     ]
 
     /// Keys the settings restore never touches, for the report and as a guard.
@@ -81,7 +79,7 @@ enum AppResetService {
         "perfRecommendationShown", "customDictionaryEntries",
         "vocabEnabledBuiltInPackIDs", "vocabBuiltInLinkedTemplates",
         "vocabCorrectionsMigratedV1", "hardwareTier", "hardwareTierDetectedAt",
-        "tierCadenceResetMigration1", "legacyMCPAuthCredentialPurged",
+        "tierCadenceResetMigration1", "legacyAgentStateRemoved",
     ]
 
     /// Clear the tuning keys and relaunch so every in-memory mirror re-reads
@@ -111,6 +109,7 @@ enum AppResetService {
                                 repositoryIDs: [String]) -> [URL] {
         let models = appSupport.appendingPathComponent("FluidAudio/Models", isDirectory: true)
         var paths = fluidModelDirectoryNames.map { models.appendingPathComponent($0, isDirectory: true) }
+        // Voice model downloaded by earlier versions that had the agent voice.
         paths.append(home.appendingPathComponent(".cache/fluidaudio/Models/pocket-tts", isDirectory: true))
         paths += repositoryIDs.compactMap { id -> URL? in
             let components = id.split(separator: "/", omittingEmptySubsequences: false)

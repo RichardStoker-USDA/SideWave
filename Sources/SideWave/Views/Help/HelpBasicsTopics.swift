@@ -26,14 +26,14 @@ struct HelpGettingStartedContent: View {
                 Spacer()
                 HelpDeepLinkButton(label: "Change shortcut", systemImage: "keyboard", targetPage: nil, targetSettingsTab: .settingsGeneral, spotlightKey: "hotkey")
             }
-            HelpItem(title: "Tap to start and finish", content: "Use one tap at each end of a dictation. Double-tap to paste the last result again. Choose Tap or hold on Home if you also want to hold the key while speaking and release to finish.")
+            HelpItem(title: "Tap to start and finish", content: "Use one tap at each end of a dictation. Double-tap to paste the last result again. Choose Tap to Toggle, Hold to Talk beside Shortcut on Home if you also want to hold the key while speaking and release to finish.")
             HelpItem(title: "Keep unfinished words", content: "Escape stops an ordinary dictation and keeps it as Paused dictation on Home without pasting. Control-Escape discards it. A document keeps its own draft and pending additions.")
             HelpInternalButton(label: "All shortcut behaviors", systemImage: "keyboard", targetSection: .hotkeySetup)
         }
 
         HelpCard {
             Text("Everyday controls stay on Home").font(.headline)
-            HelpItem(title: "Template, Refine model, and Output language", content: "Choose the shape and language of your output. Formatting rules adds your own instructions. Refine preparation is shown below these controls; models run locally after their initial download.")
+            HelpItem(title: "Template, Refine model, and Output language", content: "Choose the shape and language of your output. Formatting Rules adds your own instructions. Refine preparation is shown below these controls; models run locally after their initial download.")
             HelpItem(title: "Microphone and Send to", content: "Choose an input and whether ordinary dictation goes to the app focused at the start, at the finish, or to a specific window. Document templates use the document preview.")
             HelpItem(title: "Simple and Advanced", content: "Both use the same layout and keep the same everyday controls. Advanced adds recording, delivery, and pipeline options below recent output. Switching views does not change your model or processing settings.")
         }
@@ -89,48 +89,47 @@ struct HelpAudioWaveShowcaseContent: View {
 
     var body: some View {
         showcaseCard(
-            heading: "While you speak",
-            body: "The full spectrum follows the loudness of your voice. Before recording starts it moves gently in place.",
-            isRefining: false,
-            isWarmingUp: false,
-            backend: .appleIntelligence
+            heading: "Getting ready",
+            body: "After you press the shortcut, a small panel with a slowly breathing wave says Ready to speak in a moment. The full preview replaces it when SideWave is listening, so start talking then. The first start after installing or updating can take a minute while the speech models compile.",
+            style: .gettingReady
         )
 
         showcaseCard(
-            heading: "Getting ready",
-            body: "A quiet line while the microphone and models start. Wait for Listening before you speak; the microphone may not be recording yet.",
-            isRefining: false,
-            isWarmingUp: true,
-            backend: .appleIntelligence
+            heading: "While you speak",
+            body: "The full spectrum follows the loudness of your voice and ripples gently when you pause.",
+            style: .listening
         )
 
         showcaseCard(
             heading: "Refining with Apple Intelligence",
-            body: "The colors shift to purple and pink while Apple Intelligence refines part of your dictation.",
-            isRefining: true,
-            isWarmingUp: false,
-            backend: .appleIntelligence
+            body: "The colors shift to purple and pink while Apple Intelligence refines part of your dictation. The wave keeps reacting to your voice.",
+            style: .refining(.appleIntelligence)
         )
 
         showcaseCard(
             heading: "Refining with Gemma",
             body: "The colors shift to blue while Gemma refines. The wave keeps reacting to your voice.",
-            isRefining: true,
-            isWarmingUp: false,
-            backend: .gemma
+            style: .refining(.gemma)
         )
 
-        HelpHint("The colors change only while the model is working. Finishing and document editing also show a written status. With Reduce Motion on, the wave stays still and the status stays visible.")
+        showcaseCard(
+            heading: "Finishing",
+            body: "After you finish, slower ribbons in the Refine model's colors run while the last text is checked, with a written status above them. They no longer follow your voice.",
+            style: .finishing
+        )
+
+        HelpHint("Home, SideWave Mini, and the document preview show a quiet line in your accent color while models prepare. The refine colors appear only while a model is working. With Reduce Motion on, the wave stays still and the status text stays visible.")
+    }
+
+    private enum WaveStyle {
+        case gettingReady
+        case listening
+        case refining(RefiningBackendForPalette)
+        case finishing
     }
 
     @ViewBuilder
-    private func showcaseCard(
-        heading: String,
-        body bodyText: String,
-        isRefining: Bool,
-        isWarmingUp: Bool,
-        backend: RefiningBackendForPalette
-    ) -> some View {
+    private func showcaseCard(heading: String, body bodyText: String, style: WaveStyle) -> some View {
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text(heading)
@@ -143,18 +142,29 @@ struct HelpAudioWaveShowcaseContent: View {
                 TimelineView(.animation(minimumInterval: reduceMotion ? nil : 1.0 / 30.0, paused: reduceMotion)) { context in
                     let t = context.date.timeIntervalSinceReferenceDate
                     let level = reduceMotion ? 0.4 : (0.35 + 0.35 * abs(sin(t * 2.0)))
-                    AudioWaveVisualizer(
-                        audioLevel: level,
-                        colorMode: "rainbow",
-                        sensitivity: 0.7,
-                        liquidGlass: false,
-                        isCleanupMode: false,
-                        isRefining: isRefining,
-                        isWarmingUp: isWarmingUp,
-                        refiningBackend: backend
-                    )
-                    .accessibilityHidden(true)
-                    .frame(height: 56)
+                    switch style {
+                    case .gettingReady:
+                        AudioWaveVisualizer(audioLevel: 0, colorMode: "rainbow", sensitivity: 0.5, liquidGlass: false,
+                                            isIdleBreathing: true, reduceMotion: reduceMotion)
+                            .accessibilityHidden(true)
+                            .frame(height: 56)
+                    case .listening:
+                        AudioWaveVisualizer(audioLevel: level, colorMode: "rainbow", sensitivity: 0.7, liquidGlass: false,
+                                            reduceMotion: reduceMotion)
+                            .accessibilityHidden(true)
+                            .frame(height: 56)
+                    case .refining(let backend):
+                        AudioWaveVisualizer(audioLevel: level, colorMode: "rainbow", sensitivity: 0.7, liquidGlass: false,
+                                            isRefining: true, refiningBackend: backend, reduceMotion: reduceMotion)
+                            .accessibilityHidden(true)
+                            .frame(height: 56)
+                    case .finishing:
+                        AudioWaveVisualizer(audioLevel: 0, colorMode: "rainbow", sensitivity: 0.7, liquidGlass: false,
+                                            isCleanupMode: true, isRefining: true, refiningBackend: .appleIntelligence,
+                                            reduceMotion: reduceMotion)
+                            .accessibilityHidden(true)
+                            .frame(height: 56)
+                    }
                 }
             }
         }
@@ -174,8 +184,8 @@ struct HelpHowDictationWorksContent: View {
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     flowStep("1.", "Press the hotkey to start dictating.")
-                    flowStep("2.", "The overlay appears with a wave visualizer.")
-                    flowStep("3.", "Speak naturally. Live transcription text appears in the overlay as you talk.")
+                    flowStep("2.", "A small panel appears while SideWave gets ready, then the full preview with the wave.")
+                    flowStep("3.", "When the preview shows Listening, speak naturally. Live text appears in the preview as you talk.")
                     flowStep("4.", "With live Refine enabled, the local model cleans up completed segments. As spoken keeps recognition text without a model refinement pass.")
                     flowStep("5.", "Tap the hotkey again to finish. SideWave shows progress while remaining recognition or refinement completes. The optional Rewrite and finish gesture requests a full-session pass.")
                     flowStep("6.", "Ordinary dictation is delivered to the selected app. Document templates show the result in a preview for review, editing, and copying.")
@@ -225,12 +235,12 @@ struct HelpHowDictationWorksContent: View {
                 Text("Segment Architecture")
                     .font(.headline)
 
-                Text("SideWave doesn't wait until you stop talking to transcribe. Audio is split into segments with a 14.8-second maximum and a 3-second minimum. The Parakeet encoder has a hard limit of 15 seconds per pass, so the 14.8-second ceiling keeps a safety margin.")
+                Text("SideWave doesn't wait until you stop talking to transcribe. Audio is split into segments of at most 14.8 seconds, because the Parakeet encoder handles at most 15 seconds per pass. A pause can end a segment early once it has at least 3 seconds of audio.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("By default, segment boundaries land at the 14.8-second ceiling rather than on every pause. Natural-pause splitting is off under the Standard cadence, so the live preview doesn't collapse each time you stop to think. Two faster cadences opt into pause-based splits: Faster finalizes after about 3 seconds of silence and Aggressive after about 2 seconds, while document templates use a 5-second pause. You can change this in Settings > Refine, under Expert.")
+                Text("When live Refine runs, the refine cadence decides whether pauses end segments. Standard waits for the 14.8-second ceiling, Faster ends a segment after about 3 seconds of silence, and Aggressive after about 2. Document templates use a 5-second pause. On Macs with 16 GB of memory or more, SideWave starts with Faster plus an 8-second fixed interval, so long stretches of speech get refined before the ceiling. Without live Refine, segments end at pauses of about 3 seconds. Change the cadence in Settings > Refine > Expert, shown in Advanced view.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -259,7 +269,7 @@ struct HelpHowDictationWorksContent: View {
                 Text("Why the Live Preview Changes")
                     .font(.headline)
 
-                Text("While you're speaking, a polling loop re-transcribes the current segment every 0.4 to 0.8 seconds. Because the model sees more audio on each poll, it may revise earlier words as it gains context. A word that looked like \"their\" with 2 seconds of audio might become \"there\" once the model has 5 seconds. This is normal and expected -- the final result after the full segment is processed is the most accurate.")
+                Text("While you're speaking, a polling loop re-transcribes the current segment every 0.4 to 0.8 seconds. Because the model sees more audio on each poll, it may revise earlier words as it gains context. A word that looked like \"their\" with 2 seconds of audio might become \"there\" once the model has 5 seconds. This is expected; the text after the whole segment is processed is the most accurate.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

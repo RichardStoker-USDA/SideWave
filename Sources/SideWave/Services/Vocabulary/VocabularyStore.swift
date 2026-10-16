@@ -279,7 +279,7 @@ final class VocabularyStore {
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(userOnly)
             try data.write(to: userFileURL, options: [.atomic, .completeFileProtection])
-            // Owner-only permissions (consistent with history + MCP socket).
+            // Owner-only permissions, like history.
             try? FileManager.default.setAttributes(
                 [.posixPermissions: 0o600], ofItemAtPath: userFileURL.path
             )
