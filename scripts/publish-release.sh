@@ -79,6 +79,7 @@ for line in body.splitlines():
         para.append(line.strip())
 flush()
 
+Path(notes_html).parent.mkdir(parents=True, exist_ok=True)
 Path(notes_html).write_text(f"""<!DOCTYPE html>
 <html lang="en">
 <head>
