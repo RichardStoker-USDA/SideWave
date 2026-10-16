@@ -106,7 +106,11 @@ step "Creating GitHub release v$version"
 if gh release view "v$version" --repo "$REPO" >/dev/null 2>&1; then
     fail "Release v$version already exists on GitHub."
 fi
-gh release create "v$version" "$dmg" --repo "$REPO" --target "$(git rev-parse HEAD)" \
+# Tag the commit the build came from; main may have moved on since.
+source_commit="$(cat "$out/source-commit" 2>/dev/null || git rev-parse HEAD)"
+git merge-base --is-ancestor "$source_commit" HEAD || fail "The build's commit isn't on main."
+git ls-remote --exit-code origin >/dev/null 2>&1 || fail "Can't reach origin."
+gh release create "v$version" "$dmg" --repo "$REPO" --target "$source_commit" \
     --title "SideWave $version" --notes-file "$notes"
 url="https://github.com/$REPO/releases/download/v$version/SideWave.dmg"
 code="$(curl -s -o /dev/null -w '%{http_code}' -L "$url")"

@@ -68,6 +68,7 @@ out="$build_dir/release/$version-$build"
 rm -rf "$out"
 mkdir -p "$out"
 app="$out/SideWave.app"
+git rev-parse HEAD > "$out/source-commit"
 echo "SideWave $version ($build), signing as: $sign_id"
 
 step "Building"
