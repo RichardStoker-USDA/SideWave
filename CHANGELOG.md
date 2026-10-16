@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 (2026-10-16)
+
+### Removed
+
+- The MCP voice agent: the local MCP server, the `sidewave-mcp` helper, and agent voices. On first
+  launch SideWave clears the settings and keychain item they left. Relay (Press Return after
+  dictation) stays in Experimental.
+
+### Fixed
+
+- Help matches the app: the panel you see while SideWave gets ready, refine cadence defaults,
+  control and menu names, and the vocabulary switches.
+
 ## 0.3.0 (2026-10-16)
 
 First public release. Download the DMG from [sidewave.dev](https://sidewave.dev). Later versions
