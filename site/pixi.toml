@@ -1,0 +1,13 @@
+[workspace]
+channels = ["conda-forge"]
+name = "site"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+dev = "npx astro dev"
+build = "npx astro build"
+preview = "npx astro preview"
+
+[dependencies]
+nodejs = ">=22.12.0,<23"

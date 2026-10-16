@@ -1,0 +1,258 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+---
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href="/" class="nav-wordmark">SideWave</a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="/#how" class="nav-link">How it works</a></li>
+      <li><a href="/#screens" class="nav-link">Screenshots</a></li>
+      <li><a href="/#privacy" class="nav-link">Privacy</a></li>
+      <li><a href="/#install" class="nav-link">Install</a></li>
+      <li class="nav-dropdown" id="docs-dropdown">
+        <button
+          class="nav-dropdown-trigger"
+          aria-expanded="false"
+          aria-haspopup="true"
+          aria-controls="docs-menu"
+          type="button"
+        >
+          Docs
+          <svg class="nav-dropdown-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 4.5L6 7.5L9 4.5"/>
+          </svg>
+        </button>
+        <div class="nav-dropdown-menu" id="docs-menu" role="menu">
+          <a href="/user-guide" class="nav-dropdown-item" role="menuitem">User Guide</a>
+          <a href="/technical-docs" class="nav-dropdown-item" role="menuitem">Technical Docs</a>
+          <a href="/privacy-policy" class="nav-dropdown-item" role="menuitem">Privacy Policy</a>
+          <a href="/acknowledgments" class="nav-dropdown-item" role="menuitem">Acknowledgments</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="nav-actions">
+      <ThemeToggle />
+      <a
+        href="https://github.com/RichardStoker-USDA/SideWave"
+        class="nav-github"
+        aria-label="View on GitHub"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+      </a>
+
+      <button
+        class="nav-hamburger"
+        id="nav-hamburger"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <svg id="hamburger-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+        <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="display:none;">
+          <line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile overlay -->
+<div class="nav-mobile-overlay" id="mobile-nav" role="dialog" aria-label="Navigation menu">
+  <ul class="mobile-nav-links" role="list">
+    <li><a href="/#how" class="mobile-nav-link">How it works</a></li>
+    <li><a href="/#screens" class="mobile-nav-link">Screenshots</a></li>
+    <li><a href="/#privacy" class="mobile-nav-link">Privacy</a></li>
+    <li><a href="/#install" class="mobile-nav-link">Install</a></li>
+  </ul>
+  <hr class="mobile-nav-divider" />
+  <span class="mobile-nav-section">Documentation</span>
+  <ul class="mobile-nav-links" role="list">
+    <li><a href="/user-guide" class="mobile-nav-link">User Guide</a></li>
+    <li><a href="/technical-docs" class="mobile-nav-link">Technical Docs</a></li>
+    <li><a href="/privacy-policy" class="mobile-nav-link">Privacy Policy</a></li>
+    <li><a href="/acknowledgments" class="mobile-nav-link">Acknowledgments</a></li>
+  </ul>
+  <div class="mobile-nav-footer">
+    <a
+      href="https://github.com/RichardStoker-USDA/SideWave"
+      class="mobile-nav-github"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+      </svg>
+      GitHub
+    </a>
+  </div>
+</div>
+
+<script>
+  let navController: AbortController | null = null;
+
+  function initNav() {
+    // Clean up old listeners to prevent duplicates on astro:after-swap
+    if (navController) navController.abort();
+    navController = new AbortController();
+    const signal = navController.signal;
+
+    const nav = document.getElementById('main-nav');
+    const hamburger = document.getElementById('nav-hamburger');
+    const mobileNav = document.getElementById('mobile-nav');
+    const hamburgerIcon = document.getElementById('hamburger-icon');
+    const closeIcon = document.getElementById('close-icon');
+    const docsDropdown = document.getElementById('docs-dropdown');
+
+    if (!nav) return;
+
+    // Reset mobile nav state on page swap
+    if (mobileNav) {
+      mobileNav.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    if (hamburger && hamburgerIcon && closeIcon) {
+      hamburger.setAttribute('aria-expanded', 'false');
+      hamburgerIcon.style.display = 'block';
+      closeIcon.style.display = 'none';
+    }
+
+    // Reset dropdown state
+    if (docsDropdown) {
+      docsDropdown.classList.remove('open');
+      const btn = docsDropdown.querySelector('.nav-dropdown-trigger');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    // Scroll detection for blur background
+    let ticking = false;
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (window.scrollY > 10) {
+            nav.classList.add('nav-scrolled');
+          } else {
+            nav.classList.remove('nav-scrolled');
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true, signal });
+    onScroll();
+
+    // Mobile hamburger toggle
+    if (hamburger && mobileNav) {
+      hamburger.addEventListener('click', () => {
+        const isOpen = mobileNav.classList.contains('open');
+        mobileNav.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', String(!isOpen));
+
+        if (hamburgerIcon && closeIcon) {
+          hamburgerIcon.style.display = isOpen ? 'block' : 'none';
+          closeIcon.style.display = isOpen ? 'none' : 'block';
+        }
+
+        document.body.style.overflow = isOpen ? '' : 'hidden';
+      }, { signal });
+
+      // Close mobile nav on link click
+      mobileNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileNav.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+          if (hamburgerIcon && closeIcon) {
+            hamburgerIcon.style.display = 'block';
+            closeIcon.style.display = 'none';
+          }
+        }, { signal });
+      });
+    }
+
+    // Docs dropdown toggle
+    if (docsDropdown) {
+      const trigger = docsDropdown.querySelector('.nav-dropdown-trigger');
+
+      if (trigger) {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = docsDropdown.classList.contains('open');
+          docsDropdown.classList.toggle('open');
+          trigger.setAttribute('aria-expanded', String(!isOpen));
+        }, { signal });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (!docsDropdown.contains(e.target as Node)) {
+          docsDropdown.classList.remove('open');
+          const btn = docsDropdown.querySelector('.nav-dropdown-trigger');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+      }, { signal });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && docsDropdown.classList.contains('open')) {
+          docsDropdown.classList.remove('open');
+          const btn = docsDropdown.querySelector('.nav-dropdown-trigger');
+          if (btn) {
+            btn.setAttribute('aria-expanded', 'false');
+            (btn as HTMLElement).focus();
+          }
+        }
+      }, { signal });
+    }
+
+    // Active link highlighting via IntersectionObserver
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    if (sections.length > 0 && navLinks.length > 0) {
+      const navHeight = parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue('--nav-height')
+      ) || 52;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const id = entry.target.getAttribute('id');
+              navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === `/#${id}` || href === `#${id}`) {
+                  link.classList.add('active');
+                } else {
+                  link.classList.remove('active');
+                }
+              });
+            }
+          });
+        },
+        { rootMargin: `-${navHeight}px 0px -50% 0px`, threshold: 0 }
+      );
+
+      sections.forEach(section => observer.observe(section));
+
+      // Disconnect observer when listeners are aborted
+      signal.addEventListener('abort', () => observer.disconnect());
+    }
+  }
+
+  initNav();
+  document.addEventListener('astro:after-swap', initNav);
+</script>

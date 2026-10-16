@@ -1,0 +1,376 @@
+/* SideWave site - global design system
+   Concept: sound becomes text. Near-monochrome, luminous, keynote-futurist.
+   The only saturated element on the page is SideWave's rainbow audio wave.
+
+   Type: Clash Display (display) + Satoshi (text), by Indian Type Foundry,
+   self-hosted via Fontshare's free font license (web embedding permitted,
+   no runtime CDN). Files in /public/fonts. */
+
+/* ==============================
+   Fonts (self-hosted woff2)
+   ============================== */
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* ==============================
+   Custom Properties
+   ============================== */
+
+:root {
+  /* Type families */
+  --font-display: 'Clash Display', 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  --font-text: 'Satoshi', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+
+  /* Light mode - warm porcelain paper + ink */
+  --bg-primary: #f5f3ee;
+  --bg-secondary: #efece4;
+  --bg-tertiary: #e6e2d8;
+  --bg-elevated: #fbfaf7;
+
+  --text-primary: #17181b;
+  --text-secondary: #55555b;
+  --text-tertiary: #82817f;
+
+  /* Restrained accent (links in docs, focus rings, active states).
+     Everything of consequence stays monochrome; saturation lives in the wave. */
+  --accent: #1f5fbf;
+  --accent-hover: #1a53a8;
+
+  /* Hairlines / borders */
+  --border: rgba(0, 0, 0, 0.14);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --hairline: rgba(0, 0, 0, 0.09);
+  --hairline-strong: rgba(0, 0, 0, 0.16);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(0, 0, 0, 0.08);
+
+  /* Shadows (cast-shadow language for light mode) */
+  --shadow-sm: 0 1px 3px rgba(30, 28, 22, 0.06), 0 1px 2px rgba(30, 28, 22, 0.04);
+  --shadow-md: 0 8px 24px rgba(30, 28, 22, 0.08), 0 2px 8px rgba(30, 28, 22, 0.05);
+  --shadow-lg: 0 24px 60px rgba(30, 28, 22, 0.12), 0 6px 18px rgba(30, 28, 22, 0.07);
+
+  /* Layout */
+  --nav-height: 56px;
+  --max-width: 1080px;
+  --content-wide: 1220px;
+  --section-padding: 140px;
+
+  /* Nav */
+  --nav-bg: rgba(245, 243, 238, 0.72);
+  --nav-border: rgba(0, 0, 0, 0.08);
+
+  --grain-opacity: 0.02;
+}
+
+[data-theme="dark"] {
+  /* Dark mode - deep graphite ink + soft warm white */
+  --bg-primary: #0b0c0e;
+  --bg-secondary: #111318;
+  --bg-tertiary: #171a20;
+  --bg-elevated: #1b1e26;
+
+  --text-primary: #f3f1ec;
+  --text-secondary: #b6b3ac;
+  --text-tertiary: #7f7c76;
+
+  --accent: #6fb2ff;
+  --accent-hover: #8fc6ff;
+
+  --border: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.15);
+
+  --glass-bg: rgba(20, 22, 28, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 30px 70px rgba(0, 0, 0, 0.6), 0 8px 22px rgba(0, 0, 0, 0.4);
+
+  --nav-bg: rgba(11, 12, 14, 0.66);
+  --nav-border: rgba(255, 255, 255, 0.08);
+
+  --grain-opacity: 0.035;
+}
+
+
+/* ==============================
+   Reset
+   ============================== */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-padding-top: var(--nav-height);
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-text);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  transition: background-color 0.4s ease, color 0.4s ease;
+  overflow-x: clip;
+  position: relative;
+}
+
+/* Fine grain / noise texture, dark mode carries it strongest.
+   Inline SVG turbulence, no external asset, sits behind everything. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+
+/* ==============================
+   Typography
+   ============================== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  transition: color 0.4s ease;
+}
+
+h1 {
+  font-size: clamp(3rem, 5vw + 1rem, 5rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+h2 {
+  font-size: clamp(2.1rem, 3.4vw + 0.5rem, 3.4rem);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.06;
+}
+
+h3 {
+  font-size: clamp(1.4rem, 1.4vw + 0.5rem, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.24;
+}
+
+p {
+  color: var(--text-secondary);
+  transition: color 0.4s ease;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+::selection {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+/* Visible, consistent focus ring across the whole site */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+
+/* ==============================
+   Utility Classes
+   ============================== */
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.container-wide {
+  max-width: var(--content-wide);
+  margin: 0 auto;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.section {
+  padding: var(--section-padding) 0;
+  transition: background-color 0.4s ease;
+}
+
+.eyebrow {
+  font-family: var(--font-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* GSAP animation initial states */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.split-text {
+  overflow: hidden;
+}
+
+
+/* ==============================
+   Skip Link (accessibility)
+   ============================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  padding: 10px 18px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10000;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 10px;
+  text-decoration: none;
+  color: var(--bg-primary);
+}
+
+
+/* ==============================
+   Color Transitions
+   ============================== */
+
+body,
+h1, h2, h3, h4, h5, h6,
+p, a, span,
+.nav,
+.footer,
+.feature-card,
+.pill,
+.btn {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+
+/* ==============================
+   Reduced Motion
+   ============================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .fade-in {
+    opacity: 1;
+    transform: none;
+  }
+}

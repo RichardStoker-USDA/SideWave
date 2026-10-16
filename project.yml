@@ -1,0 +1,329 @@
+name: SideWave
+configs:
+  Debug: debug
+  DebugAG: debug
+  Release: release
+options:
+  bundleIdPrefix: com.sidewave
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "27.0"
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  postGenCommand: |
+    mkdir -p SideWave.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+    cp Package.resolved SideWave.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: targeted
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    ARCHS: arm64
+    ENABLE_APP_SANDBOX: NO
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.3.0"
+    CURRENT_PROJECT_VERSION: "30"
+  configs:
+    Debug:
+      # A high build number keeps dev builds apart from the release in Finder and Spotlight.
+      CURRENT_PROJECT_VERSION: "9999"
+      MARKETING_VERSION: "0.3.0-dev"
+    DebugAG:
+      CURRENT_PROJECT_VERSION: "9999"
+      MARKETING_VERSION: "0.3.0-devag"
+    Release:
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+
+packages:
+  SwiftMarkdown:
+    url: https://github.com/swiftlang/swift-markdown.git
+    exactVersion: "0.8.0"
+  # Later releases needed standard-library APIs missing from the Xcode 27 betas. Recheck before
+  # updating.
+  SwiftCollections:
+    url: https://github.com/apple/swift-collections.git
+    exactVersion: "1.4.1"
+  FluidAudio:
+    url: https://github.com/FluidInference/FluidAudio
+    exactVersion: "0.17.7"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: "2.10.0"
+  MCP:
+    url: https://github.com/modelcontextprotocol/swift-sdk.git
+    exactVersion: "0.12.1"
+  MLXLM:
+    url: https://github.com/ml-explore/mlx-swift-lm.git
+    exactVersion: "3.32.3"
+    # SideWave owns its Foundation Models adapter; MLX supplies Gemma only.
+    traits: []
+  SwiftHuggingFace:
+    url: https://github.com/huggingface/swift-huggingface.git
+    # Qualify native Xet transfers against download transparency before migrating.
+    exactVersion: "0.9.0"
+  SwiftTransformers:
+    url: https://github.com/huggingface/swift-transformers.git
+    exactVersion: "1.3.5"
+
+targets:
+  SideWave:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/SideWave
+      - path: Sources/Shared
+    resources:
+      - path: Sources/SideWave/Resources
+        excludes:
+          - "AppIcon.icon"
+      - path: Sources/SideWave/Resources/AppIcon.icon
+        type: folder
+    dependencies:
+      - package: SwiftMarkdown
+        product: Markdown
+      - package: FluidAudio
+      - package: Sparkle
+      - package: MCP
+      - package: MLXLM
+        product: MLXLLM
+      - package: MLXLM
+        product: MLXLMCommon
+      - package: MLXLM
+        product: MLXHuggingFace
+      - package: SwiftHuggingFace
+        product: HuggingFace
+      - package: SwiftTransformers
+        product: Tokenizers
+      - target: sidewave-mcp
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+    settings:
+      base:
+        SWIFT_STRICT_CONCURRENCY: complete
+        OTHER_SWIFT_FLAGS: $(inherited) -enable-upcoming-feature InferSendableFromCaptures
+        # Same module name in every config, so `@testable import SideWave` works in Debug.
+        PRODUCT_MODULE_NAME: SideWave
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APP_ICON_ASSETS: YES
+        COMBINE_HIDPI_IMAGES: YES
+        CODE_SIGN_ENTITLEMENTS: SideWave.entitlements
+      configs:
+        Debug:
+          # A separate bundle ID keeps Debug's macOS permissions apart from the release app's.
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.app.dev
+          # The executable name can't contain a space, but Privacy & Security labels an app by
+          # its bundle filename, so only the wrapper is named "SideWave Dev".
+          PRODUCT_NAME: SideWave_Dev
+          WRAPPER_NAME: SideWave Dev.app
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave Dev
+          # Required for `@testable import SideWave` from the unit-test target.
+          ENABLE_TESTABILITY: YES
+        DebugAG:
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.app.devag
+          PRODUCT_NAME: SideWave_DevAG
+          WRAPPER_NAME: SideWave DevAG.app
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave DevAG
+        Release:
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.app
+          PRODUCT_NAME: SideWave
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDevelopmentRegion: en
+        CFBundleIconFile: AppIcon
+        CFBundleIconName: AppIcon
+        # One setting drives both names, so the Dock, Finder, and Privacy & Security agree.
+        CFBundleName: $(INFOPLIST_KEY_CFBundleDisplayName)
+        # SideWave only uses HTTPS, which is exempt from export reporting.
+        ITSAppUsesNonExemptEncryption: false
+        NSHumanReadableCopyright: "Copyright 2026 Richard Stoker. Apache License 2.0."
+        LSApplicationCategoryType: public.app-category.productivity
+        CFBundleDisplayName: $(INFOPLIST_KEY_CFBundleDisplayName)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSPrincipalClass: NSApplication
+        NSMicrophoneUsageDescription: SideWave needs microphone access to transcribe your speech into text.
+        NSAppleEventsUsageDescription: SideWave uses Automation to submit dictation to the terminal window you selected.
+        LSUIElement: false
+        SUFeedURL: https://sidewave.dev/appcast.xml
+        SUPublicEDKey: mq2xN59P4Lwa/ohMoMmwfpv1nO0Msz3pWC3h8NQAjgo=
+        SUSendProfileInfo: false
+        SUScheduledCheckInterval: 86400
+        SUAllowsAutomaticUpdates: false
+        SUAutomaticallyUpdate: false
+        SUShowReleaseNotes: true
+    entitlements:
+      path: SideWave.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+        com.apple.security.network.client: true
+        com.apple.security.automation.apple-events: true
+
+  # A smaller app over SideWaveKit (Sources/SideWaveKit/README.md). Its own bundle IDs keep its
+  # permissions apart from SideWave's.
+  SideWave2:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/SideWave2
+    dependencies:
+      - target: SideWaveKit
+        embed: true
+    settings:
+      base:
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_MODULE_NAME: SideWave2
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: SideWave2.entitlements
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave2.app.dev
+          PRODUCT_NAME: SideWave2_Dev
+          WRAPPER_NAME: SideWave2 Dev.app
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave2 Dev
+        DebugAG:
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave2.app.devag
+          PRODUCT_NAME: SideWave2_DevAG
+          WRAPPER_NAME: SideWave2 DevAG.app
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave2 DevAG
+        Release:
+          PRODUCT_BUNDLE_IDENTIFIER: com.sidewave2.app
+          PRODUCT_NAME: SideWave2
+          INFOPLIST_KEY_CFBundleDisplayName: SideWave2
+    info:
+      path: SideWave2Info.plist
+      properties:
+        CFBundleDevelopmentRegion: en
+        CFBundleName: $(INFOPLIST_KEY_CFBundleDisplayName)
+        CFBundleDisplayName: $(INFOPLIST_KEY_CFBundleDisplayName)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        NSHumanReadableCopyright: "Copyright 2026 Richard Stoker. Apache License 2.0."
+        NSPrincipalClass: NSApplication
+        NSMicrophoneUsageDescription: SideWave needs microphone access to transcribe your speech into text.
+        LSUIElement: false
+    entitlements:
+      path: SideWave2.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+        com.apple.security.network.client: true
+
+  sidewave-mcp:
+    type: tool
+    platform: macOS
+    sources:
+      - path: Sources/SideWaveMCP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.mcp
+        SWIFT_VERSION: "5.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        ARCHS: arm64
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
+
+  # SideWave2's engine: session state machine, audio, recognition, Refine, and paste, with no UI.
+  SideWaveKit:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/SideWaveKit
+        excludes: [README.md]
+      - path: Sources/Shared
+    dependencies:
+      - package: FluidAudio
+      - package: MLXLM
+        product: MLXLLM
+      - package: MLXLM
+        product: MLXLMCommon
+      - package: MLXLM
+        product: MLXHuggingFace
+      - package: SwiftHuggingFace
+        product: HuggingFace
+      - package: SwiftTransformers
+        product: Tokenizers
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        ARCHS: arm64
+        PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.kit
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_CONCURRENCY: complete
+
+  SideWaveKitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/SideWaveKitTests
+    dependencies:
+      - target: SideWaveKit
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        ARCHS: arm64
+        PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.kit.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  SideWaveTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/SideWaveTests
+    dependencies:
+      - target: SideWave
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        ARCHS: arm64
+        PRODUCT_BUNDLE_IDENTIFIER: com.sidewave.tests
+        GENERATE_INFOPLIST_FILE: YES
+      # The host app's name differs per config, so set TEST_HOST explicitly.
+      configs:
+        Debug:
+          TEST_HOST: "$(BUILT_PRODUCTS_DIR)/SideWave Dev.app/Contents/MacOS/SideWave_Dev"
+          BUNDLE_LOADER: "$(TEST_HOST)"
+        DebugAG:
+          TEST_HOST: "$(BUILT_PRODUCTS_DIR)/SideWave DevAG.app/Contents/MacOS/SideWave_DevAG"
+          BUNDLE_LOADER: "$(TEST_HOST)"
+        Release:
+          TEST_HOST: "$(BUILT_PRODUCTS_DIR)/SideWave.app/Contents/MacOS/SideWave"
+          BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  SideWave2:
+    build:
+      targets:
+        SideWave2: all
+    run:
+      config: Debug
+
+  # `test` runs both test bundles; `build` builds only the app and framework.
+  SideWave:
+    build:
+      targets:
+        SideWave: all
+        SideWaveTests: [test]
+        SideWaveKit: all
+        SideWaveKitTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SideWaveTests
+        - SideWaveKitTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

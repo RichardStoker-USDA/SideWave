@@ -1,0 +1,95 @@
+---
+import DocLayout from '../layouts/DocLayout.astro';
+---
+
+<DocLayout title="User Guide - SideWave" description="How to install, set up, and use SideWave for local dictation on macOS.">
+
+  <h1>User Guide</h1>
+  <p class="doc-lead">Tap your shortcut, talk, tap it again, and the text goes to the app you were working in. This page covers setup and the parts of SideWave you'll use most. SideWave Help (<span class="kbd">Cmd</span> + <span class="kbd">?</span>) has more detail on every feature.</p>
+
+  <h2>Why SideWave exists</h2>
+  <p>I built SideWave because macOS dictation kept getting technical words and punctuation wrong, and it interrupted the audio I had playing whenever it turned the microphone on. I wanted dictation that handles the vocabulary of my work, keeps my focus music going, and runs entirely on the Mac.</p>
+  <p>SideWave runs NVIDIA's Parakeet speech models on the Neural Engine and cleans up the text with a local language model. There's no account, no subscription, and no telemetry. That also means I only hear about problems when someone reports them, so <a href="https://github.com/RichardStoker-USDA/SideWave/issues">issues</a> are welcome.</p>
+
+  <h2>Getting started</h2>
+
+  <h3>Install</h3>
+  <p>Download SideWave.dmg from <a href="/">sidewave.dev</a> or <a href="https://github.com/RichardStoker-USDA/SideWave/releases/latest">GitHub</a>, open it, and drag SideWave to Applications. SideWave needs macOS 26 or later on an Apple silicon Mac.</p>
+
+  <h3>First launch</h3>
+  <p>Setup explains each permission before macOS asks for it. Microphone access is for recording. Accessibility access is for the global shortcut and for pasting into other apps. If you deny one, setup shows how to turn it back on in System Settings.</p>
+  <p>Next, SideWave downloads the speech models. The window shows the download size and progress, then compiling and loading as separate steps. The first preparation takes a few minutes; later launches reuse the files.</p>
+
+  <h3>Simple and Advanced view</h3>
+  <p>Home holds the choices you change most: template, Refine model, output language, microphone, where the text goes, and the shortcut. Advanced view adds tuning controls below those and more settings panes. It changes what's shown, not which engine runs. Switch it on Home, at the bottom of the Settings sidebar, or from the SideWave menu.</p>
+
+  <h2>Dictating</h2>
+
+  <h3>The shortcut</h3>
+  <p>The default shortcut is Right Option. One key covers several gestures:</p>
+  <ul>
+    <li><strong>Tap to start, tap to stop.</strong> Wait for Listening before you speak. After the second tap, SideWave finishes the last words and any Refine pass, then pastes.</li>
+    <li><strong>Hold for push-to-talk.</strong> Hold the key while you talk and release to send. A hold counts after half a second; you can change that in Settings &gt; Advanced. Push-to-talk pastes the recognized text unless you turn on its Refine option.</li>
+    <li><strong>Double-tap to paste again.</strong> Two quick taps paste your last dictation into the app in front.</li>
+    <li><strong>Escape</strong> stops without sending. The text waits on Home, where you can paste it, keep dictating, or discard it.</li>
+    <li><strong>Control-Escape</strong> cancels. Any text so far is saved to History.</li>
+  </ul>
+  <p>To use a different key or a combination, click the shortcut on Home or in Settings &gt; General and press the new one. Avoid combinations that macOS or your apps already use.</p>
+
+  <h3>Where the text goes</h3>
+  <p>By default the text goes to the app that was in front when you started (App at Start). The Send to menu on Home can switch that to the app in front when you finish, or to a specific app or window. SideWave checks the target again before pasting. Some apps don't report enough for SideWave to confirm a paste; when that happens it won't paste twice, and the text stays on Home and in History.</p>
+
+  <h3>The preview</h3>
+  <p>While you talk, a preview at the bottom of the screen shows the text in stages. Gray words are the live draft. Words turn solid as Parakeet confirms them, and Refine revises them as each phrase finishes. Drag the preview to move it, right-click it to lock the position, and use Settings &gt; Overlay to change its size or style.</p>
+
+  <h2>Templates and Refine</h2>
+  <p>Refine is a local language model pass that fixes punctuation, filler words, and misheard terms. If it fails or times out, you get the recognized text instead. Choose the model on Home:</p>
+  <ul>
+    <li><strong>Apple Intelligence</strong>, on Macs that support it, with Apple Intelligence turned on. Nothing extra to download.</li>
+    <li><strong>Gemma 4 E2B, E4B, or 12B</strong>, which download once (about 3, 5.2, and 6.8 GB). 12B suits Macs with 24 GB of memory or more.</li>
+  </ul>
+  <p>The template sets the style. Standard fixes the mechanics and keeps your voice, Professional smooths the tone, and Concise shortens it. These paste into your app. Email, Instructions, AI Prompt, and Custom open a document window instead, where you can read the result, edit it, or type or say a change and have Refine apply it. Formatting Rules on Home lets you add your own instructions.</p>
+  <p>Output language defaults to As spoken. Pick another language and Refine translates while it cleans up. Check names, numbers, and technical details in anything translated.</p>
+
+  <h3>Dictation mode</h3>
+  <p>The Dictation tab sets how much work runs during a session:</p>
+  <ul>
+    <li><strong>Complete</strong> (default): live draft, Parakeet confirmation, and Refine.</li>
+    <li><strong>Basic</strong>: live draft and confirmation, without Refine.</li>
+    <li><strong>Minimalistic</strong>: Parakeet only. Text appears in short batches. Use it on Macs where the other modes feel slow.</li>
+  </ul>
+
+  <h2>Vocabulary</h2>
+  <p>Glossaries teach SideWave the names and terms you use. Add a word with the spelling you want, then list what it gets misheard as. Each word has two switches:</p>
+  <ul>
+    <li><strong>Replace at dictation</strong> swaps the misheard versions for your spelling, with or without Refine.</li>
+    <li><strong>Send hint to Refine</strong> tells the language model about the term, along with any usage note you add.</li>
+  </ul>
+  <p>Always include in Refine keeps a few important words in every Refine prompt. Keep that list short so it fits the model's context.</p>
+  <p>Create Words from a Description drafts terms from a sentence about your field using the local model; you review each one before saving. Speech Profile, in the same menu, summarizes how you talk from recent dictations and passes that to Refine.</p>
+  <p>Browse Bundles lists optional glossaries from a public catalog. Bundles are read-only and update only when you ask, unless you turn on daily checks for one. Make a personal copy to edit a bundle. Glossaries import and export as JSON.</p>
+
+  <h2>History and recovery</h2>
+  <p>History keeps recent dictations for seven days by default (Settings &gt; Privacy has 1 day to 90 days, or keep forever), up to 500 entries. Expand an entry to see the date, word count, and which model refined it. Show earlier stages reveals the recognized text and the live draft behind the final version.</p>
+  <p>Cancelled and failed sessions are saved too, labeled Not sent. If SideWave quits in the middle of a dictation, the next launch recovers what it can and labels it Recovered.</p>
+
+  <h2>Meetings</h2>
+  <p>Turn on Show Meetings in Settings &gt; Meetings to add a Meetings tab. SideWave records to files on your Mac as you go, then transcribes the recording, labels up to eight speakers, and can write notes with the local model. Speaker labels are estimates, so check them before you share notes. If recording is interrupted, the next launch offers to resume or process what was saved.</p>
+
+  <h2>Updates</h2>
+  <p>On the second launch SideWave asks whether to check for updates automatically. Either way, SideWave &gt; Check for Updates checks right away. Sparkle verifies each update's signature before installing it, and releases are notarized by Apple.</p>
+
+  <h2>Troubleshooting</h2>
+
+  <h3>The shortcut does nothing</h3>
+  <p>Check that SideWave has Accessibility access in System Settings &gt; Privacy &amp; Security &gt; Accessibility. If it's listed and on, turn it off and on again; macOS sometimes keeps a stale entry after an update.</p>
+
+  <h3>No words appear</h3>
+  <p>Open Settings &gt; Microphone and use Test Microphone. It shows the level and which input channel SideWave picked. Audio interfaces with the microphone on one channel work best with that channel chosen explicitly. Bluetooth headsets switch to a lower-quality mode when their microphone is in use, so a built-in or USB microphone usually sounds better.</p>
+
+  <h3>Text didn't reach the app</h3>
+  <p>Copy it from Home or History. If it keeps happening with one app, turn on Settings &gt; Advanced &gt; Troubleshooting log. It records how each paste went, without the text, so you can attach it to an issue.</p>
+
+  <h3>Refine is slow or unavailable</h3>
+  <p>Settings &gt; Refine shows the model's status. Gemma needs its download to finish first, and Apple Intelligence needs to be turned on in System Settings. On Macs with less memory, try Gemma E2B or the Basic dictation mode.</p>
+</DocLayout>
