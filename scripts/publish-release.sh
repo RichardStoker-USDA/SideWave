@@ -104,18 +104,32 @@ Path(notes_html).write_text(f"""<!DOCTYPE html>
 PY
 
 step "Creating GitHub release v$version"
+local_digest="sha256:$(shasum -a 256 "$dmg" | awk '{print $1}')"
+asset_digest() {
+    gh api "repos/$REPO/releases/tags/v$version" --jq '.assets[] | select(.name == "SideWave.dmg") | .digest' 2>/dev/null
+}
 if gh release view "v$version" --repo "$REPO" >/dev/null 2>&1; then
-    fail "Release v$version already exists on GitHub."
+    # A rerun after a later step failed. Go on only if the release holds this exact DMG.
+    [ "$(asset_digest)" = "$local_digest" ] || fail "Release v$version already exists with a different SideWave.dmg."
+    echo "Release v$version already has this SideWave.dmg."
+else
+    # Tag the commit the build came from; main may have moved on since.
+    source_commit="$(cat "$out/source-commit" 2>/dev/null || git rev-parse HEAD)"
+    git merge-base --is-ancestor "$source_commit" HEAD || fail "The build's commit isn't on main."
+    git ls-remote --exit-code origin >/dev/null 2>&1 || fail "Can't reach origin."
+    gh release create "v$version" "$dmg" --repo "$REPO" --target "$source_commit" \
+        --title "SideWave $version" --notes-file "$notes"
 fi
-# Tag the commit the build came from; main may have moved on since.
-source_commit="$(cat "$out/source-commit" 2>/dev/null || git rev-parse HEAD)"
-git merge-base --is-ancestor "$source_commit" HEAD || fail "The build's commit isn't on main."
-git ls-remote --exit-code origin >/dev/null 2>&1 || fail "Can't reach origin."
-gh release create "v$version" "$dmg" --repo "$REPO" --target "$source_commit" \
-    --title "SideWave $version" --notes-file "$notes"
-url="https://github.com/$REPO/releases/download/v$version/SideWave.dmg"
-code="$(curl -s -o /dev/null -w '%{http_code}' -L "$url")"
-[ "$code" = 200 ] || fail "The release download returned HTTP $code: $url"
+[ "$(asset_digest)" = "$local_digest" ] || fail "The uploaded SideWave.dmg doesn't match the local one."
+# Sparkle downloads without signing in, so check the public link too. A private repository has
+# none until it's made public.
+if [ "$(gh api "repos/$REPO" --jq .private)" = false ]; then
+    url="https://github.com/$REPO/releases/download/v$version/SideWave.dmg"
+    code="$(curl -s -o /dev/null -w '%{http_code}' -L "$url")"
+    [ "$code" = 200 ] || fail "The release download returned HTTP $code: $url"
+else
+    echo "The repository is private; the download link works once it's public."
+fi
 
 step "Adding $version to the appcast"
 python3 - "$item" "$version" <<'PY'
