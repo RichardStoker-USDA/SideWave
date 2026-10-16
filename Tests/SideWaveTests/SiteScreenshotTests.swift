@@ -11,20 +11,36 @@ import XCTest
 /// Nothing is shown on screen and no personal data is involved. Off unless an output folder is set:
 ///
 ///   TEST_RUNNER_SIDEWAVE_SITE_SCREENSHOTS=/path/to/folder xcodebuild ... test \
-///     -only-testing:SideWaveTests/SiteScreenshotTests
+///     -only-testing:SideWaveTests/SiteScreenshotTests/testRenderSiteScreenshots
+///
+/// `testWriteDemoProfile` writes the same demo history and glossaries in the app's file formats,
+/// for recording the real app with a staged profile (`video/profile.sh`):
+///
+///   TEST_RUNNER_SIDEWAVE_DEMO_PROFILE=/path/to/folder xcodebuild ... test \
+///     -only-testing:SideWaveTests/SiteScreenshotTests/testWriteDemoProfile
 @MainActor
 final class SiteScreenshotTests: XCTestCase {
     private var outputDirectory: URL!
 
-    override func setUp() async throws {
-        guard let path = ProcessInfo.processInfo.environment["SIDEWAVE_SITE_SCREENSHOTS"], !path.isEmpty else {
-            throw XCTSkip("Set SIDEWAVE_SITE_SCREENSHOTS to an output folder to render the site images")
+    private func folder(from variable: String) throws -> URL {
+        guard let path = ProcessInfo.processInfo.environment[variable], !path.isEmpty else {
+            throw XCTSkip("Set \(variable) to an output folder")
         }
-        outputDirectory = URL(fileURLWithPath: path, isDirectory: true)
-        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let url = URL(fileURLWithPath: path, isDirectory: true)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    func testWriteDemoProfile() throws {
+        let folder = try folder(from: "SIDEWAVE_DEMO_PROFILE")
+        try JSONEncoder().encode(DemoContent.history()).write(to: folder.appendingPathComponent("history.json"))
+        let vocabulary = VocabularyStore(storageURL: folder.appendingPathComponent("vocabulary.json"))
+        vocabulary.packs = DemoContent.glossaries()
+        XCTAssertTrue(vocabulary.saveUserPacks())
     }
 
     func testRenderSiteScreenshots() async throws {
+        outputDirectory = try folder(from: "SIDEWAVE_SITE_SCREENSHOTS")
         let defaults = UserDefaults.standard
         let keys = ["showAdvancedControls", "dictationCleanupTemplate", "dictationCleanupEnabled", "dictationCleanupBackend",
                     "skipRefine", "useDualEngineSmartPTT", "useMultiStageRendering", "lastSelectedSettingsTab", "appearance",
