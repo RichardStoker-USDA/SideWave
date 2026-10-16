@@ -1,10 +1,4 @@
-/* SideWave site - global design system
-   Concept: sound becomes text. Near-monochrome, luminous, keynote-futurist.
-   The only saturated element on the page is SideWave's rainbow audio wave.
-
-   Type: Clash Display (display) + Satoshi (text), by Indian Type Foundry,
-   self-hosted via Fontshare's free font license (web embedding permitted,
-   no runtime CDN). Files in /public/fonts. */
+/* SideWave site styles. The art direction is in site/DESIGN.md. */
 
 /* ==============================
    Fonts (self-hosted woff2)
@@ -31,27 +25,6 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/satoshi-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/satoshi-500.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/satoshi-700.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 
 /* ==============================
@@ -59,84 +32,76 @@
    ============================== */
 
 :root {
-  /* Type families */
-  --font-display: 'Clash Display', 'Satoshi', ui-sans-serif, system-ui, sans-serif;
-  --font-text: 'Satoshi', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  /* Clash Display for the title and headings; body text in the Mac's own UI face. */
+  --font-display: 'Clash Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
 
-  /* Light mode - warm porcelain paper + ink */
-  --bg-primary: #f5f3ee;
-  --bg-secondary: #efece4;
-  --bg-tertiary: #e6e2d8;
-  --bg-elevated: #fbfaf7;
+  /* Light: cool aluminum. */
+  --bg-primary: #e9edf2;
+  --bg-secondary: #e0e5eb;
+  --bg-tertiary: #d4dae2;
+  --bg-elevated: #f6f8fa;
 
-  --text-primary: #17181b;
-  --text-secondary: #55555b;
-  --text-tertiary: #82817f;
+  --text-primary: #0e1219;
+  --text-secondary: #455062;
+  --text-tertiary: #6f7a8c;
+  /* The preview's draft gray, for words that haven't settled yet. */
+  --text-draft: #9aa3b1;
 
-  /* Restrained accent (links in docs, focus rings, active states).
-     Everything of consequence stays monochrome; saturation lives in the wave. */
-  --accent: #1f5fbf;
-  --accent-hover: #1a53a8;
+  --accent: #0a63d6;
+  --accent-hover: #0852b3;
 
-  /* Hairlines / borders */
-  --border: rgba(0, 0, 0, 0.14);
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --hairline: rgba(0, 0, 0, 0.09);
-  --hairline-strong: rgba(0, 0, 0, 0.16);
+  --border: rgba(14, 18, 25, 0.14);
+  --border-subtle: rgba(14, 18, 25, 0.08);
+  --hairline: rgba(14, 18, 25, 0.09);
+  --hairline-strong: rgba(14, 18, 25, 0.16);
 
-  /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.62);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(246, 248, 250, 0.7);
+  --glass-border: rgba(14, 18, 25, 0.08);
 
-  /* Shadows (cast-shadow language for light mode) */
-  --shadow-sm: 0 1px 3px rgba(30, 28, 22, 0.06), 0 1px 2px rgba(30, 28, 22, 0.04);
-  --shadow-md: 0 8px 24px rgba(30, 28, 22, 0.08), 0 2px 8px rgba(30, 28, 22, 0.05);
-  --shadow-lg: 0 24px 60px rgba(30, 28, 22, 0.12), 0 6px 18px rgba(30, 28, 22, 0.07);
+  --shadow-sm: 0 1px 3px rgba(20, 30, 45, 0.08), 0 1px 2px rgba(20, 30, 45, 0.05);
+  --shadow-md: 0 10px 28px rgba(20, 30, 45, 0.1), 0 2px 8px rgba(20, 30, 45, 0.06);
+  --shadow-lg: 0 30px 70px rgba(20, 30, 45, 0.16), 0 8px 20px rgba(20, 30, 45, 0.08);
 
-  /* Layout */
   --nav-height: 56px;
   --max-width: 1080px;
   --content-wide: 1220px;
   --section-padding: 140px;
 
-  /* Nav */
-  --nav-bg: rgba(245, 243, 238, 0.72);
-  --nav-border: rgba(0, 0, 0, 0.08);
-
-  --grain-opacity: 0.02;
+  --nav-bg: rgba(233, 237, 242, 0.74);
+  --nav-border: rgba(14, 18, 25, 0.08);
 }
 
 [data-theme="dark"] {
-  /* Dark mode - deep graphite ink + soft warm white */
-  --bg-primary: #0b0c0e;
-  --bg-secondary: #111318;
-  --bg-tertiary: #171a20;
-  --bg-elevated: #1b1e26;
+  /* Dark: deep blue-graphite. */
+  --bg-primary: #0c0f14;
+  --bg-secondary: #12161d;
+  --bg-tertiary: #181d26;
+  --bg-elevated: #1e2430;
 
-  --text-primary: #f3f1ec;
-  --text-secondary: #b6b3ac;
-  --text-tertiary: #7f7c76;
+  --text-primary: #eef2f7;
+  --text-secondary: #a3adbc;
+  --text-tertiary: #6c7687;
+  --text-draft: #5d6676;
 
-  --accent: #6fb2ff;
-  --accent-hover: #8fc6ff;
+  --accent: #5aa9ff;
+  --accent-hover: #7dbcff;
 
-  --border: rgba(255, 255, 255, 0.14);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --hairline: rgba(255, 255, 255, 0.08);
-  --hairline-strong: rgba(255, 255, 255, 0.15);
+  --border: rgba(238, 242, 247, 0.14);
+  --border-subtle: rgba(238, 242, 247, 0.08);
+  --hairline: rgba(238, 242, 247, 0.08);
+  --hairline-strong: rgba(238, 242, 247, 0.15);
 
-  --glass-bg: rgba(20, 22, 28, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(18, 22, 29, 0.62);
+  --glass-border: rgba(238, 242, 247, 0.1);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 30px 70px rgba(0, 0, 0, 0.6), 0 8px 22px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 34px 80px rgba(0, 0, 0, 0.62), 0 8px 22px rgba(0, 0, 0, 0.4);
 
-  --nav-bg: rgba(11, 12, 14, 0.66);
-  --nav-border: rgba(255, 255, 255, 0.08);
-
-  --grain-opacity: 0.035;
+  --nav-bg: rgba(12, 15, 20, 0.7);
+  --nav-border: rgba(238, 242, 247, 0.08);
 }
 
 
@@ -172,20 +137,6 @@ body {
   overflow-x: clip;
   position: relative;
 }
-
-/* Fine grain / noise texture, dark mode carries it strongest.
-   Inline SVG turbulence, no external asset, sits behind everything. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
-}
-
 
 /* ==============================
    Typography

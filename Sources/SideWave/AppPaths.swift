@@ -16,6 +16,17 @@ enum AppPaths {
             || NSClassFromString("XCTestCase") != nil
     }
 
+    #if DEBUG
+    /// Debug builds label windows with their size and build number. Capture runs turn the labels
+    /// off with `-sideWaveCleanCapture YES` or the `SIDEWAVE_SITE_SCREENSHOTS` test variable, so
+    /// screenshots look like a release build.
+    static var showsDebugLabels: Bool {
+        let argument = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)["sideWaveCleanCapture"]
+        if (argument as? Bool) == true || (argument as? String)?.uppercased() == "YES" { return false }
+        return ProcessInfo.processInfo.environment["SIDEWAVE_SITE_SCREENSHOTS"] == nil
+    }
+    #endif
+
     private static let testDirectory = FileManager.default.temporaryDirectory
         .appendingPathComponent("sidewave_tests_" + UUID().uuidString, isDirectory: true)
 

@@ -364,12 +364,14 @@ struct DictationOverlayContent: View {
         .overlay(alignment: .topLeading) {
             // Debug-only build tag in the top-leading corner, to tell which build drives the
             // overlay.
-            Text(SideWaveApp.appVersion)
-                .font(.system(size: 9, design: .monospaced))
-                .foregroundStyle(isCinematic ? Color.white.opacity(0.35) : Color.secondary.opacity(0.55))
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .accessibilityHidden(true)
+            if AppPaths.showsDebugLabels {
+                Text(SideWaveApp.appVersion)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(isCinematic ? Color.white.opacity(0.35) : Color.secondary.opacity(0.55))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .accessibilityHidden(true)
+            }
         }
         #endif
         // Keep the visible card at the panel's bottom in every session phase.

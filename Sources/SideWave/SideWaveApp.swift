@@ -44,20 +44,24 @@ struct SideWaveApp: App {
                 .background(MainWindowReader())
                 #if DEBUG
                 .overlay(alignment: .bottomTrailing) {
-                    GeometryReader { geo in
-                        Text("\(Int(geo.size.width)) x \(Int(geo.size.height))")
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.secondary.opacity(0.5))
-                            .padding(4)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    if AppPaths.showsDebugLabels {
+                        GeometryReader { geo in
+                            Text("\(Int(geo.size.width)) x \(Int(geo.size.height))")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.secondary.opacity(0.5))
+                                .padding(4)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        }
                     }
                 }
                 .overlay(alignment: .bottomLeading) {
-                    Text("\(Self.appVersion) (\(Self.appBuild))")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.secondary.opacity(0.5))
-                        .padding(4)
-                        .accessibilityHidden(true)
+                    if AppPaths.showsDebugLabels {
+                        Text("\(Self.appVersion) (\(Self.appBuild))")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.secondary.opacity(0.5))
+                            .padding(4)
+                            .accessibilityHidden(true)
+                    }
                 }
                 #endif
                 .modifier(ModelRecoveryWindowPresenter(appState: appState))
@@ -482,13 +486,15 @@ struct SideWaveApp: App {
     @ViewBuilder
     static func debugDimensionsOverlay() -> some View {
         #if DEBUG
-        GeometryReader { geo in
-            Text("\(Int(geo.size.width)) x \(Int(geo.size.height))")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.secondary.opacity(0.6))
-                .padding(4)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .allowsHitTesting(false)
+        if AppPaths.showsDebugLabels {
+            GeometryReader { geo in
+                Text("\(Int(geo.size.width)) x \(Int(geo.size.height))")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.secondary.opacity(0.6))
+                    .padding(4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .allowsHitTesting(false)
+            }
         }
         #else
         EmptyView()

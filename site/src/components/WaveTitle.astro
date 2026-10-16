@@ -1,0 +1,558 @@
+---
+// "SideWave" with the app's wave spectrum running through the letterforms: WebGPU first,
+// WebGL2 next, and a CSS spectrum gradient when neither is available or motion is reduced.
+---
+
+<div class="hero-title-wrap" data-wave-scope>
+  <canvas id="wave-canvas" class="wave-canvas" aria-hidden="true"></canvas>
+  <h1 class="hero-title" id="hero-title">SideWave</h1>
+</div>
+
+<style>
+  .hero-title-wrap {
+    position: relative;
+    display: inline-block;
+    margin: 0 auto 26px;
+    line-height: 1;
+  }
+
+  .wave-canvas {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.9s ease;
+    z-index: 2;
+  }
+  .wave-canvas.is-live { opacity: 1; }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(4.2rem, 12vw + 0.5rem, 10.5rem);
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    line-height: 0.92;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    /* Spectrum gradient title, the no-GL / reduced-motion fallback */
+    background-image: linear-gradient(
+      100deg,
+      #ff3b30 0%, #ff9500 16%, #ffcc00 32%,
+      #34c759 50%, #32ade6 66%, #007aff 82%, #af52de 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: titleSpectrum 9s ease-in-out infinite;
+    transition: opacity 0.6s ease;
+  }
+  @keyframes titleSpectrum {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  /* When GL takes over, the canvas is authoritative; keep h1 for a11y only */
+  .hero-title.gl-live {
+    opacity: 0;
+    animation: none;
+    user-select: none;
+  }
+
+  /* Entrance: the title sharpens into place once, on first paint. */
+  .hero-title-wrap { animation: titleIn 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) 0.15s both; }
+  @keyframes titleIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.9); filter: blur(14px); }
+    to { opacity: 1; transform: none; filter: blur(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-title-wrap { animation: none; }
+    .hero-title { animation: none; }
+    .wave-canvas { display: none; }
+  }
+</style>
+
+<script>
+  // Shared 7-stop spectrum (matches the app's DictationOverlay wave colors:
+  // red, orange, yellow, green, cyan, blue, purple), for both shader backends.
+  const SPECTRUM_GLSL = `
+  vec3 spec3(float t){
+    t = clamp(t, 0.0, 1.0);
+    vec3 c0=vec3(1.000,0.231,0.188), c1=vec3(1.000,0.584,0.000), c2=vec3(1.000,0.800,0.000);
+    vec3 c3=vec3(0.204,0.780,0.349), c4=vec3(0.196,0.678,0.902), c5=vec3(0.000,0.478,1.000), c6=vec3(0.686,0.322,0.871);
+    float x=t*6.0;
+    if(x<1.0) return mix(c0,c1,x);
+    else if(x<2.0) return mix(c1,c2,x-1.0);
+    else if(x<3.0) return mix(c2,c3,x-2.0);
+    else if(x<4.0) return mix(c3,c4,x-3.0);
+    else if(x<5.0) return mix(c4,c5,x-4.0);
+    return mix(c5,c6,x-5.0);
+  }`;
+
+  const SPECTRUM_WGSL = `
+  fn spec3(t0: f32) -> vec3f {
+    let t = clamp(t0, 0.0, 1.0);
+    let c0 = vec3f(1.000,0.231,0.188); let c1 = vec3f(1.000,0.584,0.000); let c2 = vec3f(1.000,0.800,0.000);
+    let c3 = vec3f(0.204,0.780,0.349); let c4 = vec3f(0.196,0.678,0.902); let c5 = vec3f(0.000,0.478,1.000); let c6 = vec3f(0.686,0.322,0.871);
+    let x = t*6.0;
+    if (x < 1.0) { return mix(c0,c1,x); }
+    else if (x < 2.0) { return mix(c1,c2,x-1.0); }
+    else if (x < 3.0) { return mix(c2,c3,x-2.0); }
+    else if (x < 4.0) { return mix(c3,c4,x-3.0); }
+    else if (x < 5.0) { return mix(c4,c5,x-4.0); }
+    return mix(c5,c6,x-5.0);
+  }`;
+
+  let disposeWave: (() => void) | null = null;
+
+  document.addEventListener('astro:page-load', () => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!document.getElementById('wave-canvas')) return;
+    const isMobile = window.innerWidth < 768;
+    // Deferred two frames so the CSS gradient title paints first; the canvas then cross-fades in.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      initWaveTitle(isMobile).then((dispose) => { disposeWave = dispose; });
+    }));
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    try { disposeWave?.(); } catch {}
+    disposeWave = null;
+  });
+  /* ================================================================
+     Wave title. A rainbow audio ribbon flows through the letterforms
+     of "SideWave" with additive bloom, faint refraction, and light
+     spill onto the surround. WebGPU first, WebGL2 next, else the CSS
+     spectrum-gradient title stays.
+     ================================================================ */
+  async function initWaveTitle(isMobile: boolean): Promise<(() => void) | null> {
+    const canvas = document.getElementById('wave-canvas') as HTMLCanvasElement | null;
+    const title = document.getElementById('hero-title') as HTMLElement | null;
+    const wrap = document.querySelector('.hero-title-wrap') as HTMLElement | null;
+    const hero = (wrap?.closest('section') ?? wrap) as HTMLElement | null;
+    if (!canvas || !title || !wrap || !hero) return null;
+
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    // Shared animation state
+    const state = {
+      time: 0,
+      pointerX: 0.5,
+      excite: 0,
+      damp: 1,
+      dark: document.documentElement.getAttribute('data-theme') === 'dark' ? 1 : 0,
+      w: 0, h: 0,
+    };
+
+    // Build the "SideWave" alpha mask on an offscreen 2D canvas.
+    const mask = document.createElement('canvas');
+    const mctx = mask.getContext('2d')!;
+    function buildMask() {
+      const cs = getComputedStyle(title!);
+      const size = parseFloat(cs.fontSize);
+      const weight = cs.fontWeight;
+      const family = cs.fontFamily;
+      const ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
+      mctx.font = `${weight} ${size}px ${family}`;
+      if (ls) (mctx as any).letterSpacing = cs.letterSpacing;
+      const m = mctx.measureText('SideWave');
+      const tw = Math.ceil(m.width);
+      const th = Math.ceil((m.actualBoundingBoxAscent || size * 0.72) + (m.actualBoundingBoxDescent || size * 0.24));
+      const padX = Math.round(size * 0.12);
+      const cssW = tw + padX * 2;
+      const cssH = Math.round(th * 1.9);
+
+      canvas!.style.width = cssW + 'px';
+      canvas!.style.height = cssH + 'px';
+      canvas!.width = Math.floor(cssW * DPR);
+      canvas!.height = Math.floor(cssH * DPR);
+      state.w = canvas!.width;
+      state.h = canvas!.height;
+
+      mask.width = canvas!.width;
+      mask.height = canvas!.height;
+      mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      mctx.clearRect(0, 0, cssW, cssH);
+      mctx.font = `${weight} ${size}px ${family}`;
+      if (ls) (mctx as any).letterSpacing = cs.letterSpacing;
+      mctx.textAlign = 'center';
+      mctx.textBaseline = 'middle';
+      mctx.fillStyle = '#fff';
+      mctx.fillText('SideWave', cssW / 2, cssH / 2);
+    }
+    buildMask();
+
+    // Try backends in order.
+    let backend: Backend | null = null;
+    try {
+      if ((navigator as any).gpu) backend = await initWebGPU(canvas, mask, state);
+    } catch { backend = null; }
+    if (!backend) {
+      try { backend = initWebGL2(canvas, mask, state); } catch { backend = null; }
+    }
+    if (!backend) return null; // CSS gradient title remains
+
+    title.classList.add('gl-live');
+    canvas.classList.add('is-live');
+
+    // Pointer excitement (proximity + velocity)
+    let lastX = 0.5, lastT = performance.now();
+    const onMove = (e: PointerEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left) / Math.max(r.width, 1);
+      state.pointerX = Math.max(0, Math.min(1, x));
+      const now = performance.now();
+      const dt = Math.max(now - lastT, 1);
+      const v = Math.abs(state.pointerX - lastX) / (dt / 1000);
+      state.excite = Math.min(1, state.excite + v * 0.35);
+      lastX = state.pointerX; lastT = now;
+    };
+    hero.addEventListener('pointermove', onMove, { passive: true });
+
+    // Scroll damping
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      state.damp = Math.max(0, Math.min(1, 1 - y / (window.innerHeight * 0.7)));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Theme + resize
+    const themeObs = new MutationObserver(() => {
+      state.dark = document.documentElement.getAttribute('data-theme') === 'dark' ? 1 : 0;
+    });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    let resizeT: number;
+    const onResize = () => {
+      clearTimeout(resizeT);
+      resizeT = window.setTimeout(() => { buildMask(); backend!.resize(); }, 160);
+    };
+    window.addEventListener('resize', onResize, { passive: true });
+
+    // Rebuild once the display font is ready (mask was measured pre-load otherwise)
+    if ((document as any).fonts?.ready) {
+      (document as any).fonts.ready.then(() => { buildMask(); backend!.resize(); });
+    }
+
+    // Render loop, paused off-screen / when hidden
+    let raf = 0;
+    let running = false;
+    let prev = performance.now();
+    const frame = (now: number) => {
+      const dt = Math.min((now - prev) / 1000, 0.05);
+      prev = now;
+      state.time += dt;
+      state.excite *= 0.94; // decay
+      backend!.render();
+      raf = requestAnimationFrame(frame);
+    };
+    const start = () => { if (!running) { running = true; prev = performance.now(); raf = requestAnimationFrame(frame); } };
+    const stop = () => { if (running) { running = false; cancelAnimationFrame(raf); } };
+
+    const io = new IntersectionObserver(([e]) => { e.isIntersecting ? start() : stop(); }, { threshold: 0 });
+    io.observe(hero);
+    const onVis = () => { document.hidden ? stop() : (isInView(hero) && start()); };
+    document.addEventListener('visibilitychange', onVis);
+
+    return () => {
+      stop();
+      io.disconnect();
+      themeObs.disconnect();
+      hero.removeEventListener('pointermove', onMove);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVis);
+      backend!.dispose();
+    };
+  }
+
+  function isInView(el: Element) {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
+  }
+
+  type Backend = { render: () => void; resize: () => void; dispose: () => void };
+  type WaveState = { time: number; pointerX: number; excite: number; damp: number; dark: number; w: number; h: number };
+
+
+  /* ---------------- WebGL2 backend ---------------- */
+  function initWebGL2(canvas: HTMLCanvasElement, mask: HTMLCanvasElement, state: WaveState): Backend | null {
+    const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true });
+    if (!gl) return null;
+
+    const vs = `#version 300 es
+    in vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
+
+    const fs = `#version 300 es
+    precision highp float;
+    uniform sampler2D uMask;
+    uniform vec2 uRes;
+    uniform float uTime, uPointer, uExcite, uDamp, uDark;
+    out vec4 o;
+    ${SPECTRUM_GLSL}
+    void main(){
+      vec2 uv = gl_FragCoord.xy / uRes;
+      float x = uv.x;
+      float pd = x - uPointer;
+      float bump = exp(-pd*pd/0.02) * uExcite;
+      float env = pow(sin(3.14159265*clamp(x,0.0,1.0)), 1.3);
+      float idle = 0.85 + 0.15*sin(uTime*0.7);
+      float spec = 0.0; vec3 col = vec3(0.0); float disp = 0.0;
+      for(int i=0;i<5;i++){
+        float fi=float(i);
+        float freq=1.4+fi*0.42; float speed=1.1+fi*0.22;
+        float amp=(0.30-fi*0.035);
+        float phase=uTime*speed+fi*0.9;
+        float a=amp*env*uDamp*(idle+bump*1.6);
+        float cy=0.5+sin(6.2831853*freq*x+phase)*a;
+        disp+=(cy-0.5);
+        float d=uv.y-cy;
+        float thick=0.012+fi*0.002;
+        float core=1.0 - smoothstep(0.0, thick, abs(d));
+        float glow=exp(-(d*d)/(0.010+0.006*fi));
+        float hue=fract(x+fi/5.0+uTime*0.05);
+        vec3 rc=spec3(hue);
+        float inten=core+glow*0.5;
+        col+=rc*inten; spec+=inten;
+      }
+      float refr=disp*0.010;
+      float m=texture(uMask, vec2(uv.x+refr, 1.0-uv.y)).a;
+      // One design, two exposures. Dark: silver letterforms, strands glow
+      // through and spill light onto the surround. Light: ink letterforms,
+      // the same strands stream through them and cast a soft pastel wash.
+      vec3 baseD=vec3(0.42,0.43,0.47);
+      vec3 baseL=vec3(0.155,0.150,0.140);
+      vec3 base=mix(baseL,baseD,uDark);
+      vec3 inside=clamp(base+col*mix(0.72,1.15,uDark),0.0,1.4);
+      // Soft falloff toward every canvas edge so escaping light dies out
+      // in air instead of slamming into the rectangle boundary.
+      float vign=smoothstep(0.0,0.10,x)*smoothstep(0.0,0.10,1.0-x)
+               *smoothstep(0.0,0.24,uv.y)*smoothstep(0.0,0.24,1.0-uv.y);
+      float ambient=clamp(spec*0.42,0.0,1.0)*uDamp*mix(0.30,1.0,uDark)*vign;
+      float insideA=m;
+      float outsideA=ambient*(1.0-m);
+      float outA=insideA+outsideA*(1.0-insideA);
+      vec3 outC=(inside*insideA+col*outsideA*(1.0-insideA))/max(outA,0.001);
+      o=vec4(outC*outA, outA);
+    }`;
+
+    const prog = linkGL(gl, vs, fs);
+    if (!prog) return null;
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    const tex = gl.createTexture();
+    const uploadTex = () => {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mask);
+    };
+    uploadTex();
+
+    const uMask = gl.getUniformLocation(prog, 'uMask');
+    const uRes = gl.getUniformLocation(prog, 'uRes');
+    const uTime = gl.getUniformLocation(prog, 'uTime');
+    const uPointer = gl.getUniformLocation(prog, 'uPointer');
+    const uExcite = gl.getUniformLocation(prog, 'uExcite');
+    const uDamp = gl.getUniformLocation(prog, 'uDamp');
+    const uDark = gl.getUniformLocation(prog, 'uDark');
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); // premultiplied
+
+    const resize = () => { gl.viewport(0, 0, canvas.width, canvas.height); uploadTex(); };
+    resize();
+
+    const render = () => {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(prog);
+      gl.uniform1i(uMask, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, state.time);
+      gl.uniform1f(uPointer, state.pointerX);
+      gl.uniform1f(uExcite, state.excite);
+      gl.uniform1f(uDamp, state.damp);
+      gl.uniform1f(uDark, state.dark);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    render();
+    return { render, resize, dispose: () => { gl.deleteTexture(tex); gl.deleteBuffer(buf); gl.deleteProgram(prog); } };
+  }
+
+  function linkGL(gl: WebGL2RenderingContext, vsrc: string, fsrc: string) {
+    const compile = (type: number, src: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); gl.deleteShader(s); return null; }
+      return s;
+    };
+    const v = compile(gl.VERTEX_SHADER, vsrc); const f = compile(gl.FRAGMENT_SHADER, fsrc);
+    if (!v || !f) return null;
+    const p = gl.createProgram()!;
+    gl.attachShader(p, v); gl.attachShader(p, f); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.warn(gl.getProgramInfoLog(p)); return null; }
+    return p;
+  }
+
+
+  /* ---------------- WebGPU backend ---------------- */
+  async function initWebGPU(canvas: HTMLCanvasElement, mask: HTMLCanvasElement, state: WaveState): Promise<Backend | null> {
+    const gpu = (navigator as any).gpu;
+    const adapter = await gpu.requestAdapter();
+    if (!adapter) return null;
+    const device = await adapter.requestDevice();
+    const ctx = canvas.getContext('webgpu') as any;
+    if (!ctx) return null;
+    const format = gpu.getPreferredCanvasFormat();
+    ctx.configure({ device, format, alphaMode: 'premultiplied' });
+
+    const shader = device.createShaderModule({ code: `
+      struct U { res: vec2f, time: f32, excite: f32, pointer: vec2f, damp: f32, dark: f32 };
+      @group(0) @binding(0) var<uniform> u: U;
+      @group(0) @binding(1) var samp: sampler;
+      @group(0) @binding(2) var tex: texture_2d<f32>;
+
+      ${SPECTRUM_WGSL}
+
+      @vertex fn vmain(@builtin(vertex_index) vi: u32) -> @builtin(position) vec4f {
+        var p = array<vec2f,3>(vec2f(-1.0,-1.0), vec2f(3.0,-1.0), vec2f(-1.0,3.0));
+        return vec4f(p[vi], 0.0, 1.0);
+      }
+
+      @fragment fn fmain(@builtin(position) fc: vec4f) -> @location(0) vec4f {
+        let uv = vec2f(fc.x / u.res.x, fc.y / u.res.y);
+        let x = uv.x;
+        let pd = x - u.pointer.x;
+        let bump = exp(-pd*pd/0.02) * u.excite;
+        let env = pow(sin(3.14159265*clamp(x,0.0,1.0)), 1.3);
+        let idle = 0.85 + 0.15*sin(u.time*0.7);
+        var spec = 0.0; var col = vec3f(0.0); var disp = 0.0;
+        for (var i=0; i<5; i=i+1) {
+          let fi = f32(i);
+          let freq = 1.4+fi*0.42; let speed = 1.1+fi*0.22;
+          let amp = (0.30-fi*0.035);
+          let phase = u.time*speed+fi*0.9;
+          let a = amp*env*u.damp*(idle+bump*1.6);
+          let cy = 0.5+sin(6.2831853*freq*x+phase)*a;
+          disp = disp + (cy-0.5);
+          let d = uv.y-cy;
+          let thick = 0.012+fi*0.002;
+          let core = 1.0 - smoothstep(0.0, thick, abs(d));
+          let glow = exp(-(d*d)/(0.010+0.006*fi));
+          let hue = fract(x+fi/5.0+u.time*0.05);
+          let rc = spec3(hue);
+          let inten = core+glow*0.5;
+          col = col + rc*inten; spec = spec + inten;
+        }
+        let refr = disp*0.010;
+        let m = textureSample(tex, samp, vec2f(uv.x+refr, uv.y)).a;
+        // One design, two exposures — see the GLSL twin for the rationale.
+        let baseD = vec3f(0.42,0.43,0.47);
+        let baseL = vec3f(0.155,0.150,0.140);
+        let base = mix(baseL, baseD, u.dark);
+        let inside = clamp(base + col*mix(0.72,1.15,u.dark), vec3f(0.0), vec3f(1.4));
+        let vign = smoothstep(0.0,0.10,x)*smoothstep(0.0,0.10,1.0-x)
+                 *smoothstep(0.0,0.24,uv.y)*smoothstep(0.0,0.24,1.0-uv.y);
+        let ambient = clamp(spec*0.42,0.0,1.0)*u.damp*mix(0.30,1.0,u.dark)*vign;
+        let insideA = m;
+        let outsideA = ambient*(1.0-m);
+        let outA = insideA + outsideA*(1.0-insideA);
+        let outC = (inside*insideA + col*outsideA*(1.0-insideA))/max(outA,0.001);
+        return vec4f(outC*outA, outA);
+      }
+    ` });
+
+    const uBuf = device.createBuffer({ size: 32, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear' });
+
+    let texture: any = null;
+    const makeTexture = () => {
+      if (texture) texture.destroy?.();
+      texture = device.createTexture({
+        size: [mask.width, mask.height],
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+      device.queue.copyExternalImageToTexture({ source: mask }, { texture }, [mask.width, mask.height]);
+    };
+    makeTexture();
+
+    const pipeline = device.createRenderPipeline({
+      layout: 'auto',
+      vertex: { module: shader, entryPoint: 'vmain' },
+      fragment: {
+        module: shader, entryPoint: 'fmain',
+        targets: [{
+          format,
+          blend: {
+            color: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+            alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+          },
+        }],
+      },
+      primitive: { topology: 'triangle-list' },
+    });
+
+    let bindGroup: any;
+    const makeBindGroup = () => {
+      bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: uBuf } },
+          { binding: 1, resource: sampler },
+          { binding: 2, resource: texture.createView() },
+        ],
+      });
+    };
+    makeBindGroup();
+
+    const ubo = new ArrayBuffer(32);
+    const f32 = new Float32Array(ubo);
+    const writeUniforms = () => {
+      f32[0] = canvas.width; f32[1] = canvas.height;
+      f32[2] = state.time; f32[3] = state.excite;
+      f32[4] = state.pointerX; f32[5] = 0;
+      f32[6] = state.damp; f32[7] = state.dark;
+      device.queue.writeBuffer(uBuf, 0, ubo);
+    };
+
+    const render = () => {
+      writeUniforms();
+      const enc = device.createCommandEncoder();
+      const pass = enc.beginRenderPass({
+        colorAttachments: [{
+          view: ctx.getCurrentTexture().createView(),
+          clearValue: { r: 0, g: 0, b: 0, a: 0 },
+          loadOp: 'clear', storeOp: 'store',
+        }],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.draw(3);
+      pass.end();
+      device.queue.submit([enc.finish()]);
+    };
+
+    const resize = () => { makeTexture(); makeBindGroup(); };
+    render(); // first frame; throws here fall back to WebGL2 via caller catch
+    return { render, resize, dispose: () => { try { texture?.destroy?.(); uBuf.destroy?.(); device.destroy?.(); } catch {} } };
+  }
+</script>

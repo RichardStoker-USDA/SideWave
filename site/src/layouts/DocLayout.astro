@@ -163,23 +163,25 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
       tocList.appendChild(li);
     });
 
-    // ---- Active heading tracking via IntersectionObserver ----
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            tocList.querySelectorAll('.doc-toc-link').forEach((link) => {
-              link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
-            });
-          }
-        });
-      },
-      { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
-    );
-
-    headings.forEach((h) => observer.observe(h));
-    signal.addEventListener('abort', () => observer.disconnect());
+    // ---- Reading progress: sections above the fold are read, the last of them is current ----
+    const links = Array.from(tocList.querySelectorAll<HTMLAnchorElement>('.doc-toc-link'));
+    const headingList = Array.from(headings) as HTMLElement[];
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const line = 120;
+      let current = -1;
+      headingList.forEach((h, i) => { if (h.getBoundingClientRect().top <= line) current = i; });
+      const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (atEnd) current = headingList.length - 1;
+      links.forEach((link, i) => {
+        link.classList.toggle('read', i <= current);
+        link.classList.toggle('active', i === current);
+      });
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    window.addEventListener('scroll', onScroll, { passive: true, signal });
+    update();
 
     // ---- Mobile sidebar toggle ----
     const toggle = document.getElementById('doc-sidebar-toggle');
@@ -454,44 +456,33 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
     gap: 1px;
   }
 
-  /* TOC links - active item gets left border accent */
-  .doc-toc-link {
+  /* Outline links are created by script, so these selectors are global. Sections ahead of you
+     stay in the draft gray; sections you've read settle to solid, like dictated words. */
+  :global(.doc-toc-link) {
+    position: relative;
     display: block;
-    padding: 6px 14px;
+    padding: 5px 14px;
     font-size: 13px;
     line-height: 1.4;
-    color: var(--text-tertiary);
+    color: var(--text-draft);
     text-decoration: none;
     border-radius: 6px;
-    border-left: 3px solid transparent;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    transition: color 0.35s ease;
   }
-
-  .doc-toc-link:hover {
-    color: var(--text-primary);
-    background: rgba(0, 0, 0, 0.03);
-    text-decoration: none;
+  :global(.doc-toc-link:hover) { color: var(--text-primary); text-decoration: none; }
+  :global(.doc-toc-link.read) { color: var(--text-secondary); }
+  :global(.doc-toc-link.active) { color: var(--text-primary); font-weight: 600; }
+  :global(.doc-toc-link.active)::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #ff9500, #34c759 45%, #007aff 80%, #af52de);
   }
-
-  :global([data-theme="dark"]) .doc-toc-link:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .doc-toc-link.active {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    background: rgba(0, 113, 227, 0.05);
-    font-weight: 600;
-  }
-
-  :global([data-theme="dark"]) .doc-toc-link.active {
-    background: rgba(41, 151, 255, 0.08);
-  }
-
-  .doc-toc-link-sub {
-    padding-left: 28px;
-    font-size: 12.5px;
-  }
+  :global(.doc-toc-link-sub) { padding-left: 28px; font-size: 12.5px; }
 
   /* ================================
      Main Content
