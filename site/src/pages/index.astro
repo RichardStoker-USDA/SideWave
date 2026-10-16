@@ -57,7 +57,7 @@ const screens = [
               <svg class="icon-play" aria-hidden="true" viewBox="0 0 16 16"><path d="M5 3.5v9l7.5-4.5z" fill="currentColor"/></svg>
             </button>
           </div>
-          <figcaption>Recorded in SideWave 0.3.0. The speech is a synthesized voice played into the input.</figcaption>
+          <figcaption class="video-caption" hidden>Recorded in SideWave 0.3.0. The speech is a synthesized voice played into the input.</figcaption>
         </figure>
       </div>
     </section>
@@ -502,6 +502,10 @@ const screens = [
       const button = video.parentElement?.querySelector<HTMLButtonElement>('.video-toggle');
       button?.addEventListener('click', () => {
         if (video.paused) video.play().catch(() => {}); else video.pause();
+      });
+      video.addEventListener('loadeddata', () => {
+        const caption = video.closest('figure')?.querySelector<HTMLElement>('.video-caption');
+        if (caption) caption.hidden = false;
       });
       video.addEventListener('play', () => syncToggle(video));
       video.addEventListener('pause', () => syncToggle(video));
