@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.1 (2026-10-18)
+
+### Fixed
+
+- The Email template no longer copies placeholder list items ("First item") into the email.
+- Help is shorter and corrected throughout, including how a failed final Refine keeps your text,
+  Control-Escape, and a translation indicator the preview doesn't have.
+
+### Changed
+
+- Settings > About > Acknowledgments lists every model and package SideWave uses, with its
+  license and the full license and notice text.
+
+### Security
+
+- swift-crypto 4.5.2 (GHSA-8q93-f6xh-4f6f) and swift-nio 2.104.0 (GHSA-r3rc-9hpw-54v9,
+  GHSA-rj37-6j9x-74q6, GHSA-cq87-8r7h-962v).
+
 ## 0.4.0 (2026-10-16)
 
 ### Removed
@@ -21,7 +39,7 @@ install from SideWave > Check for Updates.
 ### Added
 
 - Document templates: Email, Instructions, AI Prompt, and Custom open a document window with Read
-  and Edit views, Recents, and changes you type or speak.
+  and Edit text views, Recents, and changes you type or speak.
 - Output language. Dictate in one language and Refine writes in another.
 - Gemma 4 E4B and 12B for Refine, alongside E2B and Apple Intelligence. Gemma thinking is
   available for documents in Advanced view.
@@ -29,7 +47,7 @@ install from SideWave > Check for Updates.
   Personal glossaries take pronunciation hints, categories, and notes for Refine.
 - Parakeet Ultra as a speech model choice.
 - Data Transparency window that lists downloads and update checks.
-- Downloads window with real sizes and speed, and separate download, compile, and load steps.
+- Downloads window with sizes and speed, and separate download, compile, and load steps.
 
 ### Changed
 
