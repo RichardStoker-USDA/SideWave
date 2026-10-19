@@ -33,7 +33,20 @@ final class DocumentEditFormattingTests: XCTestCase {
         XCTAssertEqual(join(["I am writing to request access to the greenhouse on Saturday.", "access to the greenhouse on Saturday"]),
                        "I am writing to request access to the greenhouse on Saturday.")
         XCTAssertEqual(join(["Thanks.", "Thanks."]), "Thanks.\n\nThanks.")
+        XCTAssertEqual(join(["I am writing to request access to the greenhouse on Saturday.\n\naccess to the greenhouse on Saturday"]),
+                       "I am writing to request access to the greenhouse on Saturday.")
+        XCTAssertEqual(join(["I am writing to request access to the greenhouse on Saturday.", "- access to the greenhouse on Saturday"]),
+                       "I am writing to request access to the greenhouse on Saturday.")
         XCTAssertEqual(join(["Can you send the plot map?", "-", "Thanks"]), "Can you send the plot map?\n\nThanks")
+        // A list item is never dropped as a repeat, even when the sentence before it names it.
+        XCTAssertEqual(join(["We need the north field soil probes and the spare batteries.", "- the north field soil probes", "- the spare batteries"]),
+                       "We need the north field soil probes and the spare batteries.\n\n- the north field soil probes\n- the spare batteries")
+        // Numbers keep their punctuation when paragraphs are compared.
+        XCTAssertEqual(join(["Use version 1.2 for the trial run today.", "Use version 1/2 for the trial run today, then check."]),
+                       "Use version 1.2 for the trial run today.\n\nUse version 1/2 for the trial run today, then check.")
+        // A one-item list introduced with a colon keeps its dash; emoji-only paragraphs stay.
+        XCTAssertEqual(join(["We still need:", "- the plot map"]), "We still need:\n\n- the plot map")
+        XCTAssertEqual(join(["See you then.", "\u{1F44D}"]), "See you then.\n\n\u{1F44D}")
         // Indented items still make a list, so the first one keeps its dash.
         XCTAssertEqual(join(["Packing list:", "- soil probes\n - spare batteries\n - the plot map"]),
                        "Packing list:\n\n- soil probes\n - spare batteries\n - the plot map")
@@ -48,6 +61,11 @@ final class DocumentEditFormattingTests: XCTestCase {
         XCTAssertEqual(DictationFormatterService.emailLine("hey Sam,"), "Hey Sam,")
         XCTAssertEqual(DictationFormatterService.emailLine("thanks"), "Thanks")
         XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("iPhone sync is fixed."), "iPhone sync is fixed.")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("thanks!"), "Thanks!")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("https://example.com has it"), "https://example.com has it")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("e.g. this one"), "e.g. this one")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("npm-cli is out"), "npm-cli is out")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("ok."), "Ok.")
         XCTAssertEqual(DictationFormatterService.joinEmailParagraphs(["send me the map", "- probes\n- batteries"]),
                        "Send me the map\n\n- probes\n- batteries")
         XCTAssertEqual(DictationFormatterService.joinEmailParagraphs(["I need the map.\n\nsend it by Friday"]),

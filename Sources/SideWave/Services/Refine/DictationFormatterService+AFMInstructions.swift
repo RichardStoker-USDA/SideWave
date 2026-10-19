@@ -352,30 +352,49 @@ extension DictationFormatterService {
     }
 
     /// Capitalizes a line whose first word is plain lowercase ("hey Sam," becomes "Hey Sam,").
-    /// Words with any capital, digit, or symbol, such as iPhone or npm-cli, are left alone.
+    /// Words with a capital, digit, or symbol inside, such as iPhone, npm-cli, or a URL, are left alone.
     nonisolated static func capitalizingFirstWord(_ line: String) -> String {
-        let word = line.prefix { !$0.isWhitespace && $0 != "," }
-        guard let first = word.first, word.allSatisfy({ ("a"..."z").contains($0) }) else { return line }
+        let word = line.prefix { ("a"..."z").contains($0) }
+        guard let first = word.first else { return line }
+        let rest = line.dropFirst(word.count)
+        if let next = rest.first, !next.isWhitespace {
+            // Sentence punctuation may follow the word; anything else makes it an identifier.
+            let ends = rest.dropFirst().first.map(\.isWhitespace) ?? true
+            guard ",;!?".contains(next) || (".:".contains(next) && ends) else { return line }
+        }
         return first.uppercased() + line.dropFirst()
     }
 
     /// Joins email paragraphs with blank lines and keeps list items that arrive as separate
-    /// paragraphs together as one list. It also undoes three model habits: a paragraph that repeats
-    /// a phrase from another one, a lowercase paragraph start, and a single sentence given a dash
-    /// with no other list item next to it.
+    /// paragraphs together as one list. It also undoes three model habits: a plain paragraph that
+    /// only repeats words from a longer one, a lowercase paragraph start, and a single sentence
+    /// given a dash with no list next to it and no colon introducing it.
     nonisolated static func joinEmailParagraphs(_ paragraphs: [String]) -> String {
         func isListItem(_ line: Substring) -> Bool {
             let item = line.drop { $0 == " " || $0 == "\t" }
             return item.hasPrefix("- ") || item.range(of: #"^\d+\. "#, options: .regularExpression) != nil
         }
-        let trimmed = paragraphs.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { $0.contains { $0.isLetter || $0.isNumber } }
+        // A paragraph of only dashes or other punctuation is a model artifact.
+        var trimmed = paragraphs.flatMap { $0.components(separatedBy: "\n\n") }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.unicodeScalars.allSatisfy(CharacterSet.punctuationCharacters.union(.whitespacesAndNewlines).contains) }
+        // A dashed paragraph of one line, with no list next to it and no colon before it, is a sentence.
+        for index in trimmed.indices where trimmed[index].hasPrefix("- ") && !trimmed[index].contains("\n") {
+            let previous = index > 0 ? String(trimmed[index - 1].split(separator: "\n").last ?? "") : ""
+            let next = index + 1 < trimmed.count ? trimmed[index + 1].split(separator: "\n").first ?? "" : ""
+            if !isListItem(Substring(previous)), !previous.hasSuffix(":"), !isListItem(next) {
+                trimmed[index] = String(trimmed[index].dropFirst(2))
+            }
+        }
+        // Words compared lowercase with their outer punctuation removed, so "1.2" stays distinct from "1/2".
         func words(_ text: String) -> String {
-            text.lowercased().split { !$0.isLetter && !$0.isNumber }.joined(separator: " ")
+            text.lowercased().split(whereSeparator: \.isWhitespace)
+                .map { $0.trimmingCharacters(in: .punctuationCharacters) }
+                .filter { !$0.isEmpty }.joined(separator: " ")
         }
         let blocks = trimmed.enumerated().filter { index, block in
             let phrase = words(block)
-            guard phrase.split(separator: " ").count >= 4 else { return true }
+            guard !isListItem(Substring(block)), phrase.split(separator: " ").count >= 4 else { return true }
             return !trimmed.enumerated().contains { other, text in
                 other != index && text.count > block.count && " \(words(text)) ".contains(" \(phrase) ")
             }
@@ -395,7 +414,8 @@ extension DictationFormatterService {
         }
         let content = lines.indices.filter { !lines[$0].trimmingCharacters(in: .whitespaces).isEmpty }
         for (position, index) in content.enumerated() where lines[index].hasPrefix("- ") && !lines[index].hasPrefix("- -") {
-            let before = position > 0 && isListItem(Substring(lines[content[position - 1]]))
+            let previous = position > 0 ? lines[content[position - 1]] : ""
+            let before = isListItem(Substring(previous)) || previous.hasSuffix(":")
             let after = position + 1 < content.count && isListItem(Substring(lines[content[position + 1]]))
             if !before && !after { lines[index] = capitalizingFirstWord(String(lines[index].dropFirst(2))) }
         }
