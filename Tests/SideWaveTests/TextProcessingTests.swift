@@ -158,7 +158,7 @@ final class TextProcessingTests: XCTestCase {
 
     func testStripGemmaUnclosedThoughtHidesReasoningMidStream() {
         // While the model is still thinking, the closing marker hasn't
-        // arrived yet — everything from the marker on must be suppressed so
+        // arrived yet; everything from the marker on must be suppressed so
         // reasoning never streams into the overlay.
         let raw = "<|channel>thought\n* Maintain original voice/structure\n* Strictly adhere to"
         XCTAssertEqual(DictationFormatterService.stripGemmaThinkBlock(raw), "")

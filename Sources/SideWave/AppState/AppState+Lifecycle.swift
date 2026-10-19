@@ -73,7 +73,7 @@ extension AppState {
         // deleting them. The sheet offers continue / transcribe / discard.
         pendingMeetingRecovery = MeetingSessionStore.scanForOrphans()
         if !pendingMeetingRecovery.isEmpty {
-            print("[AppState] Found \(pendingMeetingRecovery.count) interrupted meeting(s) to recover")
+            SWLog.note("[AppState] Found \(pendingMeetingRecovery.count) interrupted meeting(s) to recover")
         }
         // Remove settings and files left by the voice agent server in earlier versions.
         LegacyStateCleanup.run()
@@ -128,13 +128,13 @@ extension AppState {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 if self.transcriptionService.isRecording {
-                    print("[AppState] System sleeping during recording, tearing down synchronously")
+                    SWLog.note("[AppState] System sleeping during recording, tearing down synchronously")
                     self.transcriptionService.teardownEngineForShutdown()
                     self.restoreDictationVolumeControl()
                     self.hotkeyManager.isRecording = false
                 }
                 if case .recording = self.meetingService.state {
-                    print("[AppState] System sleeping during meeting recording, stopping and queuing for transcription")
+                    SWLog.note("[AppState] System sleeping during meeting recording, stopping and queuing for transcription")
                     self.meetingService.stopRecording()
                     // Process the recording instead of leaving it: the task pauses during sleep and
                     // finishes after wake, saving the transcript to meeting history.

@@ -125,7 +125,7 @@ enum WindowTargetingService {
                 let activateOK = NSRunningApplication(processIdentifier: pid)?.activate() ?? false
                 let raiseErr = AXUIElementPerformAction(axWindow, kAXRaiseAction as CFString)
                 // Make keyboard focus follow the raised window. Both sets are
-                // best-effort — apps that expose these read-only just ignore
+                // best-effort; apps that expose these read-only just ignore
                 // them, which is harmless.
                 AXUIElementSetAttributeValue(axWindow, kAXMainAttribute as CFString, true as CFTypeRef)
                 AXUIElementSetAttributeValue(appElement, kAXFocusedWindowAttribute as CFString, axWindow as CFTypeRef)
@@ -154,7 +154,7 @@ enum WindowTargetingService {
                 if containingWindowID(of: focusedElement) == targetWID {
                     return true
                 }
-                // else: focus is in another window — fall through to search.
+                // else: focus is in another window; fall through to search.
             } else {
                 return true
             }
@@ -165,10 +165,10 @@ enum WindowTargetingService {
 
         if let targetWID = windowID,
            let axWindow = axWindowForID(targetWID, pid: pid) {
-            // User locked onto a specific window — search only that one
+            // User locked onto a specific window; search only that one
             var nc1 = 0; collectTextFields(in: axWindow, depth: 0, results: &candidates, nodeCount: &nc1)
         } else {
-            // No specific window — use the focused window, then fall back to app
+            // No specific window; use the focused window, then fall back to app
             var mainWindowRef: CFTypeRef?
             if AXUIElementCopyAttributeValue(
                 appElement,
@@ -611,7 +611,7 @@ enum WindowTargetingService {
                     results.append((element, area))
                 }
             }
-            // Don't recurse into AXWebArea children — they're HTML
+            // Don't recurse into AXWebArea children; they're HTML
             // elements, not independent paste targets. The web area
             // itself is the target for browser-based apps.
             if role == "AXWebArea" { return }

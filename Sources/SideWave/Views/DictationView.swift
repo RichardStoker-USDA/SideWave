@@ -55,7 +55,7 @@ struct DictationView: View {
         // Expanded controls remain scrollable at the default window size.
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                // Experience preset — the primary control. Most people pick a
+                // Experience preset; the primary control. Most people pick a
                 // mode here and never open the sections below. Always visible,
                 // never inside the accordion.
                 experiencePresetCard

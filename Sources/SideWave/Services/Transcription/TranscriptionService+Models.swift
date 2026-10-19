@@ -120,11 +120,11 @@ extension TranscriptionService {
                 try await ModelDownloadManager.downloadCTC(verifyCachedFiles: true)
                 // FluidAudio verification (sees files exist, returns immediately)
                 try await CtcModels.download(variant: .ctc110m)
-                print("[TranscriptionService] CTC 110M model cached (from richtext/)")
+                SWLog.note("[TranscriptionService] CTC 110M model cached (from richtext/)")
             } catch {
                 let msg = "CTC vocabulary model: \(error.localizedDescription)"
                 auxiliaryModelErrors.append(msg)
-                print("[TranscriptionService] CTC model download failed (non-fatal): \(error.localizedDescription)")
+                SWLog.note("[TranscriptionService] CTC model download failed (non-fatal): \(error.localizedDescription)")
             }
 
             modelState = .downloadingAuxiliary(model: "Voice activity detection")
@@ -133,11 +133,11 @@ extension TranscriptionService {
                 try await ModelDownloadManager.downloadVAD()
                 // FluidAudio verification (sees files exist, returns immediately)
                 let _ = try await VadManager()
-                print("[TranscriptionService] VAD model cached (from richtext/)")
+                SWLog.note("[TranscriptionService] VAD model cached (from richtext/)")
             } catch {
                 let msg = "Voice activity detection: \(error.localizedDescription)"
                 auxiliaryModelErrors.append(msg)
-                print("[TranscriptionService] VAD model download failed (non-fatal): \(error.localizedDescription)")
+                SWLog.note("[TranscriptionService] VAD model download failed (non-fatal): \(error.localizedDescription)")
             }
 
             UserDefaults.standard.set(version.rawValue, forKey: "selectedModelVersion")
@@ -147,7 +147,7 @@ extension TranscriptionService {
             modelState = .ready
         } catch {
             modelState = .error(error.localizedDescription)
-            print("[TranscriptionService] Model download failed: \(error)")
+            SWLog.note("[TranscriptionService] Model download failed: \(error)")
         }
     }
 
@@ -160,22 +160,22 @@ extension TranscriptionService {
         do {
             try await ModelDownloadManager.downloadCTC(verifyCachedFiles: true)
             try await CtcModels.download(variant: .ctc110m)
-            print("[TranscriptionService] CTC 110M model cached (retry from richtext/)")
+            SWLog.note("[TranscriptionService] CTC 110M model cached (retry from richtext/)")
         } catch {
             let msg = "CTC vocabulary model: \(error.localizedDescription)"
             newErrors.append(msg)
-            print("[TranscriptionService] CTC model retry failed: \(error.localizedDescription)")
+            SWLog.note("[TranscriptionService] CTC model retry failed: \(error.localizedDescription)")
         }
 
         modelState = .downloadingAuxiliary(model: "Voice activity detection")
         do {
             try await ModelDownloadManager.downloadVAD()
             let _ = try await VadManager()
-            print("[TranscriptionService] VAD model cached (retry from richtext/)")
+            SWLog.note("[TranscriptionService] VAD model cached (retry from richtext/)")
         } catch {
             let msg = "Voice activity detection: \(error.localizedDescription)"
             newErrors.append(msg)
-            print("[TranscriptionService] VAD model retry failed: \(error.localizedDescription)")
+            SWLog.note("[TranscriptionService] VAD model retry failed: \(error.localizedDescription)")
         }
 
         auxiliaryModelErrors = newErrors
@@ -273,8 +273,8 @@ extension TranscriptionService {
 
     // MARK: - Cold-inference warm-up decode
 
-    /// Two seconds of silence at 16kHz mono. Silence is a supported input —
-    /// the EOU actor's own finish() pads with zeros — and enough samples to
+    /// Two seconds of silence at 16kHz mono. Silence is a supported input;
+    /// the EOU actor's own finish() pads with zeros; and enough samples to
     /// push several full chunks through the encoder.
     nonisolated private static var silentWarmupSamples: [Float] {
         Array(repeating: 0, count: 32_000)

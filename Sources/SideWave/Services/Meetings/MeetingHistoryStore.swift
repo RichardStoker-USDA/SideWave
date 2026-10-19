@@ -44,7 +44,7 @@ final class MeetingHistoryStore {
         meetings.removeAll { $0.timestamp < cutoff && !$0.isPartial && $0.hasSpeech }
         if meetings.count < before {
             saveMeetings()
-            print("[MeetingHistory] Pruned \(before - meetings.count) expired meetings")
+            SWLog.note("[MeetingHistory] Pruned \(before - meetings.count) expired meetings")
         }
     }
 
@@ -129,7 +129,7 @@ final class MeetingHistoryStore {
         guard !storageNeedsRecovery else { return false }
         // Meeting transcripts are the only copy of what was said; a silently
         // swallowed write (read-only dir, disk full) would drop them without
-        // a trace. Log loudly — the in-memory copy stays intact this session.
+        // a trace. Log loudly; the in-memory copy stays intact this session.
         do {
             let data = try JSONEncoder().encode(meetings)
             try data.write(to: fileURL, options: .atomic)

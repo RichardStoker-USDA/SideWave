@@ -87,7 +87,7 @@ final class ModelDownloadActivity {
     /// reset transient view state like the countdown timer.
     private(set) var sessionGeneration: Int = 0
 
-    /// User-controllable "hide for now" — closing the recovery window mid
+    /// User-controllable "hide for now"; closing the recovery window mid
     /// download won't reopen until the next download starts.
     var isPresentationSuppressed: Bool = false
 
@@ -224,7 +224,7 @@ final class ModelDownloadActivity {
         isPresentationSuppressed = false
     }
 
-    /// Hide the window for this session only — without aborting the download.
+    /// Hide the window for this session only, without aborting the download.
     func suppressPresentationForCurrentSession() {
         isPresentationSuppressed = true
     }

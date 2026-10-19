@@ -5,7 +5,7 @@ import SwiftUI
 import SideWaveKit
 
 /// Settings-lite: hotkey, microphone, language, refine, appearance.
-/// Nothing else in v1 — the simple view IS the app.
+/// Nothing else in v1; the simple view IS the app.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
 

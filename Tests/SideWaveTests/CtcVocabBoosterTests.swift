@@ -31,7 +31,7 @@ final class CtcVocabBoosterTests: XCTestCase {
         XCTAssertLessThan(CtcVocabBooster.stringSimilarity("team", "rust"), 0.3)
     }
 
-    // MARK: spanMatchesTerm — sim bait cases (must all be rejected)
+    // MARK: spanMatchesTerm; sim bait cases (must all be rejected)
 
     func testBaitSpansRejected() {
         XCTAssertFalse(CtcVocabBooster.spanMatchesTerm(span: "called the team this", term: "Claude", floor: floor))
@@ -41,7 +41,7 @@ final class CtcVocabBoosterTests: XCTestCase {
         XCTAssertFalse(CtcVocabBooster.spanMatchesTerm(span: "the pipeline from Kafka", term: "Anthropic", floor: floor))
     }
 
-    // MARK: spanMatchesTerm — sim positive-control cases (must all pass)
+    // MARK: spanMatchesTerm; sim positive-control cases (must all pass)
 
     func testLegitSpansAccepted() {
         XCTAssertTrue(CtcVocabBooster.spanMatchesTerm(span: "talking with Claude", term: "Claude", floor: floor))
@@ -58,7 +58,7 @@ final class CtcVocabBoosterTests: XCTestCase {
         XCTAssertFalse(CtcVocabBooster.spanMatchesTerm(span: "anything at all", term: "...", floor: floor))
     }
 
-    // MARK: spanMatchesTerm — multi-word terms (the per-word check alone can't
+    // MARK: spanMatchesTerm; multi-word terms (the per-word check alone can't
     // reach the floor against these, so the whole-span window path must)
 
     func testMultiWordTermMatchesInsideSpan() {
@@ -73,7 +73,7 @@ final class CtcVocabBoosterTests: XCTestCase {
             span: "the build finally passed", term: "GitHub Actions", floor: floor))
     }
 
-    // MARK: applyAcceptedReplacements — whole-word, first-occurrence, positional
+    // MARK: applyAcceptedReplacements; whole-word, first-occurrence, positional
 
     func testReplacementDoesNotCorruptSubstring() {
         // A substring replace of "rust" would rewrite the "rust" inside
@@ -145,7 +145,7 @@ final class CtcVocabBoosterTests: XCTestCase {
         XCTAssertEqual(out.count, 0)
     }
 
-    // MARK: spanMatchesTerm — short terms demand exact matches
+    // MARK: spanMatchesTerm; short terms demand exact matches
 
     // Every spoken "help" became "Helm" from a glossary term. "help" and
     // "helm" are 0.75 similar, exactly the floor, and one edit around a 4 or

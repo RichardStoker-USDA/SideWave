@@ -388,7 +388,7 @@ enum VocabularyAIExtractor {
 // MARK: - AFM guided-generation schema
 
 /// @Generable extraction schema for the Apple Intelligence path. Constrained
-/// decoding replaces the freeform-JSON prompt + firstIndex('[') scraping —
+/// decoding replaces the freeform-JSON prompt + firstIndex('[') scraping;
 /// gen-1 in particular drifts on strict JSON prose but honors a typed schema.
 @Generable
 struct AFMVocabTerm {

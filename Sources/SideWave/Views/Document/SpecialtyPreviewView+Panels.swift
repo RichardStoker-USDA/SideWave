@@ -453,7 +453,7 @@ extension SpecialtyPreviewView {
         guard !activity.isWorking, let previous = undoStack.popLast() else { return }
         if !appliedAsks.isEmpty { appliedAsks.removeFirst() }
         // A user-initiated write, same path the Pending-Additions "Append"
-        // buttons use — no programmatic-write flag, so `specialtyIsEdited`
+        // buttons use; no programmatic-write flag, so `specialtyIsEdited`
         // latches exactly as a manual edit would.
         appState.specialtyEditedText = previous
     }

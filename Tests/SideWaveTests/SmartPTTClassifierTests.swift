@@ -36,7 +36,7 @@ final class SmartPTTClassifierTests: XCTestCase {
     }
 
     /// Holding through a slow start and KEEPING the hold once live is a
-    /// deliberate PTT — the user is waiting to talk, then talking.
+    /// deliberate PTT; the user is waiting to talk, then talking.
     func testHoldMaintainedPastSlowStartIsPTT() {
         XCTAssertTrue(HotkeyManager.smartPTTHoldSatisfied(
             now: 12.6, pressDown: 10.0, engineLiveAt: 12.0, threshold: threshold))

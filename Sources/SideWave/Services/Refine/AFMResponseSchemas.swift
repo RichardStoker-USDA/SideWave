@@ -121,7 +121,7 @@ struct AFMPromptDocumentOutput {
 }
 
 /// Live-status analysis schema for the specialty overlay. Constrained
-/// decoding replaces the hand-rolled XML parser on the AFM path — far more
+/// decoding replaces the hand-rolled XML parser on the AFM path; far more
 /// reliable on gen-1, which drifts on "emit these exact XML tags" prose.
 @Generable
 struct AFMLiveStatus {

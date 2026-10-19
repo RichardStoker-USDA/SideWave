@@ -154,11 +154,11 @@ extension VocabularyStore {
     @discardableResult
     func importGlossaries(from data: Data) -> [UUID] {
         guard data.count <= Self.maxImportBytes else {
-            print("[VocabularyStore] Import rejected: \(data.count) bytes exceeds cap")
+            SWLog.note("[VocabularyStore] Import rejected: \(data.count) bytes exceeds cap")
             return []
         }
         guard let glossaries = Self.decodeGlossaries(from: data), !glossaries.isEmpty else {
-            print("[VocabularyStore] Import failed: no glossaries decoded")
+            SWLog.note("[VocabularyStore] Import failed: no glossaries decoded")
             return []
         }
 

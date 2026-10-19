@@ -276,7 +276,7 @@ extension TranscriptionService {
 
             segmentFinalizationFailures = 0
 
-            print("[TranscriptionService] Segment \(segment.index) finalized (\(triggerLabel), \(String(format: "%.1f", Double(segmentSize) / 16000.0))s)")
+            SWLog.note("[TranscriptionService] Segment \(segment.index) finalized (\(triggerLabel), \(String(format: "%.1f", Double(segmentSize) / 16000.0))s)")
             let segDur = Double(segmentSize) / 16_000.0
             dictationTraceLog.notice("tdt finalize idx=\(segment.index, privacy: .public) words=\(wordCount(text), privacy: .public) dur=\(segDur, format: .fixed(precision: 2), privacy: .public)s trigger=\(triggerLabel, privacy: .public) tail=\(transcriptMetrics(text), privacy: .public)")
 
@@ -291,7 +291,7 @@ extension TranscriptionService {
             }
 
         } catch {
-            print("[TranscriptionService] Segment finalization failed (\(triggerLabel)): \(error)")
+            SWLog.note("[TranscriptionService] Segment finalization failed (\(triggerLabel)): \(error)")
             segmentFinalizationFailures += 1
             if segmentFinalizationFailures >= 3 {
                 // Use lastVolatileSnapshot first (survives finalization clearing volatileText),

@@ -16,7 +16,7 @@ extension TranscriptionService {
     func startRecording(deviceUID: String? = nil, allowStaleEngineRetry: Bool = true) async {
         guard !isRecording, !Task.isCancelled else { return }
         guard modelState.isReady else {
-            print("[TranscriptionService] Model not ready, cannot start recording")
+            SWLog.note("[TranscriptionService] Model not ready, cannot start recording")
             return
         }
 
@@ -39,7 +39,7 @@ extension TranscriptionService {
         dictationTraceLog.notice("startRecording permission checked elapsedMs=\((CFAbsoluteTimeGetCurrent() - startEntryAt) * 1000, format: .fixed(precision: 0), privacy: .public)")
         guard !Task.isCancelled else { return }
         guard granted else {
-            print("[TranscriptionService] Microphone permission denied")
+            SWLog.note("[TranscriptionService] Microphone permission denied")
             // Surface a modal alert with a deep-link to System Settings
             // instead of silently aborting. Otherwise the hotkey fires,
             // nothing happens, and the user has no idea why.
@@ -140,7 +140,7 @@ extension TranscriptionService {
                 }
                 engineQuiesceTask = nil
                 if finished == nil {
-                    print("[TranscriptionService] Engine quiesce timed out; abandoning kept engine for a fresh one")
+                    SWLog.note("[TranscriptionService] Engine quiesce timed out; abandoning kept engine for a fresh one")
                     engineStorage = nil
                 }
             }
@@ -175,7 +175,7 @@ extension TranscriptionService {
             // below.
             startPollingLoop(pollManager: pollManager)
             // High-frequency audio level polling (~20Hz) for equalizer animation.
-            // Also gated by isRecording — sleeps until the flip.
+            // Also gated by isRecording; sleeps until the flip.
             startAudioLevelPolling()
             startLiveTailPolling()
 
@@ -205,12 +205,12 @@ extension TranscriptionService {
             // a device re-enumerated under the same ID. Retry once with a new engine so the press
             // still works.
             if engineWasReused && allowStaleEngineRetry && !isRecording && !Task.isCancelled {
-                print("[TranscriptionService] Setup failed on reused engine; retrying once with a fresh engine")
+                SWLog.note("[TranscriptionService] Setup failed on reused engine; retrying once with a fresh engine")
                 teardownEngine(destroyEngine: true)
                 await startRecording(deviceUID: deviceUID, allowStaleEngineRetry: false)
                 return
             }
-            print("[TranscriptionService] Failed to start recording: \(error)")
+            SWLog.note("[TranscriptionService] Failed to start recording: \(error)")
             isRecording = false
             pollingTask?.cancel()
             pollingTask = nil
@@ -252,7 +252,7 @@ extension TranscriptionService {
             currentEngineForOverlay = .undecided
             eouPartialAccumulated = ""
             audioBuffers.clearSamples()
-            // Setup failed — never keep this engine for reuse.
+            // Setup failed; never keep this engine for reuse.
             teardownEngine(destroyEngine: true)
         }
     }
@@ -386,7 +386,7 @@ extension TranscriptionService {
                     remainingText = processed
                 } catch {
                     // Timeout fallback: use last known volatile text
-                    print("[TranscriptionService] Final segment transcription failed/timed out: \(error)")
+                    SWLog.note("[TranscriptionService] Final segment transcription failed/timed out: \(error)")
                     remainingText = lastKnownVolatile
                 }
             } else {

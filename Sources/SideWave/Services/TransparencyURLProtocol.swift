@@ -235,7 +235,7 @@ public final class TransparencyURLProtocol: URLProtocol, URLSessionDataDelegate,
                 kind = .modelManifest
                 detail = "Querying HuggingFace model listing"
             } else if path.contains("/resolve/") || path.contains("/blobs/") {
-                // A model file fetched outside the app's own downloader —
+                // A model file fetched outside the app's own downloader;
                 // name the file so the transparency row is meaningful.
                 kind = .modelDownload
                 let file = (path as NSString).lastPathComponent

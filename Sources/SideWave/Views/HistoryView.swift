@@ -811,7 +811,7 @@ private struct BackTranslationSheet: View {
     }
 
     private func runLookup() async {
-        // Cached from a previous open — show it, never re-run the model.
+        // Cached from a previous open; show it, never re-run the model.
         if let cached = entry.backTranslation {
             state = .ready(cached)
             return

@@ -96,7 +96,7 @@ extension MeetingTranscriptionService {
             liveDrainTask?.cancel(); liveDrainTask = nil
             await engine.abandonLive()
             if isResume {
-                // Prior parts are the user's kept audio — keep them recoverable.
+                // Prior parts are the user's kept audio; keep them recoverable.
                 newSession.setStatus(.stopped)
             } else {
                 // Fresh session captured nothing; drop the empty directory.
@@ -224,7 +224,7 @@ extension MeetingTranscriptionService {
         }
         audioDiagnostics = nil
 
-        print("[MeetingTranscription] Recording stopped. Duration: \(String(format: "%.1f", recordingDuration))s")
+        SWLog.note("[MeetingTranscription] Recording stopped. Duration: \(String(format: "%.1f", recordingDuration))s")
 
         if case .recording = state {
             state = .idle

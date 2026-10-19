@@ -117,7 +117,7 @@ extension AppState {
                 }
 
                 // Retry the standby session if it should be on but isn't
-                // yet (permission granted mid-launch). Cheap to call —
+                // yet (permission granted mid-launch). Cheap to call;
                 // start() is a no-op when already running.
                 let shouldBeOnStandby = strongSelf.keepMicOnStandby
                 if shouldBeOnStandby {

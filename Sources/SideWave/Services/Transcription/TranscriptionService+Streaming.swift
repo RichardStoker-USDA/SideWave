@@ -118,7 +118,7 @@ extension TranscriptionService {
             } catch {
                 let duration = Date().timeIntervalSince(startLoad) * 1000.0
                 DictationTracingService.shared.log(.modelLoad, .error, "Dual-engine EOU load failed: \(error.localizedDescription)", durationMs: duration)
-                print("[TranscriptionService] Dual-engine EOU load failed (\(error.localizedDescription))")
+                SWLog.note("[TranscriptionService] Dual-engine EOU load failed (\(error.localizedDescription))")
                 streamingAudioQueue?.finish()
                 streamingAudioQueue = nil
                 eouAsr = nil
@@ -143,7 +143,7 @@ extension TranscriptionService {
         }
 
         do { try await Self.prepareEouSession(eou) }
-        catch { print("[TranscriptionService] Streaming input priming failed") }
+        catch { SWLog.note("[TranscriptionService] Streaming input priming failed") }
         guard streamingAudioQueue != nil, isRecording, !Task.isCancelled else { return }
         eouAsr = eou
 
@@ -284,7 +284,7 @@ extension TranscriptionService {
                     consecutiveErrors += 1
                     let errMsg = error.localizedDescription
                     DictationTracingService.shared.log(.engineState, .warning, "EOU Feeder error #\(consecutiveErrors): \(errMsg)")
-                    print("[TranscriptionService] EOU feeder error #\(consecutiveErrors): \(errMsg)")
+                    SWLog.note("[TranscriptionService] EOU feeder error #\(consecutiveErrors): \(errMsg)")
                     
                     if consecutiveErrors >= 5 {
                         DictationTracingService.shared.log(.engineState, .error, "EOU Feeder reached 5 consecutive errors. Triggering actor reset.")

@@ -4,11 +4,8 @@
 import AppKit
 import SwiftUI
 
-/// Headless UI verification: draws every overlay state to PNG files and
-/// exits before a single window exists. Launch the binary with
-/// `-renderPreviews <dir>`; nothing appears on screen. This is how the
-/// overlay design gets reviewed and iterated without borrowing the
-/// user's display.
+/// `-renderPreviews <dir>` draws every overlay state to PNG files and exits before any window
+/// opens.
 @MainActor
 enum PreviewRenderer {
 

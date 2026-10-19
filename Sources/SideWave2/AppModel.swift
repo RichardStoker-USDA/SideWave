@@ -366,7 +366,7 @@ final class AppModel {
         Task { await controller.requestCancel(save: false) }
     }
 
-    /// Start requested from UI (dashboard button / menu) — same session,
+    /// Start requested from UI (dashboard button / menu); same session,
     /// no PTT semantics.
     func toggleFromUI() {
         switch phase {
@@ -487,7 +487,7 @@ final class AppModel {
     }
 
     /// Flip the overlay hint once the hold crosses the live-anchored
-    /// threshold — the hint's only owner, scheduled from engine-live the
+    /// threshold; the hint's only owner, scheduled from engine-live the
     /// way the carried fix demands (never from key-down).
     private func armPttHint() {
         pttHintTask?.cancel()

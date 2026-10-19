@@ -11,9 +11,7 @@ import os
 /// reported success at each step.
 ///
 /// File: ~/Library/Application Support/SideWave/paste_trace.jsonl
-/// Owner-read-only (chmod 0o600) so other same-user processes can't read
-/// dictated text. Capped at 200 entries (oldest dropped) to bound disk
-/// usage. Surfaced via a "Show Paste Log" button in Settings →
+/// Owner read/write only (0600), capped at 200 entries (oldest dropped). Surfaced via a "Show Paste Log" button in Settings →
 /// Audio → Advanced → Diagnostics.
 enum PasteTracer {
     private static let maxEntries: Int = 200
@@ -39,7 +37,7 @@ enum PasteTracer {
         }
     }
 
-    /// One paste attempt — the lifetime of `typeTextInstantly` plus the
+    /// One paste attempt: the lifetime of `typeTextInstantly` plus the
     /// cascade of fallback layers it dispatches into.
     struct Trace: Codable, Sendable {
         let timestamp: Date
@@ -93,7 +91,7 @@ enum PasteTracer {
                 trimIfNeeded(url: url)
                 logger.info("paste outcome=\(trace.outcome, privacy: .public) verdict=\(trace.verdict, privacy: .public) target=\(trace.targetApp, privacy: .public)")
             } catch {
-                print("[PasteTracer] Failed to write trace: \(error.localizedDescription)")
+                SWLog.note("[PasteTracer] Failed to write trace: \(error.localizedDescription)")
             }
         }
     }
@@ -105,7 +103,7 @@ enum PasteTracer {
     }
 
     /// Erase the trace log on demand. Useful when reproducing a specific
-    /// failure — clear, repro, share.
+    /// failure; clear, repro, share.
     static func clear() {
         queue.async {
             try? FileManager.default.removeItem(at: traceFileURL())

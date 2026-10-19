@@ -69,7 +69,7 @@ final class VocabularyStoreTests: XCTestCase {
     // MARK: - Legacy salvage
 
     /// A file that fails the typed decode because one term is missing its
-    /// required canonical must NOT be quarantined — salvage rebuilds the pack
+    /// required canonical must NOT be quarantined; salvage rebuilds the pack
     /// and keeps every recoverable term.
     func testSalvageRecoversPackDroppingOnlyBadTerm() throws {
         let json = """
@@ -144,7 +144,7 @@ final class VocabularyStoreTests: XCTestCase {
         let pack = VocabPack(name: "Mine", description: "", isEnabled: true, terms: [term])
         VocabularyStore.shared.packs = [pack]
 
-        // "kubernetis" is one edit from the canonical — exact substring misses,
+        // "kubernetis" is one edit from the canonical; exact substring misses,
         // fuzzy should catch it.
         let section = VocabularyStore.shared.makeSnapshot()
             .buildPromptSection(for: "deploying to kubernetis cluster")
@@ -182,7 +182,7 @@ final class VocabularyStoreTests: XCTestCase {
 
     // MARK: - Blurb budget skip
 
-    /// An over-budget blurb must be skipped, not stop the loop — later blurbs
+    /// An over-budget blurb must be skipped, not stop the loop; later blurbs
     /// that still fit have to keep filling the budget.
     func testBlurbBudgetSkipsOverBudgetKeepsLaterFitting() {
         // Budget is 600. 350 + 350 busts, but a trailing short blurb fits.
@@ -345,7 +345,7 @@ final class VocabularyStoreTests: XCTestCase {
             .appendingPathComponent("vocabulary.json")
         let backup = try? Data(contentsOf: fileURL)
         // The tests are hosted in the real app, so BOTH the on-disk file and
-        // the shared singleton's in-memory packs must be restored — restoring
+        // the shared singleton's in-memory packs must be restored; restoring
         // only the file leaves the singleton diverged, and any later save
         // would clobber the restored file with test data.
         let packsBackup = VocabularyStore.shared.packs

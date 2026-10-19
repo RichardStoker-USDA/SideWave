@@ -203,7 +203,7 @@ final class PasteEngine: @unchecked Sendable {
             return
         }
         guard AXIsProcessTrusted() else {
-            print("[PasteEngine] Accessibility permissions required")
+            Logger(subsystem: "com.sidewave.kit", category: "paste").error("Accessibility permission required")
             Self.onAccessibilityMissing?()
             completion?(.failed)
             return
@@ -335,7 +335,7 @@ final class PasteEngine: @unchecked Sendable {
             let r1 = insertTextViaClipboard(text, targetPID: pid)
             if r1 != .failed { return r1 }
             // PID-targeted Cmd+V positively did not land. Try the HID-tap
-            // Cmd+V variant before giving up — some Electron builds accept the
+            // Cmd+V variant before giving up; some Electron builds accept the
             // global tap when the direct postToPid is dropped.
             attempts.append("clipboard-hid-electron")
             let r2 = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID)
@@ -365,7 +365,7 @@ final class PasteEngine: @unchecked Sendable {
                     return .assumed
                 case .notLanded:
                     // AX positively confirms nothing landed. Safe to fall
-                    // through to the clipboard paste below — no double-paste.
+                    // through to the clipboard paste below; no double-paste.
                     break
                 }
             }
@@ -562,7 +562,7 @@ final class PasteEngine: @unchecked Sendable {
               let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
         else { return false }
 
-        // Explicit empty flags — same inherited-modifier hazard as
+        // Explicit empty flags; same inherited-modifier hazard as
         // insertTextBulk above.
         keyDown.flags = []
         keyUp.flags = []
@@ -610,7 +610,7 @@ final class PasteEngine: @unchecked Sendable {
         if insertResult == .success { return true }
 
         // Selected-text isn't settable here. For a secure field the value reads
-        // back as bullets, so appending would corrupt it — keep the replace
+        // back as bullets, so appending would corrupt it; keep the replace
         // behavior the secure-input path depends on.
         var roleRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef) == .success,

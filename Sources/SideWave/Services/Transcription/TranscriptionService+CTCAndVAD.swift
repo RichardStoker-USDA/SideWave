@@ -27,10 +27,10 @@ extension TranscriptionService {
             guard !vocabTerms.isEmpty else {
                 if hasActiveVocabulary {
                     self.ctcBoostStatus = .noValidTerms
-                    print("[TranscriptionService] Vocabulary has active entries but none passed length filter, CTC boosting skipped")
+                    SWLog.note("[TranscriptionService] Vocabulary has active entries but none passed length filter, CTC boosting skipped")
                 } else {
                     self.ctcBoostStatus = .noDictionary
-                    print("[TranscriptionService] No vocabulary terms configured, CTC boosting skipped")
+                    SWLog.note("[TranscriptionService] No vocabulary terms configured, CTC boosting skipped")
                 }
                 if self.boostSetupTask == box.task {
                     self.boostSetupTask = nil
@@ -58,7 +58,7 @@ extension TranscriptionService {
 
                 guard let booster else {
                     self.ctcBoostStatus = .noValidTerms
-                    print("[TranscriptionService] No vocabulary terms survived CTC tokenization")
+                    SWLog.note("[TranscriptionService] No vocabulary terms survived CTC tokenization")
                     if self.boostSetupTask == box.task {
                         self.boostSetupTask = nil
                     }
@@ -69,10 +69,10 @@ extension TranscriptionService {
                 self.ctcBooster = booster
                 self.isCtcBoosterReady = true
                 self.ctcBoostStatus = .ready
-                print("[TranscriptionService] CTC vocabulary boosting ready with \(booster.termCount) terms")
+                SWLog.note("[TranscriptionService] CTC vocabulary boosting ready with \(booster.termCount) terms")
             } catch {
                 self.ctcBoostStatus = .failed(error.localizedDescription)
-                print("[TranscriptionService] CTC vocabulary boosting setup failed: \(error.localizedDescription)")
+                SWLog.note("[TranscriptionService] CTC vocabulary boosting setup failed: \(error.localizedDescription)")
             }
             if self.boostSetupTask == box.task {
                 self.boostSetupTask = nil
@@ -101,13 +101,13 @@ extension TranscriptionService {
                 audioSamples: audioSamples
             )
             if outcome.wasModified {
-                print("[TranscriptionService] CTC rescoring applied \(outcome.replacementCount) replacement(s)")
+                SWLog.note("[TranscriptionService] CTC rescoring applied \(outcome.replacementCount) replacement(s)")
                 ctcBoostsApplied += outcome.replacementCount
                 return outcome.text
             }
             return result.text
         } catch {
-            print("[TranscriptionService] CTC rescoring failed: \(error.localizedDescription)")
+            SWLog.note("[TranscriptionService] CTC rescoring failed: \(error.localizedDescription)")
             return result.text
         }
     }
@@ -146,9 +146,9 @@ extension TranscriptionService {
                 self.vadTotalSamplesProcessed = 0
                 self.lastSpeechEndSampleIndex = nil
                 self.isVadReady = true
-                print("[TranscriptionService] VadManager ready for smart segment boundaries")
+                SWLog.note("[TranscriptionService] VadManager ready for smart segment boundaries")
             } catch {
-                print("[TranscriptionService] VAD setup failed (non-fatal): \(error.localizedDescription)")
+                SWLog.note("[TranscriptionService] VAD setup failed (non-fatal): \(error.localizedDescription)")
             }
             if self.vadSetupTask == box.task {
                 self.vadSetupTask = nil
@@ -266,10 +266,10 @@ extension TranscriptionService {
                     }
                 }
             } catch {
-                print("[TranscriptionService] VAD chunk error (non-fatal): \(error.localizedDescription)")
+                SWLog.note("[TranscriptionService] VAD chunk error (non-fatal): \(error.localizedDescription)")
                 consecutiveVadErrors += 1
                 if consecutiveVadErrors >= Self.maxVadErrors {
-                    print("[TranscriptionService] VAD disabled after \(consecutiveVadErrors) consecutive errors")
+                    SWLog.note("[TranscriptionService] VAD disabled after \(consecutiveVadErrors) consecutive errors")
                     self.vadManager = nil
                     self.vadStreamState = nil
                     self.vadAccumulationBuffer = []

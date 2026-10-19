@@ -6,11 +6,7 @@ import XCTest
 
 /// Characterization tests for `StagedTranscript`, the data model that drives
 /// the dictation preview overlay (gray EOU tail + confirmed/refined spans) and
-/// the paste-on-stop assembly. This model is the single most regression-prone
-/// surface in the app ("EOU text must ALWAYS stream when the user speaks"), and
-/// it had no automated coverage. These tests pin the behavior so the
-/// per-partial re-split and boundary logic can be optimized later without a
-/// live-audio repro.
+/// the paste-on-stop assembly. The draft must always stream while the user speaks.
 @MainActor
 final class StagedTranscriptTests: XCTestCase {
 
@@ -103,7 +99,7 @@ final class StagedTranscriptTests: XCTestCase {
         // (model reload / context-window pressure). The shrink-detection branch
         // in ingestEouPartial must recompute the tail to the new content, not
         // crash, dump stale text, or leave the cached split (eouAccumulatedWords)
-        // out of sync. Regression net for the turn-27 split cache.
+        // out of sync.
         let t = StagedTranscript()
         t.ingestEouPartial("one two three four five six")
         XCTAssertEqual(t.liveEouTail, "one two three four five six")
@@ -256,11 +252,8 @@ final class StagedTranscriptTests: XCTestCase {
 
     // The EOU engine can restart its accumulator mid-session (FluidAudio
     // reset() after feeder errors, audio recovery, internal reset under long-
-    // session pressure). Without epochs, after a restart session-lifetime
-    // coverage exceeded the fresh accumulator's word count on every partial,
-    // so the shrink branch re-zeroed both cursors ~6x/second and the entire
-    // post-restart accumulator rendered as a permanent gray tail duplicating
-    // already-refined content. These tests pin the epoch semantics that fix it.
+    // session pressure). A restarted accumulator must not inherit coverage from an earlier
+    // epoch, or the whole post-restart draft stays gray and duplicates refined text.
 
     /// Runs a "phase A" session: three committed segments, EOU fully covered.
     private func buildCoveredSession(_ t: StagedTranscript) {
@@ -291,12 +284,12 @@ final class StagedTranscriptTests: XCTestCase {
         // The next partial extends the restarted accumulator. Under the old
         // code, session-lifetime coverage (> accumulator length) re-tripped
         // the shrink branch here, zeroed both cursors, and the tail dumped
-        // ALL 15 words — 12 of them already committed above.
+        // ALL 15 words; 12 of them already committed above.
         t.ingestEouPartial(fresh + " plus three more")
         XCTAssertEqual(t.liveEouTail, "plus three more",
                        "tail must only hold words past the committed fresh segment, got '\(t.liveEouTail)'")
 
-        // Paste assembly shares the cursor — no duplication there either.
+        // Paste assembly shares the cursor; no duplication there either.
         let final = t.finalText()
         let occurrences = final.components(separatedBy: "totally different set").count - 1
         XCTAssertEqual(occurrences, 1, "committed fresh segment must appear exactly once in paste, got: \(final)")
@@ -310,7 +303,7 @@ final class StagedTranscriptTests: XCTestCase {
         t.resetEouAlignment()
         XCTAssertEqual(t.liveEouTail, "")
 
-        // Fresh engine output after recovery — must not trip the shrink
+        // Fresh engine output after recovery; must not trip the shrink
         // branch against pre-recovery coverage.
         t.ingestEouPartial("hello again after recovery")
         XCTAssertEqual(t.liveEouTail, "hello again after recovery")

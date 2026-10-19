@@ -699,7 +699,7 @@ final class StagedTranscript {
                     j += 1
                 }
                 // Require at least one whitespace after the terminator
-                // (and optional closing punctuation) — otherwise things
+                // (and optional closing punctuation); otherwise things
                 // like "U.S.A." get falsely uppercased on the next letter.
                 if j < chars.count, chars[j].isWhitespace {
                     // Advance past whitespace.
@@ -900,10 +900,10 @@ final class StagedTranscript {
                     while backtrackJ > 0 && backtrackI > 0 {
                         let cost = (confirmedSuffix[backtrackI-1] == tailPrefix[backtrackJ-1]) ? 0 : 1
                         if dp[backtrackI][backtrackJ] == dp[backtrackI][backtrackJ-1] + 1 {
-                            // Trailing insertion in tailPrefix — trim it from the match length
+                            // Trailing insertion in tailPrefix; trim it from the match length
                             backtrackJ -= 1
                         } else if dp[backtrackI][backtrackJ] == dp[backtrackI-1][backtrackJ-1] + cost {
-                            // Match or substitution found — this is the actual boundary of the overlap!
+                            // Match or substitution found; this is the actual boundary of the overlap!
                             break
                         } else {
                             // Deletion in confirmedSuffix
@@ -931,8 +931,8 @@ final class StagedTranscript {
     }
 
     /// How many streaming words correspond to the TDT text. The two often count differently
-    /// ("in-house" against "in house", dropped or added words), and advancing by TDT's count left
-    /// streaming words in the tail as duplicate text. Uses an edit-distance table.
+    /// ("in-house" against "in house", dropped or added words), so counting TDT's words would leave
+    /// duplicates in the tail. Uses an edit-distance table.
     // `internal` (not `private`) for direct unit coverage via `@testable import`.
     static func findEouCoverage(tdtText: String, eouWords: [Substring]) -> Int {
         let tdtWords = tdtText.split(whereSeparator: \.isWhitespace).map { $0.lowercased().trimmingCharacters(in: .punctuationCharacters) }

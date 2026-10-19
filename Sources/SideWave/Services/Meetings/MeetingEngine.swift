@@ -86,7 +86,7 @@ actor MeetingEngine {
             try await loadFastModels(base: 0.0, weight: 0.15, label: "Nemotron 3 live speakers", progress: progress)
             try await loadBalancedModels(base: 0.15, weight: 0.15, label: "Nemotron 3 final speakers", progress: progress)
             try await loadASRModels(base: 0.30, weight: 0.10, label: "Speech model", progress: progress)
-            // Live is an enhancement, not required for batch meetings — a failed
+            // Live is an enhancement, not required for batch meetings; a failed
             // live fetch must never block New Meeting. Swallow its error and let
             // the caller's refreshLiveAvailability reflect that live isn't ready.
             do {
@@ -157,7 +157,7 @@ actor MeetingEngine {
                 let n = max(1, min(completedFiles + 1, totalFiles))
                 forward(.downloading(fraction: f, detail: "\(label): \(n) of \(totalFiles) files"))
             case .compiling:
-                // Local Core ML compile — no byte feedback, can take seconds. Call
+                // Local Core ML compile; no byte feedback, can take seconds. Call
                 // it out by name so an indeterminate bar never reads as frozen.
                 forward(.preparing(detail: "Compiling \(label). This takes a moment."))
             case .listing, .downloading:

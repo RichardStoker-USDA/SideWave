@@ -105,7 +105,7 @@ final class EouGhostGateTests: XCTestCase {
 
     func testSilenceWindowDropsWhenNoSpeechInWindow() {
         // Speech last seen before the window began; VAD has consumed past
-        // the window end — the window is a pause, drop.
+        // the window end; the window is a pause, drop.
         XCTAssertTrue(TranscriptionService.silenceWindowShouldDrop(
             vadProcessedThrough: 260_000,
             lastVadSpeechSample: 90_000,
@@ -124,7 +124,7 @@ final class EouGhostGateTests: XCTestCase {
     }
 
     func testSilenceWindowFailsOpenWhenVadLagsBehindWindow() {
-        // VAD hasn't consumed the whole window — it must not veto audio it
+        // VAD hasn't consumed the whole window; it must not veto audio it
         // hasn't seen, even though its last speech stamp predates the window.
         XCTAssertTrue(!TranscriptionService.silenceWindowShouldDrop(
             vadProcessedThrough: 200_000,
@@ -146,7 +146,7 @@ final class EouGhostGateTests: XCTestCase {
 
     func testSilenceWindowDropsWithinOneChunkMargin() {
         // VAD frontier one sub-chunk (<=1600 samples) short of the window end
-        // still counts as full coverage — the stop-path drain always leaves a
+        // still counts as full coverage; the stop-path drain always leaves a
         // partial chunk unconsumed.
         XCTAssertTrue(TranscriptionService.silenceWindowShouldDrop(
             vadProcessedThrough: 249_000,
@@ -201,7 +201,7 @@ final class EouGhostGateTests: XCTestCase {
     func testPhantomFilterStripsEntireSegmentWhenAllTokensArePhantom() {
         // Field case: every token starts after speech end ("Updating whatever
         // the last year." with 12/12 tokens past cutoff). Empty is the correct
-        // output — the caller's empty-text guard drops the segment. The old
+        // output; the caller's empty-text guard drops the segment. The old
         // guard refused the strip and shipped the whole hallucination.
         let timings = [
             timing("I", start: 1.6),
@@ -262,7 +262,7 @@ final class EouGhostGateTests: XCTestCase {
     @MainActor
     func testPhantomFilterBailsOnSuffixMismatch() {
         // Post-processing altered the tail so the phantom tokens no longer
-        // form a literal suffix — the filter must not garble, return as-is.
+        // form a literal suffix; the filter must not garble, return as-is.
         let timings = [
             timing("hello", start: 0.2),
             timing(" wrld", start: 1.6),

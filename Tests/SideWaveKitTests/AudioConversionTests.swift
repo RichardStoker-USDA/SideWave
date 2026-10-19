@@ -47,7 +47,7 @@ final class AudioConversionTests: XCTestCase {
             cachedAutoChannel: nil,
             onAutoCalibrated: { _, channel in cached.set(channel) })
 
-        // Mic on input 2, input 1 silent — the field scenario mirrored.
+        // Mic on input 2, input 1 silent; the field scenario mirrored.
         let quiet = tone(0.0001)
         let loud = tone(0.4)
         for _ in 0..<8 {

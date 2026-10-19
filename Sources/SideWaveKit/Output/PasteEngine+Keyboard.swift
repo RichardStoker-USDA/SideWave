@@ -87,7 +87,7 @@ extension PasteEngine {
                     layout,
                     UInt16(code),
                     UInt16(kUCKeyActionDown),
-                    0, // no modifiers — we want the base character
+                    0, // no modifiers; we want the base character
                     kbdType,
                     OptionBits(kUCKeyTranslateNoDeadKeysBit),
                     &deadKeyState,

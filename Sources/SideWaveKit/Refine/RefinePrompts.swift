@@ -119,7 +119,7 @@ enum RefinePrompts {
     // MARK: Hard rules (shared, most-weighted)
 
     /// Both engines complete dangling thoughts when the input ends in a
-    /// conjunction. Enumerating the trigger words is deliberate — the
+    /// conjunction. Enumerating the trigger words is deliberate; the
     /// models recognize the pattern from the list.
     static let noCompletionRule = """
     HARD RULE — DO NOT EXTEND THE INPUT. The input is a slice of in-progress speech. Your output must cover ONLY what the input contains. If the input ends mid-thought, mid-clause, or with a trailing connector word (because, that, which, and, so, but, or, when, if, while, where, who, whose, whom, since, although, though, unless, after, before, until, then, also), you MUST stop your output at that connector. Do NOT add the next clause. Do NOT complete the thought. Do NOT invent the rest of the sentence. The speaker has not said those words yet. Adding them creates visible duplication on screen when the speaker continues speaking. Match your output's content scope to the input's content scope exactly. Grammar fixes (adding 1-2 missing articles, auxiliaries, prepositions to make a sentence parseable) are fine. Adding entire clauses, predicates, or trailing thoughts is fabrication and forbidden.

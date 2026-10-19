@@ -65,7 +65,7 @@ public enum SessionTransition {
             _ = since
             return Result(.live(since: now))
         case (.starting(let since), .stopRequested):
-            // Queue it. The session that hasn't started cannot be stopped —
+            // Queue it. The session that hasn't started cannot be stopped;
             // only remembered. This is what makes an early release or a
             // fast second tap non-destructive on slow starts.
             return Result(.starting(since: since), [.queueStop])

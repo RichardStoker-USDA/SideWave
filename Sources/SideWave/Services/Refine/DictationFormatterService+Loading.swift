@@ -71,7 +71,7 @@ extension DictationFormatterService {
 
         preparationDetail = "Checking model files and loading weights"
         state = .loading
-        print("[DictationFormatter] Loading \(activeBackend.displayName)... (attempt \(attemptID))")
+        SWLog.note("[DictationFormatter] Loading \(activeBackend.displayName)... (attempt \(attemptID))")
         let seenPartialProgressBox = SeenPartialProgressBox()
         // Wrap the default Hugging Face downloader so every fetched file
         // is logged in NetworkActivityLog and surfaced in the Model Recovery
@@ -105,13 +105,13 @@ extension DictationFormatterService {
                 }
             }
             guard !Task.isCancelled, currentLoadAttemptID == attemptID else {
-                print("[DictationFormatter] Load cancelled or superseded")
+                SWLog.note("[DictationFormatter] Load cancelled or superseded")
                 return
             }
             // Don't clobber a user-initiated teardown state with .ready
             switch state {
             case .disabled, .unloaded:
-                print("[DictationFormatter] Load finished but state is \(state); discarding container")
+                SWLog.note("[DictationFormatter] Load finished but state is \(state); discarding container")
                 return
             default:
                 break
@@ -131,7 +131,7 @@ extension DictationFormatterService {
             guard !Task.isCancelled, currentLoadAttemptID == attemptID else { return }
             self.modelContainer = container
             self.state = .ready
-            print("[DictationFormatter] Ready")
+            SWLog.note("[DictationFormatter] Ready")
         } catch {
             if Task.isCancelled || currentLoadAttemptID != attemptID { return }
             // Don't overwrite a user-initiated teardown state with an error
@@ -141,7 +141,7 @@ extension DictationFormatterService {
             default:
                 break
             }
-            print("[DictationFormatter] Model load failed: \(error.localizedDescription)")
+            SWLog.note("[DictationFormatter] Model load failed: \(error.localizedDescription)")
             self.state = .error(Self.userFacingErrorMessage(from: error))
         }
     }
@@ -171,7 +171,7 @@ extension DictationFormatterService {
                 if event.contains(.critical) {
                     self.handleCriticalMemoryPressure()
                 } else if event.contains(.warning) {
-                    print("[DictationFormatter] Memory pressure warning (keeping model loaded)")
+                    SWLog.note("[DictationFormatter] Memory pressure warning (keeping model loaded)")
                 }
             }
         }
@@ -190,7 +190,7 @@ extension DictationFormatterService {
         // to load the model again. `onAutoUnloaded` lets AppState explain with a toast.
         state = .unloaded
         onAutoUnloaded?()
-        print("[DictationFormatter] Dropped model due to critical memory pressure")
+        SWLog.note("[DictationFormatter] Dropped model due to critical memory pressure")
     }
 
     // No deinit to cancel memoryPressureSource: AppState owns this service for the app's lifetime

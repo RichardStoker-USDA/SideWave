@@ -5,12 +5,9 @@ import XCTest
 @testable import SideWave
 
 /// Regression tests for `DictationOverlayContent.alignWords`, the EOU/TDT
-/// word aligner behind the animated in-progress zone. The one-sided-empty
-/// guard fixed a whole-app SIGTRAP (`for i in 1...0`) that fired during
-/// SwiftUI body evaluation whenever exactly one of the two arrays was empty
-/// — routine at session start (EOU has words ~160ms in, first streaming-TDT
-/// poll hasn't returned) and right after a TDT commit clears the streaming
-/// slot.
+/// word aligner behind the animated in-progress zone. Either array can be empty: at session
+/// start the draft has words before the first TDT poll returns, and a TDT commit clears the
+/// streaming slot.
 @MainActor
 final class OverlayAlignmentTests: XCTestCase {
 
@@ -78,7 +75,7 @@ final class OverlayAlignmentTests: XCTestCase {
 
     func testInteriorTdtOnlyPairIsKept() {
         // Interior TDT-only (TDT split a word / caught one EOU missed)
-        // must survive — only the trailing run is stale.
+        // must survive; only the trailing run is stale.
         let pairs = [pair("a", "A"), pair(nil, "X"), pair("b", "B")]
         let trim = DictationOverlayContent.inProgressTrim(alignedPairs: pairs)
         XCTAssertEqual(trim.pairCount, 3)
@@ -129,9 +126,8 @@ final class OverlayAlignmentTests: XCTestCase {
     }
 
     func testCommitFloorLeapDoesNotTeleportPointer() {
-        // The bug: a commit leaps `floor` by a whole segment; the old code
-        // snapped the pointer straight up to it. The pointer must keep its
-        // constant chase pace instead.
+        // A commit moves `floor` up by a whole segment; the pointer keeps its chase pace instead
+        // of jumping to it.
         let next = TdtTrailAnimator.nextPointer(
             current: 4.0, target: 12, floor: 12,
             dt: 1.0 / 30.0, wordDuration: wordDur, isFirstTick: false
@@ -218,7 +214,7 @@ final class OverlayAlignmentTests: XCTestCase {
         let fade = 1.6
         // Pointer has swept word 0 fully white showing raw EOU "the".
         _ = lock.apply(words: [dword("the")], confirmedTdtCount: 0, pointer: 2.0, fadeWindow: fade)
-        // Streaming TDT now rescores word 0 to "The" — but it's already white.
+        // Streaming TDT now rescores word 0 to "The"; but it's already white.
         let out = lock.apply(words: [dword("the", tdt: "The")], confirmedTdtCount: 0, pointer: 2.1, fadeWindow: fade)
         XCTAssertEqual(out.count, 1)
         XCTAssertEqual(DictationOverlayContent.displayText(out[0], progress: 1.0), "the",

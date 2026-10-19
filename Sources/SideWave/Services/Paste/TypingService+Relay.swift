@@ -117,7 +117,7 @@ extension TypingService {
         var error: NSDictionary?
         script.executeAndReturnError(&error)
         if let error {
-            print("[TypingService] AppleScript error: \(error)")
+            SWLog.note("[TypingService] AppleScript error: \(error)")
             return false
         }
         return true

@@ -143,7 +143,7 @@ final class MeetingTranscriptionService {
             removed += 1
         }
         if removed > 0 {
-            print("[MeetingTranscription] Cleaned up \(removed) legacy audio file(s)")
+            SWLog.note("[MeetingTranscription] Cleaned up \(removed) legacy audio file(s)")
         }
     }
 
@@ -230,7 +230,7 @@ final class MeetingTranscriptionService {
                 self?.meetingModelsState = .error(error.localizedDescription)
                 self?.modelPrepDetail = nil
                 self?.modelPrepIndeterminate = false
-                print("[MeetingTranscription] Model prepare failed: \(error.localizedDescription)")
+                SWLog.note("[MeetingTranscription] Model prepare failed: \(error.localizedDescription)")
             }
             self?.prepareTask = nil
         }
@@ -266,7 +266,7 @@ final class MeetingTranscriptionService {
         do {
             try await engine.downloadLiveASRModel(progress: handler)
         } catch {
-            print("[MeetingTranscription] Live transcript model download failed: \(error.localizedDescription)")
+            SWLog.note("[MeetingTranscription] Live transcript model download failed: \(error.localizedDescription)")
         }
         liveModelDownloadProgress = nil
         modelPrepDetail = nil

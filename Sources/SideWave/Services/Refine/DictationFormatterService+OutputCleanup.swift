@@ -130,13 +130,13 @@ extension DictationFormatterService {
         for tailLen in stride(from: 5, through: 4, by: -1) {
             guard words.count >= tailLen * 2 else { continue }
             let tail = Array(words.suffix(tailLen))
-            // Look for an earlier occurrence — must not overlap with the
+            // Look for an earlier occurrence; must not overlap with the
             // tail itself, so search the prefix up to length - tailLen.
             let searchEnd = words.count - tailLen
             for start in 0..<searchEnd {
                 let candidate = Array(words[start..<(start + tailLen)])
                 // Case-insensitive comparison so "And the same" matches
-                // "and the same" — common at AFM-fabricated boundaries.
+                // "and the same"; common at AFM-fabricated boundaries.
                 if zip(candidate, tail).allSatisfy({ $0.lowercased() == $1.lowercased() }) {
                     // Drop the tail, plus a short connector such as "an" or "a" that often precedes
                     // the repeat.

@@ -29,8 +29,8 @@ final class ManualTranslationProbeTests: XCTestCase {
 
     /// Realistic English dictation, split into the kind of ~1-2 sentence slices
     /// the real-time refiner sees per segment. Deliberately mixes in a proper
-    /// name (Sarah), a weekday, numbers, and a percentage — all of which the
-    /// language rule says to PRESERVE — so a fully translated output still
+    /// name (Sarah), a weekday, numbers, and a percentage; all of which the
+    /// language rule says to PRESERVE; so a fully translated output still
     /// carries a little ASCII and the Han-ratio threshold stays honest.
     private let segments: [String] = [
         "so today I want to walk through the quarterly budget review and where we landed on the numbers",
@@ -77,9 +77,7 @@ final class ManualTranslationProbeTests: XCTestCase {
 
     /// The stop-time full-session final pass: the whole dictation refined in one
     /// shot through the real `buildPrompt` path (priorContext nil, no turn
-    /// override) — a different prompt builder than the per-turn arms, and the
-    /// path the owner's "Full Session" strategy and the smart/incremental tail
-    /// merge feed. Confirms the tail doesn't drop back to English on the final
+    /// override), the path Full Session and the stop-time tail merge use. Confirms the tail doesn't drop back to English on the final
     /// pass.
     func testZhFinalPassArm() async throws {
         try await runFinalPassTest(language: .simplifiedChinese, metric: .hanScript, threshold: 0.5)
@@ -108,12 +106,9 @@ final class ManualTranslationProbeTests: XCTestCase {
     // -- End-to-end through the production `formatOrReturnRaw` entry --
     //
     // The arms above call `runAFMGeneration` directly, so they measure the
-    // model, not the app path. The field leak was NOT in the model: generation
-    // scored 1.00 while live dictation still pasted English. The culprit lived
-    // one layer up, in `formatOrReturnRaw`'s word-ratio gate — `wordCount`
-    // splits on whitespace, and Chinese has no spaces, so a correct 30-word
-    // translation counted as ~1 word, blew the ratio floor, and the gate
-    // discarded the translation and returned the raw English. This arm drives
+    // model, not the app path. `formatOrReturnRaw`'s word-ratio gate counts words by
+    // whitespace, and Chinese has no spaces, so a correct translation could read as one word,
+    // fail the ratio floor, and fall back to the English input. This arm drives
     // the real `formatOrReturnRaw` on a long (>=15-word) input so the ratio gate
     // is actually in play; it would have caught the leak the direct arms missed.
     @MainActor
@@ -298,7 +293,7 @@ final class ManualTranslationProbeTests: XCTestCase {
         }
     }
 
-    /// Log the device's own claim about a language — the gating signals
+    /// Log the device's own claim about a language; the gating signals
     /// `offeredOutputLanguages` could rely on (`supportsLocale` is the per-device
     /// pre-flight; `supportedLanguages` membership is the set the current code
     /// uses).
@@ -385,7 +380,7 @@ final class ManualTranslationProbeTests: XCTestCase {
             } catch {
                 // Hard-reset on overflow (or any generation error): rebuild the
                 // session, reseed from the prior tail, retry the turn once. If
-                // it still fails, record the error and keep going — one bad
+                // it still fails, record the error and keep going; one bad
                 // segment must not abort the whole probe (and lose all data).
                 session = makeSession()
                 tokenEstimate = sessionBase

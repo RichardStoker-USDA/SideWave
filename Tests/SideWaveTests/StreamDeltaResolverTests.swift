@@ -10,7 +10,7 @@ import XCTest
 /// behavior is the GHOST-TEXT GUARD: the LLM stream is normally a strict
 /// append, but if a delta is NOT a strict append of what's on screen, slicing
 /// at the old length would strand stale glyphs ("ghost text"), so the resolver
-/// must replace wholesale. The brief's #1 visual requirement.
+/// must replace wholesale.
 final class StreamDeltaResolverTests: XCTestCase {
 
     func testCleanAppendPromotesPrefixAndSlicesTail() {

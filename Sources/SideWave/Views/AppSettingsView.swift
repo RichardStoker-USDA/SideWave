@@ -11,7 +11,7 @@ struct AppSettingsView: View {
     @Environment(\.openWindow) private var openWindow
     @AppStorage("experimentalFeatures") private var experimentalFeatures = false
     /// Simple-by-default switch (Settings > General). When off, the Advanced
-    /// category is dropped from the sidebar — its pane is expert-only tuning.
+    /// category is dropped from the sidebar; its pane is expert-only tuning.
     @AppStorage("showAdvancedControls") private var showAdvancedControls = false
     /// Persist across opens so reopening Settings returns to where the
     /// user was. Stored as the SidebarItem's case name; falls back to

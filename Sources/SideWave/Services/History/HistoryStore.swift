@@ -49,7 +49,7 @@ struct TranscriptionEntry: Codable, Identifiable, Equatable {
     let id: UUID
     let timestamp: Date
     /// The refined / final pasted text. This is the default surface in
-    /// History — what the user actually sent into their target app.
+    /// History: what the user actually sent into their target app.
     let text: String
     let appName: String
     let characterCount: Int
@@ -401,7 +401,7 @@ final class HistoryStore {
                 )
                 success = true
             } catch {
-                print("[HistoryStore] History flush failed")
+                SWLog.note("[HistoryStore] History flush failed")
             }
         }
         if !success { persistenceError = "History changes could not be saved. Copy your output before quitting." }

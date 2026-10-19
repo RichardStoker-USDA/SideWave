@@ -27,7 +27,7 @@ final class TdtTrailAnimator {
 
     /// Moves the pointer one tick toward `targetWords`, the TDT-confirmed edge. `floorWords`, the
     /// confirmed word count, positions the pointer only on the first tick; later commits don't pull
-    /// the pointer forward, which used to turn the rest of the text white at once.
+    /// the pointer forward, so the rest of the text doesn't turn solid at once.
     func advance(targetWords: Int, floorWords: Int, at now: TimeInterval) -> Double {
         // Detect session reset: total word count fell from non-zero to
         // zero (StagedTranscript.reset() between sessions).

@@ -5,7 +5,7 @@ import FluidAudio
 import XCTest
 @testable import SideWave
 
-/// Pins the R4 attribution invariants: words go to the speaker they actually
+/// Speaker attribution: words go to the speaker they actually
 /// overlap (not the earlier-starting one), short interjections land on the
 /// interjector, quiet audio with no diarizer output still keeps the ASR text,
 /// and word grouping never splits a word across speakers.

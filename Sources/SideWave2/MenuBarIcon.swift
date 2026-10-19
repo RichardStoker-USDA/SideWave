@@ -4,7 +4,7 @@
 import AppKit
 
 /// The menu bar glyph: two interweaving wave strands that converge to points
-/// at both ends — a monochrome echo of the SideWave ribbon in the app icon.
+/// at both ends; a monochrome echo of the SideWave ribbon in the app icon.
 /// Drawn in code as a template image so it stays vector-crisp at any backing
 /// scale and picks up the menu bar's light/dark/tinted appearance for free.
 ///

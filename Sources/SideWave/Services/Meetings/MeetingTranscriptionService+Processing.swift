@@ -28,7 +28,7 @@ extension MeetingTranscriptionService {
             } catch {
                 if !Task.isCancelled {
                     self.state = .error(error.localizedDescription)
-                    print("[MeetingTranscription] Processing failed: \(error)")
+                    SWLog.note("[MeetingTranscription] Processing failed: \(error)")
                 }
             }
         }
@@ -137,7 +137,7 @@ extension MeetingTranscriptionService {
             : "A partial transcript was recovered but could not be saved to history. Copy it now. The recording is kept for recovery at the next launch."
         session.closeJournal()
         state = .complete
-        print("[MeetingTranscription] Recovered \(segments.count) segments from live journal after batch failure")
+        SWLog.note("[MeetingTranscription] Recovered \(segments.count) segments from live journal after batch failure")
         return true
     }
 
@@ -202,7 +202,7 @@ extension MeetingTranscriptionService {
         session.closeJournal()
 
         state = .complete
-        print("[MeetingTranscription] Complete. \(finalSegments.count) segments from \(uniqueSpeakers.count) speakers (saved=\(saved))")
+        SWLog.note("[MeetingTranscription] Complete. \(finalSegments.count) segments from \(uniqueSpeakers.count) speakers (saved=\(saved))")
     }
 
     private func preserveGeneratedNotes(in updated: inout MeetingTranscript) {

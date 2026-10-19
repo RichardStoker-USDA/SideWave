@@ -12,7 +12,7 @@ import UniformTypeIdentifiers
 /// description of how they talk and write, fed to Refine so it preserves their
 /// voice. One button builds it from the user's own dictation with the active
 /// local model; the text is fully editable, toggleable, and clearable. This is
-/// separate from Vocabulary glossaries — it teaches Refine WHO the speaker is,
+/// separate from Vocabulary glossaries; it teaches Refine WHO the speaker is,
 /// not which words to spell. Nothing leaves the Mac.
 struct SpeechProfileSheet: View {
     let appState: AppState
@@ -25,7 +25,7 @@ struct SpeechProfileSheet: View {
     /// Build and Clear write through to the store immediately.
     @State private var draft: String = ""
     @State private var phase: Phase = .editing
-    /// The running build, held so dismissing mid-generation cancels it — an
+    /// The running build, held so dismissing mid-generation cancels it; an
     /// orphaned Gemma run keeps the GPU busy and stalls later refines.
     @State private var buildTask: Task<Void, Never>?
 
@@ -281,7 +281,7 @@ struct SpeechProfileSheet: View {
                 fromSampleText: sample,
                 via: appState.dictationFormatter
             )
-            // Sheet dismissed mid-generation — drop the result instead of
+            // Sheet dismissed mid-generation; drop the result instead of
             // mutating state on a view that's gone.
             try Task.checkCancellation()
             store.setBuilt(text: text, sourceEntryCount: texts.count)
@@ -294,7 +294,7 @@ struct SpeechProfileSheet: View {
         }
     }
 
-    /// The user's own dictation, newest-first, final (refined) text only —
+    /// The user's own dictation, newest-first, final (refined) text only;
     /// meetings and other entry types are excluded.
     private func recentDictationTexts() -> [String] {
         appState.historyStore.entries

@@ -43,7 +43,7 @@ extension AudioDeviceManager {
         var defAddr = defaultInputAddress
         let status = AudioObjectAddPropertyListenerBlock(system, &defAddr, nil, defaultBlock)
         if status != noErr {
-            print("[AudioDeviceManager] Failed to install default input listener: \(status)")
+            SWLog.note("[AudioDeviceManager] Failed to install default input listener: \(status)")
         }
 
         // Default output changes: Bluetooth headphones often switch only the output, because the
@@ -58,7 +58,7 @@ extension AudioDeviceManager {
         var outAddr = defaultOutputAddress
         let outStatus = AudioObjectAddPropertyListenerBlock(system, &outAddr, nil, outputBlock)
         if outStatus != noErr {
-            print("[AudioDeviceManager] Failed to install default output listener: \(outStatus)")
+            SWLog.note("[AudioDeviceManager] Failed to install default output listener: \(outStatus)")
         }
     }
 
@@ -73,13 +73,13 @@ extension AudioDeviceManager {
             
             // Stage 1: Fast wake refresh after 0.8 seconds to capture fast USB/built-in device changes
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-                print("[AudioDeviceManager] Fast wake device refresh (Stage 1)")
+                SWLog.note("[AudioDeviceManager] Fast wake device refresh (Stage 1)")
                 self?.refreshDevices()
             }
             
             // Stage 2: Thorough wake refresh after 1.5 seconds to capture slower Bluetooth/HFP route negotiations
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                print("[AudioDeviceManager] Thorough wake device refresh (Stage 2)")
+                SWLog.note("[AudioDeviceManager] Thorough wake device refresh (Stage 2)")
                 self?.refreshDevices()
             }
         }

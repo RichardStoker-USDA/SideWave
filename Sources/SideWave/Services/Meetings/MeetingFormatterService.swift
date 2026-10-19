@@ -120,12 +120,12 @@ final class MeetingFormatterService {
         afmSessionHolder = nil
         cachedTranscriptHash = nil
         state = .idle
-        print("[MeetingFormatter] Model unloaded")
+        SWLog.note("[MeetingFormatter] Model unloaded")
     }
 
     /// Swap the active backend. Drops both models so the next `format(...)`
     /// loads the newly-selected backend from scratch. Safe to call when a
-    /// generation is in flight — the running task is cancelled first.
+    /// generation is in flight; the running task is cancelled first.
     func setBackend(_ newBackend: MeetingFormatterBackend) {
         guard newBackend != selectedBackend else { return }
         loadGeneration = UUID()
@@ -219,7 +219,6 @@ final class MeetingFormatterService {
         vocabSection: String,
         format: MeetingFormat
     ) async throws {
-        // Step 1: Ensure model is loaded
         if modelContainer == nil {
             try await loadModel()
         }
@@ -246,7 +245,6 @@ final class MeetingFormatterService {
             return
         }
 
-        // Step 2: Build the user message
         let systemPrompt = resolvedSystemPrompt(for: format)
         let transcriptHash = (transcriptText + "\n\n" + vocabSection).hashValue
         let reformatMessage = """
@@ -265,7 +263,7 @@ final class MeetingFormatterService {
             // This is the fast path (~1-2 seconds instead of 20-30).
             // The system prompt is neutral so switching between formats works cleanly.
             userMessage = reformatMessage
-            print("[MeetingFormatter] KV cache hit -- reformat only")
+            SWLog.note("[MeetingFormatter] KV cache hit -- reformat only")
         } else {
             // First time or different transcript -- send the full text. Vocab
             // rides along with the transcript so it stays in the KV cache for
@@ -282,7 +280,7 @@ final class MeetingFormatterService {
             userMessage = withVocabulary(base, vocabSection)
             // Reset session for new transcript
             chatSession = nil
-            print("[MeetingFormatter] Processing full transcript (\(transcriptText.count) chars)")
+            SWLog.note("[MeetingFormatter] Processing full transcript (\(transcriptText.count) chars)")
         }
 
         // Create or reuse the chat session with a neutral system prompt so different formats don't
@@ -302,7 +300,6 @@ final class MeetingFormatterService {
         let promptTokens = await container.encode(userMessage).count
         try Task.checkCancellation()
 
-        // Step 4: Stream the response
         state = .generating(output: "", note: nil)
         var fullOutput = ""
 
@@ -333,7 +330,7 @@ final class MeetingFormatterService {
                 output: fullOutput
             )
         }
-        print("[MeetingFormatter] Gemma generation complete (\(fullOutput.count) chars)")
+        SWLog.note("[MeetingFormatter] Gemma generation complete (\(fullOutput.count) chars)")
     }
 
 }

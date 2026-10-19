@@ -9,13 +9,8 @@ import QuartzCore
 /// Transparent, click-through window that draws a colored border around a target window.
 /// Tracks the target window's position and size in real time using AXObserver + polling.
 ///
-/// `@MainActor`-isolated: it drives an `NSWindow` and AppKit ordering, all of
-/// which must run on the main thread. Every caller (AppState) is already on the
-/// main actor, the AXObserver callback and poll timer both hop to main, so the
-/// isolation is now compiler-enforced instead of convention. No `deinit`
-/// cleanup: this is a single app-lifetime instance owned by AppState, which
-/// calls `detach()` explicitly; a nonisolated deinit cannot touch the
-/// main-actor window/timer/observer state anyway.
+/// Main-actor isolated because it drives an `NSWindow`. One instance lives as long as the app;
+/// AppState calls `detach()` explicitly.
 @MainActor
 final class BorderOverlayController {
     private var overlayWindow: NSWindow?

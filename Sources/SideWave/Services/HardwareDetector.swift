@@ -30,7 +30,7 @@ enum HardwareDetector {
            let cached = Tier(rawValue: stored),
            defaults.object(forKey: detectedAtKey) != nil
         {
-            // Detection is cached after first launch — the chip and RAM
+            // Detection is cached after first launch; the chip and RAM
             // don't change under a running install.
             tier = cached
         } else {

@@ -34,7 +34,7 @@ final class TypingServiceTests: XCTestCase {
         // Newlines must NOT survive into the AppleScript string in any form:
         // a raw newline terminates the script line, and an escaped \n gets
         // decoded back to a real newline by AppleScript inside `do script` /
-        // `write text` — which executes each line of a multi-line dictation
+        // `write text`; which executes each line of a multi-line dictation
         // as a separate terminal command. They collapse to single spaces so
         // the injected text is always exactly one command line.
         XCTAssertEqual(svc.escapeForAppleScript("a\nb"), "a b")

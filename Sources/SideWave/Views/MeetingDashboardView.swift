@@ -287,7 +287,7 @@ struct MeetingDashboardView: View {
 
         case .downloading(let progress):
             // Compiling (and cache listing) carry no byte feedback, so show an
-            // indeterminate bar and drop the percent — a fraction sitting still
+            // indeterminate bar and drop the percent; a fraction sitting still
             // reads as frozen.
             let indeterminate = appState.meetingService.modelPrepIndeterminate
             VStack(alignment: .leading, spacing: Spacing.xs) {

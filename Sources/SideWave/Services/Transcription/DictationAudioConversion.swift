@@ -48,7 +48,7 @@ final class AudioResampler: @unchecked Sendable {
             if let hq = resampleHQ(samples: samples, sourceSampleRate: sourceSampleRate) {
                 return hq
             }
-            // HQ path failed (rare — bad format, allocation failure).
+            // HQ path failed (rare; bad format, allocation failure).
             // Quiet fall-through to linear so the session still works.
         }
         return Self.resampleLinear(samples: samples, sourceSampleRate: sourceSampleRate)
@@ -181,7 +181,7 @@ final class ChannelSelector: @unchecked Sendable {
     private let deviceUID: String?
     private let onAutoCalibrated: (@Sendable (String?, Int) -> Void)?
 
-    // Calibration state — only mutated by the audio tap thread.
+    // Calibration state; only mutated by the audio tap thread.
     private var calibrationCallbacksRemaining: Int
     private var perChannelSumSquares: [Float]
     private var perChannelFrameCount: [Int]
@@ -244,7 +244,7 @@ final class ChannelSelector: @unchecked Sendable {
     }
 
     /// Extract mono samples at the device's native rate. Always returns
-    /// data — never nil — so the caller doesn't need a drop-buffer path.
+    /// data (never nil) so the caller doesn't need a drop-buffer path.
     /// Updates calibration state if calibration is still in progress.
     func selectAndDownmix(_ buffer: AVAudioPCMBuffer) -> [Float] {
         guard let channelData = buffer.floatChannelData else { return [] }
@@ -315,11 +315,11 @@ final class ChannelSelector: @unchecked Sendable {
 
         if finalBestRMS < Self.silenceFloor {
             // All channels essentially silent during calibration. Don't
-            // persist — let the next recording re-run calibration when
+            // persist; let the next recording re-run calibration when
             // the user is actually speaking.
             lockedInChannel = 1
             DispatchQueue.global(qos: .utility).async {
-                print("[ChannelSelector] Calibration found only silence (best RMS=\(finalBestRMS)); using channel 1 without caching")
+                SWLog.note("[ChannelSelector] Calibration found only silence (best RMS=\(finalBestRMS)); using channel 1 without caching")
             }
             return
         }

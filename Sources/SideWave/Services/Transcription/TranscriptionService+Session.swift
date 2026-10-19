@@ -58,7 +58,7 @@ extension TranscriptionService {
                 }
                 handle.closeFile()
             } catch {
-                print("[TranscriptionService] Failed to persist segment: \(error)")
+                SWLog.note("[TranscriptionService] Failed to persist segment: \(error)")
             }
         }
     }
@@ -93,7 +93,7 @@ extension TranscriptionService {
             do {
                 try Self.writeRecoverySnapshot(trimmed, to: fileURL)
             } catch {
-                print("[TranscriptionService] Could not save the recovery snapshot")
+                SWLog.note("[TranscriptionService] Could not save the recovery snapshot")
             }
         }
     }
@@ -214,7 +214,7 @@ extension TranscriptionService {
                 if lastEpoch > 0 {
                     let elapsed = Date().timeIntervalSince1970 - lastEpoch
                     if elapsed > 5 {
-                        print("[TranscriptionService] WARNING: No audio buffers received in \(Int(elapsed))s")
+                        SWLog.note("[TranscriptionService] WARNING: No audio buffers received in \(Int(elapsed))s")
                         if !self.hasAttemptedRecovery {
                             await self.attemptAudioRecovery()
                         } else {

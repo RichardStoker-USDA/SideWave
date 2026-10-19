@@ -41,7 +41,7 @@ enum GemmaPalette {
     }
 
     /// Saturated subset for small glyph tints (the Refine header sparkles).
-    /// Skips the near-white dark-scheme stops — at caption size they wash
+    /// Skips the near-white dark-scheme stops; at caption size they wash
     /// the glyph out; the deep-to-bright blues keep it legible both schemes.
     static func glyphColors(for scheme: ColorScheme) -> [Color] {
         let source = scheme == .light

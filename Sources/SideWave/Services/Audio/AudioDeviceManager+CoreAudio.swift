@@ -150,7 +150,7 @@ extension AudioDeviceManager {
     nonisolated static func warmInputDeviceHAL(_ deviceID: AudioDeviceID) {
         guard deviceID != 0 else { return }
 
-        // 1. Stream format on the input scope — what AVAudioEngine reads.
+        // 1. Stream format on the input scope: what AVAudioEngine reads.
         var fmtAddr = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyStreamFormat,
             mScope: kAudioDevicePropertyScopeInput,
@@ -184,7 +184,7 @@ extension AudioDeviceManager {
             _ = AudioObjectGetPropertyData(deviceID, &streamCfgAddr, 0, nil, &streamCfgSize, bufList)
         }
 
-        // 4. Available nominal sample rates — forces the driver to expose its
+        // 4. Available nominal sample rates, which forces the driver to expose its
         // rate table, which Sound settings reads on open.
         var ratesAddr = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyAvailableNominalSampleRates,
@@ -450,7 +450,7 @@ extension AudioDeviceManager {
             &id
         )
         if status != noErr {
-            print("[AudioDeviceManager] Failed to set system default input (\(status))")
+            SWLog.note("[AudioDeviceManager] Failed to set system default input (\(status))")
         }
     }
 

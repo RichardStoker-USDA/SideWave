@@ -34,7 +34,7 @@ struct DashboardView: View {
     private var header: some View {
         HStack(spacing: 14) {
             // The brand mark, alive: calm at rest, flowing while a
-            // session runs — the same wave the overlay carries.
+            // session runs; the same wave the overlay carries.
             WaveStrands(
                 mood: model.phase == .live ? .listening : .calm,
                 activityPulse: model.transcriptPulse

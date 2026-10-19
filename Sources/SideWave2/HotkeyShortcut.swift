@@ -74,7 +74,7 @@ struct HotkeyShortcut: Codable, Equatable {
             return keyGlyph ?? Self.keyCodeToString(keyCode) ?? "?"
         }
 
-        // Modifier + key — concatenate glyphs (no separator) so the keycap
+        // Modifier + key; concatenate glyphs (no separator) so the keycap
         // reads like a stamped key.
         let key = keyGlyph ?? Self.keyCodeToString(keyCode) ?? "?"
         return modifiers.joined() + key

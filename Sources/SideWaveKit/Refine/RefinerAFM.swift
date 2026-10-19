@@ -448,7 +448,7 @@ public actor RefinerAFM: Refiner {
             let stream = session.streamResponse(to: prompt, options: options)
             for try await partial in stream {
                 try Task.checkCancellation()
-                // Cumulative snapshot, not a delta — assign, don't append.
+                // Cumulative snapshot, not a delta; assign, don't append.
                 output = partial.content
             }
             return output

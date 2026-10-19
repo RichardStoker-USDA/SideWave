@@ -46,7 +46,7 @@ enum AIAssist {
     /// Best-effort read of whether the extractor can run right now. Gemma has
     /// to be loaded into RAM (`.ready`); AFM is OS-owned and attemptable
     /// unless the formatter reports it disabled/unavailable. The extractor
-    /// still guards the true state at call time — this only powers the
+    /// still guards the true state at call time; this only powers the
     /// up-front heads-up so a user isn't surprised by an error after typing.
     @MainActor
     static func backendReady(_ formatter: DictationFormatterService) -> Bool {
@@ -64,7 +64,7 @@ enum AIAssist {
 
 /// The "model is working" phase for the AI-assist sheets: the reactive audio
 /// wave plus a title and per-backend on-device subtitle. Respects Reduce
-/// Motion — the wave holds a steady level instead of animating.
+/// Motion; the wave holds a steady level instead of animating.
 struct AIThinkingView: View {
     let title: String
     let subtitle: String
@@ -167,7 +167,7 @@ struct DescribeVocabularySheet: View {
     @State private var candidates: [AIVocabCandidate] = []
     @State private var state: AISheetState = .idle
     /// The running extraction, held so dismissing the sheet mid-generation can
-    /// cancel it — otherwise an orphaned Gemma run keeps the GPU busy and
+    /// cancel it; otherwise an orphaned Gemma run keeps the GPU busy and
     /// stalls later refines.
     @State private var extractTask: Task<Void, Never>?
     @FocusState private var descriptionFocused: Bool
@@ -469,7 +469,7 @@ struct DescribeVocabularySheet: View {
                 maxTerms: Int(wordCount.rounded()),
                 via: appState.dictationFormatter
             )
-            // Sheet dismissed mid-generation — drop the result instead of
+            // Sheet dismissed mid-generation; drop the result instead of
             // mutating state on a view that's gone.
             try Task.checkCancellation()
             candidates = extracted.map {

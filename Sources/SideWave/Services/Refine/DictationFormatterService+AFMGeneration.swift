@@ -69,7 +69,7 @@ extension DictationFormatterService {
         )
         // prewarm() is a synchronous load hint that can block for hundreds
         // of ms; on the MainActor it stalls the live-preview paints that
-        // queue behind it. Fire it off-main — generation works either way.
+        // queue behind it. Fire it off-main; generation works either way.
         let warmSession = session
         Task.detached(priority: .utility) { warmSession.prewarm() }
         afmSessionHolder = session
@@ -93,7 +93,7 @@ extension DictationFormatterService {
         let priorContext = settings.priorContext ?? ""
         let priorEmpty = priorContext.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
-        // Cached at (re)build — the OS context window can't change mid-
+        // Cached at (re)build; the OS context window can't change mid-
         // dictation, and afmContextSize() is an out-of-process query that was
         // running on the MainActor once per turn.
         if afmTurnContextCap == 0 { afmTurnContextCap = Self.afmContextSize() }
@@ -122,7 +122,7 @@ extension DictationFormatterService {
             )
             // prewarm() is a synchronous load hint that can block for hundreds
             // of ms; on the MainActor it stalls the live-preview paints that
-            // queue behind it. Fire it off-main — generation works either way.
+            // queue behind it. Fire it off-main; generation works either way.
             let warmSession = session
             Task.detached(priority: .utility) { warmSession.prewarm() }
             afmTurnSessionHolder = session
@@ -182,7 +182,7 @@ extension DictationFormatterService {
             self.afmSessionHolder = session
             self.afmSessionTemplate = defaultTemplate
             self.state = .ready
-            print("[DictationFormatter] Apple Intelligence ready")
+            SWLog.note("[DictationFormatter] Apple Intelligence ready")
         case .unavailable(let reason):
             self.state = .unavailable(Self.afmUnavailableMessage(for: reason))
         @unknown default:

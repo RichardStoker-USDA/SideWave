@@ -18,11 +18,9 @@ import FluidAudio
 ///    relies on: once the first inference has been burned on a silent
 ///    buffer, a quiet session start can't inherit hallucinated tokens.
 /// 3. If the first pass DOES emit tokens (a truly cold ANE program), the
-///    probe logs them — that text is literally what a fresh-install user
-///    would have seen as ghost words. On a machine whose OS-level ANE cache
-///    is already warm, an empty first pass is expected and does not falsify
-///    the diagnosis; the production log trap ("warmup decode consumed
-///    ghost") is the definitive first-install evidence.
+///    probe logs them; that text is literally what a fresh-install user
+///    would have seen as ghost words. With a warm OS-level ANE cache, an empty
+///    first pass is expected.
 ///
 /// Run:
 ///   TEST_RUNNER_SIDEWAVE_WARMUP_PROBE=1 xcodebuild test ... \
@@ -35,7 +33,7 @@ final class WarmupDecodeProbeTests: XCTestCase {
         }
     }
 
-    /// 2s of silence at 16kHz mono — the exact buffer the production
+    /// 2s of silence at 16kHz mono; the exact buffer the production
     /// warm-up decode feeds.
     private func silentBuffer() throws -> AVAudioPCMBuffer {
         let format = try XCTUnwrap(AVAudioFormat(
@@ -60,7 +58,7 @@ final class WarmupDecodeProbeTests: XCTestCase {
         let eou = StreamingEouAsrManager(chunkSize: .ms160, eouDebounceMs: 1280)
         try await eou.loadModels(to: nil, configuration: nil, progressHandler: nil)
 
-        // Pass 1: the process-cold inference — the production warm-up decode.
+        // Pass 1: the process-cold inference; the production warm-up decode.
         let firstStart = Date()
         _ = try await eou.process(audioBuffer: try silentBuffer())
         let firstText = try await eou.finish()
@@ -70,7 +68,7 @@ final class WarmupDecodeProbeTests: XCTestCase {
         print("[warmup-probe] EOU pass 1 (cold): \(firstMs)ms text=\"\(firstText)\"")
 
         // Pass 2: the state a user's first session now starts in. Silence
-        // after the warm-up MUST decode to nothing — this is the assertion
+        // after the warm-up MUST decode to nothing; this is the assertion
         // that makes the trigger fix meaningful.
         let secondStart = Date()
         _ = try await eou.process(audioBuffer: try silentBuffer())

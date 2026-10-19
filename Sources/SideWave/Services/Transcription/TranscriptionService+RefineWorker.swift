@@ -302,7 +302,7 @@ extension TranscriptionService {
         }
     }
 
-    /// Han (incl. extensions), Hiragana/Katakana, and Hangul — the scripts the
+    /// Han (incl. extensions), Hiragana/Katakana, and Hangul; the scripts the
     /// CJK output languages render in. Kept in sync with the probe's scorer.
     nonisolated static func isEastAsianScriptScalar(_ scalar: Unicode.Scalar) -> Bool {
         let v = scalar.value

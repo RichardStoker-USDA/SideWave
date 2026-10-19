@@ -23,7 +23,7 @@ extension MeetingFormatterService {
     nonisolated static func canReuseContext(cachedTokens: Int, promptTokens: Int, contextCap: Int) -> Bool {
         cachedTokens + promptTokens + maxOutputTokens + 512 <= contextCap
     }
-    /// Smaller ceiling for per-chunk map-reduce notes — these are working
+    /// Smaller ceiling for per-chunk map-reduce notes; these are working
     /// notes, not prose.
     nonisolated private static let maxChunkNotesTokens = 1024
     /// Per-chunk token budget for map-reduce. Comfortably under the window so
@@ -257,7 +257,7 @@ extension MeetingFormatterService {
             state = .error("This meeting has no transcript to format.")
             return
         }
-        print("[MeetingFormatter] Map-reduce over \(chunks.count) sections")
+        SWLog.note("[MeetingFormatter] Map-reduce over \(chunks.count) sections")
 
         // Map: per-section structured notes.
         let notesParams = Self.gemmaParameters(maxTokens: Self.maxChunkNotesTokens)
@@ -376,7 +376,7 @@ extension MeetingFormatterService {
                 output: fullOutput
             )
         }
-        print("[MeetingFormatter] Map-reduce complete (\(fullOutput.count) chars)")
+        SWLog.note("[MeetingFormatter] Map-reduce complete (\(fullOutput.count) chars)")
     }
 
     nonisolated static func groupNotes(_ notes: [String], tokenBudget: Int,

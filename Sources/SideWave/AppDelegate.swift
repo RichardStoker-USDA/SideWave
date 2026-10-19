@@ -57,11 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     main.makeKeyAndOrderFront(nil)
                     main.orderFrontRegardless()
                 } else {
-                    let names = NSApp.windows.map { win -> String in
-                        let id = win.identifier?.rawValue ?? "nil"
-                        return "id=\(id) title='\(win.title)'"
-                    }
-                    NSLog("[SideWave] ensureDashboardVisible: still no main window after retry. NSApp.windows = \(names)")
+                    SWLog.note("ensureDashboardVisible: no main window after retry; \(NSApp.windows.count) windows open")
                 }
             }
         }

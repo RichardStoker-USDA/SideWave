@@ -389,7 +389,7 @@ final class HotkeyManager {
             guard !Task.isCancelled else { return }
             if setupGlobalHotkey() {
                 isInitialized = true
-                print("[HotkeyManager] Event tap created on attempt \(attempts + 1)")
+                SWLog.note("[HotkeyManager] Event tap created on attempt \(attempts + 1)")
                 return
             }
             attempts += 1
@@ -397,7 +397,7 @@ final class HotkeyManager {
             catch { return }
         }
 
-        print("[HotkeyManager] Failed to create event tap after \(maxAttempts) attempts")
+        SWLog.note("[HotkeyManager] Failed to create event tap after \(maxAttempts) attempts")
         isInitialized = false
     }
 
@@ -406,7 +406,7 @@ final class HotkeyManager {
         cleanupEventTap()
 
         guard AXIsProcessTrusted() else {
-            print("[HotkeyManager] Accessibility not granted")
+            SWLog.note("[HotkeyManager] Accessibility not granted")
             return false
         }
 
@@ -430,13 +430,13 @@ final class HotkeyManager {
         )
 
         guard let tap = eventTap else {
-            print("[HotkeyManager] CGEvent.tapCreate failed")
+            SWLog.note("[HotkeyManager] CGEvent.tapCreate failed")
             return false
         }
 
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         guard let source = runLoopSource else {
-            print("[HotkeyManager] CFRunLoopSource creation failed")
+            SWLog.note("[HotkeyManager] CFRunLoopSource creation failed")
             return false
         }
 
@@ -444,7 +444,7 @@ final class HotkeyManager {
         CGEvent.tapEnable(tap: tap, enable: true)
 
         guard isEventTapEnabled() else {
-            print("[HotkeyManager] Event tap could not be enabled")
+            SWLog.note("[HotkeyManager] Event tap could not be enabled")
             cleanupEventTap()
             return false
         }
@@ -480,7 +480,7 @@ final class HotkeyManager {
                 await MainActor.run {
                     guard let self else { return }
                     if !self.validateEventTapHealth() {
-                        print("[HotkeyManager] Health check failed, recovering")
+                        SWLog.note("[HotkeyManager] Health check failed, recovering")
                         if self.setupGlobalHotkey() {
                             self.isInitialized = true
                         } else {
@@ -702,7 +702,7 @@ final class HotkeyManager {
                         // Delayed appearance: don't show anything for the
                         // first ~150ms so quick taps never flash the ring.
                         if elapsed < visualDelay {
-                            // holdProgress stays nil — ring is hidden
+                            // holdProgress stays nil; ring is hidden
                         } else {
                             self.holdProgress = min(1.0, elapsed / thresholdSeconds)
                         }

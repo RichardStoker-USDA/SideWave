@@ -201,7 +201,7 @@ extension TranscriptionService {
                     if result.processingTime > 0 && result.duration > 0 {
                         let rtfx = result.processingTime / result.duration
                         if rtfx > 0.8 {
-                            print("[TranscriptionService] Slow poll: \(String(format: "%.2f", rtfx))x RT (\(String(format: "%.2f", result.processingTime))s for \(String(format: "%.1f", result.duration))s audio)")
+                            SWLog.note("[TranscriptionService] Slow poll: \(String(format: "%.2f", rtfx))x RT (\(String(format: "%.2f", result.processingTime))s for \(String(format: "%.1f", result.duration))s audio)")
                         }
                     }
                     #endif
@@ -322,14 +322,14 @@ extension TranscriptionService {
 
                 } catch {
                     self.consecutivePollingErrors += 1
-                    print("[TranscriptionService] Polling transcription error (\(self.consecutivePollingErrors) consecutive): \(error)")
+                    SWLog.note("[TranscriptionService] Polling transcription error (\(self.consecutivePollingErrors) consecutive): \(error)")
 
                     // After 5 consecutive failures, try reinitializing the AsrManager.
                     // CoreML models can occasionally enter a bad state after extended use.
                     // Guard with isReinitializingAsrManager to prevent concurrent reinit attempts.
                     if self.consecutivePollingErrors >= 5, self.isRecording, !self.isReinitializingAsrManager {
                         self.isReinitializingAsrManager = true
-                        print("[TranscriptionService] Attempting AsrManager reinitialization after \(self.consecutivePollingErrors) consecutive errors")
+                        SWLog.note("[TranscriptionService] Attempting AsrManager reinitialization after \(self.consecutivePollingErrors) consecutive errors")
                         do {
                             guard !Task.isCancelled, self.isRecording else {
                                 self.isReinitializingAsrManager = false
@@ -356,9 +356,9 @@ extension TranscriptionService {
                             }
                             self.pollingAsrManager = newManager
                             self.consecutivePollingErrors = 0
-                            print("[TranscriptionService] AsrManager reinitialized successfully")
+                            SWLog.note("[TranscriptionService] AsrManager reinitialized successfully")
                         } catch {
-                            print("[TranscriptionService] AsrManager reinitialization failed: \(error)")
+                            SWLog.note("[TranscriptionService] AsrManager reinitialization failed: \(error)")
                         }
                         self.isReinitializingAsrManager = false
                     }
@@ -504,7 +504,7 @@ extension TranscriptionService {
             if result.isEmpty {
                 dictationTraceLog.notice("phantom filter: stripped entire segment (\(droppedTokens.count, privacy: .public) tokens past speech end at \(speechEndTimeInSegment, format: .fixed(precision: 2), privacy: .public)s)")
             } else {
-                print("[TranscriptionService] Phantom word filter: stripped \(droppedTokens.count) trailing token(s) after speech end at \(String(format: "%.2f", speechEndTimeInSegment))s")
+                SWLog.note("[TranscriptionService] Phantom word filter: stripped \(droppedTokens.count) trailing token(s) after speech end at \(String(format: "%.2f", speechEndTimeInSegment))s")
             }
             return result
         }
@@ -539,7 +539,7 @@ extension TranscriptionService {
         }
 
         // Phase 2: Remove default single-word fillers. Scan for any filler
-        // before paying the O(n) split + alloc cost — if there's no filler
+        // before paying the O(n) split + alloc cost; if there's no filler
         // byte-substring, the split is wasted.
         let lowered = result.lowercased()
         let hasAnyFiller = Self.defaultFillers.contains(where: { lowered.contains($0) })

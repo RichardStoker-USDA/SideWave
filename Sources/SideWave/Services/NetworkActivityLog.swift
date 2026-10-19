@@ -208,7 +208,7 @@ final class NetworkActivityLog {
     }
 
     /// Clears the log. User-initiated only via the transparency window.
-    /// Doesn't affect the contract — events continue to be recorded after.
+    /// Doesn't affect the contract; events continue to be recorded after.
     func clear() {
         events = []
         persistedIDs = []

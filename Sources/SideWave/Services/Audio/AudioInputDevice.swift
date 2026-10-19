@@ -19,7 +19,7 @@ enum ChannelMode: Equatable, Sendable {
     case auto
     /// User explicitly selected this 1-based channel index.
     case channel(Int)
-    /// Mix (average) all channels — historical default before this knob
+    /// Mix (average) all channels, the historical default before this knob
     /// existed. Useful for legitimately stereo sources (binaural mics,
     /// stereo line-in).
     case mix

@@ -59,7 +59,6 @@ struct TutorialState: Codable, Equatable {
         save()
     }
 
-    /// Advance to next step
     mutating func nextStep() {
         if currentStep < Self.totalSteps - 1 {
             currentStep += 1

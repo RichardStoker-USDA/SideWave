@@ -199,7 +199,7 @@ final class AudioDeviceManager {
         #if DEBUG
         let defID = Self.defaultInputDeviceID()
         let defName = inputDevices.first(where: { $0.id == defID })?.name ?? "<none>"
-        print("[AudioDeviceManager] Refreshed devices (\(inputDevices.count) input). Default ID=\(defID), name=\(defName)")
+        SWLog.note("[AudioDeviceManager] Refreshed devices (\(inputDevices.count) input). Default ID=\(defID), name=\(defName)")
         #endif
 
         // Track UIDs between refreshes to detect a reconnect. The first refresh only records them,
@@ -225,7 +225,7 @@ final class AudioDeviceManager {
                 preferredDeviceUID = uid
             }
             selectedDeviceUID = nil
-            print("[AudioDeviceManager] Selected device disappeared, falling back to system default")
+            SWLog.note("[AudioDeviceManager] Selected device disappeared, falling back to system default")
         }
 
         // Switch back to the preferred device when it goes from missing to present (USB mic plugged
@@ -241,7 +241,7 @@ final class AudioDeviceManager {
         {
             selectedDeviceUID = preferred
             onDeviceAutoSwitched?(reconnected.name, "reconnected")
-            print("[AudioDeviceManager] Preferred device reconnected: \(reconnected.name)")
+            SWLog.note("[AudioDeviceManager] Preferred device reconnected: \(reconnected.name)")
 
             // Linked mode: also make it the macOS default, so the next dictation binds directly.
             // Not in independent mode or during dictation.
@@ -274,7 +274,7 @@ final class AudioDeviceManager {
     /// Called automatically when system default changes to Bluetooth, or manually.
     func performBluetoothFailover(silent: Bool = false) {
         guard let alternative = recommendedNonBluetoothDevice else {
-            print("[AudioDeviceManager] Bluetooth failover: no non-Bluetooth alternative available")
+            SWLog.note("[AudioDeviceManager] Bluetooth failover: no non-Bluetooth alternative available")
             return
         }
         selectedDeviceUID = alternative.uid
@@ -287,7 +287,7 @@ final class AudioDeviceManager {
         if !silent {
             onDeviceAutoSwitched?(alternative.name, "bluetooth_failover")
         }
-        print("[AudioDeviceManager] Bluetooth failover: switched to \(alternative.name)")
+        SWLog.note("[AudioDeviceManager] Bluetooth failover: switched to \(alternative.name)")
     }
 
     /// Aligns the macOS default with SideWave's selection right away, when the sync option is
@@ -457,7 +457,7 @@ final class AudioDeviceManager {
             guard let device = availableDevices.first(where: { $0.uid == uid }) else { continue }
             // BT-only mode: don't swap to another BT device, that's pointless.
             if !alwaysMode && device.isBluetooth { continue }
-            // Already on this device — nothing to do.
+            // Already on this device; nothing to do.
             if device.id == currentDefault { return false }
 
             Self.setSystemDefaultInputDevice(device.id)
@@ -469,14 +469,13 @@ final class AudioDeviceManager {
             } else {
                 reason = "bt_output_default_override"
             }
-            print("[AudioDeviceManager] Input override (\(alwaysMode ? "always" : "bt-only"), inputBT=\(inputIsBT) outputBT=\(outputIsBT)): macOS default → \(device.name)")
+            SWLog.note("[AudioDeviceManager] Input override (\(alwaysMode ? "always" : "bt-only"), inputBT=\(inputIsBT) outputBT=\(outputIsBT)): macOS default → \(device.name)")
             onDeviceAutoSwitched?(device.name, reason)
             return true
         }
         return false
     }
 
-    /// Old name, still used by init. Forwards to the combined override.
     @discardableResult
     private func attemptBluetoothDefaultOverride() -> Bool {
         attemptInputOverride()

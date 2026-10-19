@@ -285,7 +285,7 @@ extension AppState {
         isProgrammaticWrite = false
         agenticEditOriginalText = ""
         documentEditNotice = nil
-        // Insights describe a document that no longer exists — drop them too.
+        // Insights describe a document that no longer exists; drop them too.
         transcriptionService.specialtyLiveStatus = nil
     }
 

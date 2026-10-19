@@ -130,7 +130,7 @@ extension DictationFormatterService {
             }
         }
 
-        /// Tolerant lookup — unknown / legacy codes fall back to Match input.
+        /// Tolerant lookup; unknown / legacy codes fall back to Match input.
         static func from(code: String?) -> OutputLanguage {
             guard let code else { return .matchInput }
             return OutputLanguage(rawValue: code) ?? .matchInput

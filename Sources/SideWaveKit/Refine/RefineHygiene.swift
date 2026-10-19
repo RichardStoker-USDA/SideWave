@@ -117,7 +117,7 @@ enum RefineHygiene {
                         keep.removeLast()
                     }
                     // Slice the original text rather than rejoin with
-                    // spaces — rejoining would flatten every newline.
+                    // spaces; rejoining would flatten every newline.
                     if let endIdx = endIndexAfterWords(in: trimmed, count: keep.count) {
                         return String(trimmed[trimmed.startIndex..<endIdx])
                     }

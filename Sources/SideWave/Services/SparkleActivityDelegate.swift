@@ -7,7 +7,7 @@ import Sparkle
 /// Bridges Sparkle's updater lifecycle into `NetworkActivityLog` so every
 /// outbound update check and download surfaces in the transparency window.
 ///
-/// Without this, Sparkle's traffic was invisible to users — even though the
+/// Without this, Sparkle's traffic was invisible to users; even though the
 /// privacy contract advertised update checks as one of the two outbound
 /// reasons SideWave makes any network requests at all.
 ///

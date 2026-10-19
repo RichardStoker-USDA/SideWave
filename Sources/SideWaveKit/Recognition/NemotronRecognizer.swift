@@ -29,10 +29,8 @@ public struct ModelSetupProgress: Sendable, Equatable {
 
 /// The one speech engine: NVIDIA Nemotron Speech Streaming 0.6B
 /// (multilingual 3.5 line) through FluidAudio's CoreML pipeline.
-/// Cache-aware true streaming — an emitted token never retracts — at
-/// roughly one quarter the word error rate of the chunked design it
-/// replaces, so the dual-engine draft/confirm reconciliation layer is
-/// gone entirely.
+/// Cache-aware streaming: an emitted token never retracts, so there is no separate
+/// draft and confirm step.
 ///
 /// Decisions that live here:
 /// - Models preload once (`prepare`) into shared, ANE-resident instances;
@@ -301,7 +299,7 @@ public actor NemotronRecognizer: Recognizer {
         guard !trimmed.isEmpty else { return "" }
 
         // Gate 1: the whole session was silence or steady noise as far as
-        // VAD could see — the text is hallucination, not speech.
+        // VAD could see; the text is hallucination, not speech.
         if EvidenceGates.silenceWindowShouldDrop(
             vadProcessedThrough: vadProcessedThrough,
             lastVadSpeechSample: lastVadSpeechSample,
@@ -327,14 +325,9 @@ public actor NemotronRecognizer: Recognizer {
             return ""
         }
 
-        // ITN is paused here: running NeMo over
-        // the WHOLE session transcript over-groups plain counting into
-        // times/phone numbers ("ten twenty six nine ten" -> "10 26
-        // 09:10"). The original app avoids this by normalizing per ~14s
-        // segment. Re-enable only with segment-scoped spans plus a tuned
-        // maxSpanTokens; the library stays linked and the ordinal revert
-        // stays ready.
-        // final = ProseOrdinalReverter.revert(TextNormalizer.shared.normalizeSentence(final))
+        // No number normalization here: NeMo over a whole session groups plain counting into times
+        // and phone numbers ("ten twenty six nine ten" became "10 26 09:10"). The original app
+        // normalizes each ~14 s segment instead.
 
         if options.tidyFinalTranscript {
             final = EvidenceGates.tidyFinalTranscript(final, detectedLanguage: detectedLanguage)

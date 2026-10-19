@@ -8,9 +8,8 @@ import os
 
 /// Global hotkey listening, carried tap mechanics only: session-level
 /// CGEvent tap on the main run loop, timeout re-enable, 30s health check.
-/// Gesture MEANING lives in AppModel (via the kit's GestureClassifier);
-/// this type just reports raw press/release/abort of the configured chord
-/// plus Escape handling while a session is active.
+/// AppModel classifies gestures with the kit's GestureClassifier; this type reports raw
+/// press, release, and abort of the configured chord, plus Escape while a session is active.
 ///
 /// The tap source is added to the MAIN run loop, so the callback runs on
 /// the main thread and can touch MainActor state directly.

@@ -55,7 +55,7 @@ public actor PasterCascade: Paster {
         case .assumed:
             return .assumed
         case .failed:
-            return .failed(reason: "The text could not be inserted. It is on your clipboard — press Cmd+V to paste it.")
+            return .failed(reason: "The text could not be inserted. It is on your clipboard; press Command-V to paste it.")
         case .blockedSecureInput:
             return .failed(reason: "Another app is blocking keyboard input (secure input). The text is on your clipboard.")
         }

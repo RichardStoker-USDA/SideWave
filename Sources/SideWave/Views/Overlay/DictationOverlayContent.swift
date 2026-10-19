@@ -348,7 +348,7 @@ struct DictationOverlayContent: View {
         // Expand and collapse button in the top-trailing corner: faint until hovered. Hidden in
         // cinematic mode. The panel frame change animates the growth.
         .overlay(alignment: .topTrailing) {
-            // Hidden on the pre-ready chip — there is nothing to expand yet,
+            // Hidden on the pre-ready chip; there is nothing to expand yet,
             // and the chip should carry zero chrome.
             if !isCinematic && !isPreReady {
                 ExpandToggleButton(

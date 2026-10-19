@@ -31,12 +31,12 @@ enum HistorySummarizer {
         if let afm = await summarizeWithAFM(text: trimmed) {
             let cleaned = cleanup(afm)
             if !cleaned.isEmpty {
-                print("[HistorySummarizer] Title generated")
+                SWLog.note("[HistorySummarizer] Title generated")
                 return cleaned
             }
-            print("[HistorySummarizer] AFM returned empty after cleanup — falling back to prefix")
+            SWLog.note("[HistorySummarizer] AFM returned empty after cleanup — falling back to prefix")
         } else {
-            print("[HistorySummarizer] AFM unavailable or refused — falling back to prefix")
+            SWLog.note("[HistorySummarizer] AFM unavailable or refused — falling back to prefix")
         }
         #endif
 
@@ -47,7 +47,7 @@ enum HistorySummarizer {
     private static func summarizeWithAFM(text: String) async -> String? {
         let availability = DictationFormatterService.currentAFMAvailability()
         guard case .available = availability else {
-            print("[HistorySummarizer] AFM not .available — \(availability)")
+            SWLog.note("[HistorySummarizer] AFM not .available — \(availability)")
             return nil
         }
 
@@ -74,7 +74,7 @@ enum HistorySummarizer {
 
         let model = AFMRuntime.makeModel()
         guard case .available = model.availability else {
-            print("[HistorySummarizer] AFM model.availability not .available")
+            SWLog.note("[HistorySummarizer] AFM model.availability not .available")
             return nil
         }
         let session = LanguageModelSession(model: model, instructions: instructions)
@@ -83,7 +83,7 @@ enum HistorySummarizer {
             let raw = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
             return raw.isEmpty ? nil : raw
         } catch {
-            print("[HistorySummarizer] AFM threw: \(error)")
+            SWLog.note("[HistorySummarizer] AFM threw: \(error)")
             return nil
         }
     }

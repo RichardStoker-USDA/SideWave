@@ -4,7 +4,7 @@
 import XCTest
 @testable import SideWave
 
-/// Speech-profile store + prompt-injection tests. Pure logic only — no model
+/// Speech-profile store + prompt-injection tests. Pure logic only; no model
 /// is loaded. The store tests snapshot and restore the shared singleton so a
 /// dev machine's real profile survives the run.
 @MainActor

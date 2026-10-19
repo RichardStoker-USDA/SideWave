@@ -109,7 +109,7 @@ final class DictationFormatterService {
     private var gemmaTurnOutputLanguage: OutputLanguage = .matchInput
     /// Approx tokens (chars/3, conservative) in the turn cache. Crossing the
     /// rebuild threshold rebuilds the state, reseeding continuity from a
-    /// compact priorContext tail — bounds both KV RAM and drift exposure.
+    /// compact priorContext tail; bounds both KV RAM and drift exposure.
     private var gemmaTurnTokenEstimate: Int = 0
     var currentGenerationTask: Task<String, Error>?
     var retiringGenerationTasks: Set<Task<String, Error>> = []
@@ -171,7 +171,7 @@ final class DictationFormatterService {
     /// await abandons the task this long after its own deadline.
     nonisolated static let abandonMarginNanos: UInt64 = 8_000_000_000 // 8s
     /// Raw-generation (generateRawText) wall-clock bounds. Higher ceiling than
-    /// the refine path — document edits can legitimately run long.
+    /// the refine path; document edits can legitimately run long.
     nonisolated static let rawMinTimeoutNanos: UInt64 = 15_000_000_000 // 15s
     nonisolated static let rawMaxTimeoutNanos: UInt64 = 90_000_000_000 // 90s
 
@@ -413,7 +413,7 @@ final class DictationFormatterService {
             parts.append(vocabSection)
         }
         if let seed = seedTail?.trimmingCharacters(in: .whitespacesAndNewlines), !seed.isEmpty {
-            // Framed in quotes rather than with a leading ellipsis — the
+            // Framed in quotes rather than with a leading ellipsis; the
             // benchmark showed the model copying a literal "…" seed marker into
             // its output on the turns immediately after a reseed.
             parts.append("""
@@ -721,7 +721,7 @@ final class DictationFormatterService {
             // falls back to the input. Longer inputs get the per-template ratio check, so an
             // invented paragraph or heavy truncation can't be pasted.
             guard !cleaned.isEmpty else {
-                print("[DictationFormatter] Empty output, using raw")
+                SWLog.note("[DictationFormatter] Empty output, using raw")
                 if !silentMode { onSilentFallback?("Refine output looked off. Used your original text.") }
                 dropTurnSessionsOnUncleanExit()
                 restoreReadyIfLoaded()
@@ -736,7 +736,7 @@ final class DictationFormatterService {
                 let ratio = Double(outputWords) / Double(max(inputWords, 1))
                 let bounds = Self.outputRatioBounds(for: capturedSettings.template)
                 guard ratio >= bounds.min, ratio <= bounds.max else {
-                    print("[DictationFormatter] Output ratio \(String(format: "%.2f", ratio)) out of bounds, using raw")
+                    SWLog.note("[DictationFormatter] Output ratio \(String(format: "%.2f", ratio)) out of bounds, using raw")
                     if !silentMode { onSilentFallback?("Refine output looked off. Used your original text.") }
                     dropTurnSessionsOnUncleanExit()
                     restoreReadyIfLoaded()
@@ -779,7 +779,7 @@ final class DictationFormatterService {
             return .original(rawText)
 
         case .otherError(let description):
-            print("[DictationFormatter] Generation failed: \(description)")
+            SWLog.note("[DictationFormatter] Generation failed: \(description)")
             if !silentMode {
                 onSilentFallback?("Refine failed. Used your original text.")
             }

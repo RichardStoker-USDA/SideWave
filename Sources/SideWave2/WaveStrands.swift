@@ -3,11 +3,8 @@
 
 import SwiftUI
 
-/// The SideWave brand mark, alive: three sine strands braided the way the
-/// menu bar icon draws them, flowing while the mic listens. The strands
-/// carry the session's meaning through color — SideWave blues while
-/// dictating, the Apple Intelligence or Gemma palette while refining,
-/// still and quiet at rest.
+/// Three sine strands braided like the menu bar icon. They move while the microphone listens and
+/// take the Refine model's colors while refining.
 struct WaveStrands: View {
 
     enum Mood: Equatable {

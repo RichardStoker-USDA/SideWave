@@ -111,11 +111,11 @@ final class VocabularyStore {
         // written, the glossary exists only for this session, and the migration runs again next
         // launch.
         guard saveUserPacks() else {
-            print("[VocabularyStore] Migration write failed; will retry next launch")
+            SWLog.note("[VocabularyStore] Migration write failed; will retry next launch")
             return
         }
         defaults.set(true, forKey: Self.correctionsMigrationFlagKey)
-        print("[VocabularyStore] Migrated \(migratedTerms.count) legacy dictionary entries into '\(Self.migratedCorrectionsPackName)'")
+        SWLog.note("[VocabularyStore] Migrated \(migratedTerms.count) legacy dictionary entries into '\(Self.migratedCorrectionsPackName)'")
     }
 
     // MARK: - Scope-aware accessors (new unified model)
@@ -188,7 +188,7 @@ final class VocabularyStore {
         // in the current format.
         if let salvaged = Self.salvageLegacyPacks(from: data) {
             userPacksNeedResave = true
-            print("[VocabularyStore] Recovered \(salvaged.count) user pack(s) from a legacy \(Self.userFileName) schema")
+            SWLog.note("[VocabularyStore] Recovered \(salvaged.count) user pack(s) from a legacy \(Self.userFileName) schema")
             return salvaged.map(Self.sanitizePackContent)
         }
 
@@ -339,7 +339,7 @@ final class VocabularyStore {
             let data = try JSONEncoder().encode(enabled)
             UserDefaults.standard.set(data, forKey: Self.builtInEnabledIDsKey)
         } catch {
-            print("[VocabularyStore] saveEnabledBuiltInIDs failed: \(error)")
+            SWLog.note("[VocabularyStore] saveEnabledBuiltInIDs failed: \(error)")
         }
     }
 
@@ -362,7 +362,7 @@ final class VocabularyStore {
             let data = try JSONEncoder().encode(map)
             UserDefaults.standard.set(data, forKey: Self.builtInLinkedTemplatesKey)
         } catch {
-            print("[VocabularyStore] saveBuiltInLinkedTemplates failed: \(error)")
+            SWLog.note("[VocabularyStore] saveBuiltInLinkedTemplates failed: \(error)")
         }
     }
 

@@ -53,7 +53,7 @@ extension TranscriptionService {
                         &targetID
                     )
                     if status != noErr {
-                        print("[TranscriptionService] System default input redirect failed (\(status))")
+                        SWLog.note("[TranscriptionService] System default input redirect failed (\(status))")
                     } else {
                         prepared.originalDefault = originalDefault
                         prepared.redirectedTo = targetDeviceID
@@ -85,12 +85,12 @@ extension TranscriptionService {
                         userInfo: [NSLocalizedDescriptionKey: "Audio input format invalid after \(maxRetries) retries. Microphone may still be initializing."]
                     )
                 }
-                print("[TranscriptionService] Input format not ready (attempt \(retryCount)/\(maxRetries)), waiting 100ms")
+                SWLog.note("[TranscriptionService] Input format not ready (attempt \(retryCount)/\(maxRetries)), waiting 100ms")
                 Thread.sleep(forTimeInterval: 0.1)
                 inFormat = input.inputFormat(forBus: 0)
             }
             if retryCount > 0 {
-                print("[TranscriptionService] Input format ready after \(retryCount) retries: \(inFormat.sampleRate)Hz \(inFormat.channelCount)ch")
+                SWLog.note("[TranscriptionService] Input format ready after \(retryCount) retries: \(inFormat.sampleRate)Hz \(inFormat.channelCount)ch")
             }
 
             // Build the channel selector from the device's saved channel mode. It either takes one
@@ -265,7 +265,7 @@ extension TranscriptionService {
             }
             let targetID = deviceUID.map { AudioDeviceManager.deviceIDForUID($0) } ?? 0
             // First inputNode access instantiates the AUHAL bound to the
-            // system default — already the whole win when default == target.
+            // system default; already the whole win when default == target.
             let input = engineRef.inputNode
             guard targetID != 0, let audioUnit = input.audioUnit else { return }
             var currentDevice: AudioDeviceID = 0

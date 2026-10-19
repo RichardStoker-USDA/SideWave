@@ -41,7 +41,7 @@ extension MeetingFormatterService {
         \(resolvedSystemPrompt(for: format))
         """
         let userMessage = withVocabulary(base, vocabSection)
-        print("[MeetingFormatter] AFM processing \(transcriptText.count) chars")
+        SWLog.note("[MeetingFormatter] AFM processing \(transcriptText.count) chars")
 
         state = .generating(output: "", note: nil)
         var fullOutput = ""
@@ -86,7 +86,7 @@ extension MeetingFormatterService {
                 output: fullOutput
             )
         }
-        print("[MeetingFormatter] AFM generation complete (\(fullOutput.count) chars)")
+        SWLog.note("[MeetingFormatter] AFM generation complete (\(fullOutput.count) chars)")
     }
 
     private func loadAppleIntelligence() async throws {
@@ -102,7 +102,7 @@ extension MeetingFormatterService {
             )
             session.prewarm()
             afmSessionHolder = session
-            print("[MeetingFormatter] Apple Intelligence session ready")
+            SWLog.note("[MeetingFormatter] Apple Intelligence session ready")
         case .unavailable(let reason):
             throw FormatterError.afmUnavailable(Self.afmUnavailableMessage(for: reason))
         @unknown default:
@@ -135,7 +135,7 @@ extension MeetingFormatterService {
     func loadModel() async throws {
         let backend = selectedBackend
         guard let config = backend.registryConfig else {
-            // Apple Intelligence shouldn't reach loadModel — runFormatting
+            // Apple Intelligence shouldn't reach loadModel; runFormatting
             // routes it to loadAppleIntelligence instead. Defensive throw.
             throw FormatterError.modelNotLoaded
         }
@@ -150,7 +150,7 @@ extension MeetingFormatterService {
         let attempt = UUID()
         loadGeneration = attempt
         state = .loading
-        print("[MeetingFormatter] Loading \(backend.displayName)...")
+        SWLog.note("[MeetingFormatter] Loading \(backend.displayName)...")
 
         // Recognize a cached load so the UI doesn't flash a download card at 100%: MLX sends a
         // single progress update at 1.0 when the files are already present, as in
@@ -203,9 +203,9 @@ extension MeetingFormatterService {
             try Task.checkCancellation()
             guard loadGeneration == attempt else { throw CancellationError() }
             self.modelContainer = container
-            print("[MeetingFormatter] Model loaded: \(backend.displayName)")
+            SWLog.note("[MeetingFormatter] Model loaded: \(backend.displayName)")
         } catch {
-            print("[MeetingFormatter] Model load failed: \(error)")
+            SWLog.note("[MeetingFormatter] Model load failed: \(error)")
             throw error
         }
     }

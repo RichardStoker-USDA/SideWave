@@ -48,7 +48,7 @@ extension AppState {
 
         // Check accessibility before starting -- if not granted, show alert and bail
         guard AXIsProcessTrusted() else {
-            print("[SideWave] Accessibility not granted, showing alert")
+            SWLog.note("[SideWave] Accessibility not granted, showing alert")
             isAccessibilityGranted = false
             AppDelegate.showAccessibilityAlert()
             return
@@ -155,7 +155,7 @@ extension AppState {
             targetAppName = "Front app when done"
             targetFieldFingerprint = nil
             // Finish mode resolves the real target at stop time, not now, so
-            // the start-time focused element is stale. Drop it — the field
+            // the start-time focused element is stale. Drop it; the field
             // captured at stop (savedFieldFP) drives refocus instead.
             targetFocusedElement = nil
         } else {
@@ -302,7 +302,7 @@ extension AppState {
                 await handleSoftStop()
             } else if pendingStopAfterStart {
                 // Recording started successfully but user pressed stop while start was
-                // in flight. Engine is live — confirm so smart-PTT semantics work
+                // in flight. Engine is live; confirm so smart-PTT semantics work
                 // for any subsequent press, then honor the deferred stop.
                 hotkeyManager.confirmEngineLive()
                 self.recordingStartTime = Date()

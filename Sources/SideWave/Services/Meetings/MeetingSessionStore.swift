@@ -15,7 +15,7 @@ enum MeetingSessionStatus: String, Codable, Sendable {
     case stopped
     case processing
     /// Transcript is durable in `MeetingHistoryStore`; the directory is kept
-    /// only so the current session can rediarize. Never an orphan — the scan
+    /// only so the current session can rediarize. Never an orphan; the scan
     /// deletes leftover `completed` directories at the next launch.
     case completed
 
@@ -405,7 +405,7 @@ final class MeetingSession: @unchecked Sendable {
 
     /// Read finalized segments from the journal, tolerating a truncated or
     /// partially-written last line (a crash mid-append must not poison the
-    /// whole read — drop the bad tail line only).
+    /// whole read; drop the bad tail line only).
     func readLiveSegments() -> [MeetingSegment] {
         Self.readJournal(at: directory.appendingPathComponent(MeetingSessionStore.journalName))
     }

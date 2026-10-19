@@ -42,9 +42,7 @@ extension AppState {
         preserveRawOnCleanupCancel = false
         appStateTraceLog.notice("AppState.handleStopRecording entry isSmartPTTActive=\(self.hotkeyManager.isSmartPTTActive, privacy: .public) transcriptionRecording=\(self.transcriptionService.isRecording, privacy: .public)")
 
-        // Cancel any in-flight hold-to-refine tick Task immediately.
-        // This is the primary fix for the crash where the tick Task would
-        // spin forever if the modifier-UP event was lost.
+        // Stop hold tracking now, in case the modifier-up event was lost.
         hotkeyManager.cancelHoldTracking()
 
         let signpostID = signposter.makeSignpostID()
@@ -65,7 +63,7 @@ extension AppState {
             if smartPttActiveAtStop || inFlight < 2.0 {
                 pendingStopAfterStart = true
             } else {
-                // Stop refused (session stays alive) — expire the one-shot
+                // Stop refused (session stays alive); expire the one-shot
                 // refine-gesture flags so they can't leak a surprise forced
                 // or thinking pass into a later, unrelated stop.
                 forceRefineThisCapture = false
@@ -99,7 +97,7 @@ extension AppState {
             isOverlayVisible = false
             captureStart.cancel()
             pendingStopAfterStart = false
-            // Session is fully over — one-shot refine-gesture flags die with it.
+            // Session is fully over; one-shot refine-gesture flags die with it.
             forceRefineThisCapture = false
             thoroughRefineThisCapture = false
             return
@@ -493,7 +491,7 @@ extension AppState {
                 }
                 if !focusConfirmed {
                     // One last attempt to force focus. When a specific window is
-                    // in play, re-raise it — activate alone won't reorder windows
+                    // in play, re-raise it; activate alone won't reorder windows
                     // within an already-frontmost app.
                     if let wid = sessionWindowID {
                         _ = WindowTargetingService.raiseWindow(windowID: wid, pid: pid)
@@ -565,7 +563,7 @@ extension AppState {
                     } else {
                         DictationTracingService.shared.log(.pasteCascade, .error, "Layer 3: Primary Window text field search fallback failed. Refusing active focusing.", durationMs: duration)
                         DictationTracingService.shared.log(.pasteCascade, .warning, "Layer 4: Falling back to OS-default window active typing (no target refocusing).")
-                        print("[AppState] Paste focus could not be confirmed for pid \(pid); proceeding anyway and the paste may not land in the intended field")
+                        SWLog.note("[AppState] Paste focus could not be confirmed for pid \(pid); proceeding anyway and the paste may not land in the intended field")
                     }
                 }
             }

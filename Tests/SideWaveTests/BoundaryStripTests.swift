@@ -5,9 +5,7 @@ import XCTest
 @testable import SideWave
 
 /// Tests for the two pure de-dup primitives that keep duplicate / ghost words
-/// out of the dictation overlay and the pasted text at a TDT segment boundary
-/// (the brief's "no ghost text, no text that should have disappeared lingering"
-/// requirement). Both are sim-tuned edit-distance routines; these pin the
+/// out of the dictation overlay and the pasted text at a TDT segment boundary. Both are sim-tuned edit-distance routines; these pin the
 /// load-bearing INVARIANTS (clear echoes are stripped, unrelated tails are
 /// left alone, and the minMatchLen guard stops short coincidental matches from
 /// eating resumed speech).

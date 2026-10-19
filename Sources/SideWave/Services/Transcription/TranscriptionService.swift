@@ -9,7 +9,7 @@ import FluidAudio
 import Foundation
 import os
 
-/// Per-engine dictation tracing. Active in DEBUG only — release binary's
+/// Per-engine dictation tracing. Active in DEBUG only; release binary's
 /// logger is the disabled handle so log output is fully elided. Filter via
 /// Console.app: `subsystem == "com.sidewave.dev" AND category == "dictation-trace"`.
 let dictationTraceLog: Logger = {
@@ -20,7 +20,7 @@ let dictationTraceLog: Logger = {
     #endif
 }()
 
-/// Word count helper — splits on whitespace and counts non-empty pieces.
+/// Word count helper; splits on whitespace and counts non-empty pieces.
 /// Cheap; called only on a delta path so allocation pressure is minimal.
 func wordCount(_ s: String) -> Int {
     s.split(whereSeparator: \.isWhitespace).count
@@ -67,7 +67,7 @@ final class TranscriptionService {
     var audioLevel: Double = 0
 
     // Peak amplitude of the most recent buffer (0.0 to 1.0+). Used for
-    // clipping detection — RMS averages out brief peaks but the peak
+    // clipping detection; RMS averages out brief peaks but the peak
     // catches them. Published at ~20Hz alongside audioLevel.
     var audioPeak: Double = 0
 
@@ -95,7 +95,7 @@ final class TranscriptionService {
 
     var audioInputStatus: AudioInputStatus {
         guard isRecording else { return .idle }
-        // Peak-based clipping check first — a brief transient peak should
+        // Peak-based clipping check first; a brief transient peak should
         // turn the indicator red even if RMS is still in the balanced
         // range, because clipped samples are unrecoverable.
         if audioPeak >= 0.95 { return .clipping }

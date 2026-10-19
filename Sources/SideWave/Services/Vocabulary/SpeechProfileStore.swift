@@ -50,7 +50,7 @@ final class SpeechProfileStore {
     static let shared = SpeechProfileStore()
 
     /// Hard cap on the profile's length. It rides in every Refine prompt, so
-    /// the budget matters — kept small and independent of the vocabulary cap.
+    /// the budget matters; kept small and independent of the vocabulary cap.
     nonisolated static let charCap = 600
 
     private static let fileName = "speech-profile.json"
@@ -143,7 +143,7 @@ final class SpeechProfileStore {
             let data = try encoder.encode(profile)
             try data.write(to: fileURL, options: [.atomic])
         } catch {
-            print("[SpeechProfileStore] Could not save \(Self.fileName): \(error.localizedDescription)")
+            SWLog.note("[SpeechProfileStore] Could not save \(Self.fileName): \(error.localizedDescription)")
         }
     }
 
@@ -255,7 +255,7 @@ enum SpeechProfileBuilder {
     // MARK: Apple Intelligence
 
     private static func buildWithAFM(sample: String) async throws -> String {
-        // Permissive guardrails, matching every other AFM surface in the app —
+        // Permissive guardrails, matching every other AFM surface in the app;
         // this transforms the user's own dictation, it doesn't generate new
         // content, and the default guardrails make gen-1 refuse more of it.
         let model = AFMRuntime.makeModel()
