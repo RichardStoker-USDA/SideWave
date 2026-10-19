@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.1</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Fixed</h3>
+<ul><li>The Email template no longer copies placeholder list items (&quot;First item&quot;) into the email, turns a single sentence into a one-item bullet list, or writes &quot;Nil&quot; as the sign-off. Lists stay together instead of spreading over blank lines.</li><li>Help is shorter and corrected throughout, including how a failed final Refine keeps your text, Control-Escape, and a translation indicator the preview doesn&#x27;t have.</li></ul>
+<h3>Changed</h3>
+<ul><li>Settings &gt; About &gt; Acknowledgments lists every model and package SideWave uses, with its license and the full license and notice text.</li></ul>
+<h3>Security</h3>
+<ul><li>swift-crypto 4.5.2 (GHSA-8q93-f6xh-4f6f) and swift-nio 2.104.0 (GHSA-r3rc-9hpw-54v9, GHSA-rj37-6j9x-74q6, GHSA-cq87-8r7h-962v).</li></ul>
+</body>
+</html>
