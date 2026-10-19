@@ -334,20 +334,48 @@ extension DictationFormatterService {
     /// yet.
     nonisolated static func renderEmailReadyPartial(_ partial: AFMEmailReadyOutput.PartiallyGenerated) -> String {
         var parts: [String] = []
-        if let g = partial.greeting?.trimmingCharacters(in: .whitespacesAndNewlines), !g.isEmpty {
-            parts.append(g)
-        }
+        if let g = emailLine(partial.greeting) { parts.append(g) }
         if let paragraphs = partial.paragraphs {
-            let body = paragraphs
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-                .joined(separator: "\n\n")
+            let body = joinEmailParagraphs(paragraphs)
             if !body.isEmpty { parts.append(body) }
         }
-        if let s = partial.signoff?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
-            parts.append(s)
-        }
+        if let s = emailLine(partial.signoff) { parts.append(s) }
         return parts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// A greeting or sign-off, or nil when the model wrote a placeholder for "none" as text.
+    nonisolated static func emailLine(_ text: String?) -> String? {
+        guard let line = text?.trimmingCharacters(in: .whitespacesAndNewlines), !line.isEmpty,
+              !["nil", "none", "null", "n/a"].contains(line.lowercased()) else { return nil }
+        return line
+    }
+
+    /// Joins email paragraphs with blank lines, but keeps list items that arrive as separate
+    /// paragraphs on adjacent lines so they read as one list. A lone bullet between ordinary
+    /// paragraphs loses its dash: the model sometimes bullets a single closing sentence.
+    nonisolated static func joinEmailParagraphs(_ paragraphs: [String]) -> String {
+        func isListItem(_ line: Substring) -> Bool {
+            let item = line.drop { $0 == " " || $0 == "\t" }
+            return item.hasPrefix("- ") || item.range(of: #"^\d+\. "#, options: .regularExpression) != nil
+        }
+        let blocks = paragraphs.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        var body = ""
+        for (index, block) in blocks.enumerated() {
+            if index > 0 {
+                let previous = blocks[index - 1].split(separator: "\n").last ?? ""
+                let next = block.split(separator: "\n").first ?? ""
+                body += isListItem(previous) && isListItem(next) ? "\n" : "\n\n"
+            }
+            body += block
+        }
+        var lines = body.components(separatedBy: "\n")
+        let content = lines.indices.filter { !lines[$0].trimmingCharacters(in: .whitespaces).isEmpty }
+        for (position, index) in content.enumerated() where lines[index].hasPrefix("- ") && !lines[index].hasPrefix("- -") {
+            let before = position > 0 && isListItem(Substring(lines[content[position - 1]]))
+            let after = position + 1 < content.count && isListItem(Substring(lines[content[position + 1]]))
+            if !before && !after { lines[index] = String(lines[index].dropFirst(2)) }
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// Render a partially-decoded AFMInstructionListOutput into best-

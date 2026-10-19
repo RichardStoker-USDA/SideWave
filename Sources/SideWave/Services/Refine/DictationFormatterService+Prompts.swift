@@ -362,8 +362,7 @@ extension DictationFormatterService {
 
             [Closing line indicating next steps or expectation.]
 
-            Best,
-            [Your name]
+            [Sign-off with the speaker's name, only if the speaker said one.]
 
             Adapt the greeting, signoff, and paragraphing to what the speaker actually said. If they didn't say a recipient name, skip the greeting line. If they didn't say a sign-off name, skip it. NEVER invent a recipient or signoff name the speaker didn't say.
             """

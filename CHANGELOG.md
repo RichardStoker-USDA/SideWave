@@ -4,7 +4,9 @@
 
 ### Fixed
 
-- The Email template no longer copies placeholder list items ("First item") into the email.
+- The Email template no longer copies placeholder list items ("First item") into the email, turns
+  a single sentence into a one-item bullet list, or writes "Nil" as the sign-off. Lists stay
+  together instead of spreading over blank lines.
 - Help is shorter and corrected throughout, including how a failed final Refine keeps your text,
   Control-Escape, and a translation indicator the preview doesn't have.
 

@@ -18,6 +18,29 @@ final class DocumentEditFormattingTests: XCTestCase {
         }
     }
 
+    func testEmailListItemsStayTogetherAndParagraphsStaySeparate() {
+        let join = DictationFormatterService.joinEmailParagraphs
+        XCTAssertEqual(join(["We need three things:", "- probes", "- batteries", "- the plot map", "Thanks."]),
+                       "We need three things:\n\n- probes\n- batteries\n- the plot map\n\nThanks.")
+        XCTAssertEqual(join(["1. Collect samples", " ", "2. Log them"]), "1. Collect samples\n2. Log them")
+        XCTAssertEqual(join(["First paragraph.", "Second paragraph."]), "First paragraph.\n\nSecond paragraph.")
+        XCTAssertEqual(join(["Please collect your samples Wednesday.", "- Let me know if that works.", "Thanks, Jordan"]),
+                       "Please collect your samples Wednesday.\n\nLet me know if that works.\n\nThanks, Jordan")
+        XCTAssertEqual(join(["We need:", "- probes\n- batteries"]), "We need:\n\n- probes\n- batteries")
+        XCTAssertEqual(join(["Samples move to Wednesday.\n- Let me know if that works."]),
+                       "Samples move to Wednesday.\nLet me know if that works.")
+        // Indented items still make a list, so the first one keeps its dash.
+        XCTAssertEqual(join(["Packing list:", "- soil probes\n - spare batteries\n - the plot map"]),
+                       "Packing list:\n\n- soil probes\n - spare batteries\n - the plot map")
+    }
+
+    func testEmailGreetingAndSignOffPlaceholdersAreDropped() {
+        XCTAssertNil(DictationFormatterService.emailLine("Nil"))
+        XCTAssertNil(DictationFormatterService.emailLine(" none "))
+        XCTAssertNil(DictationFormatterService.emailLine(nil))
+        XCTAssertEqual(DictationFormatterService.emailLine("Thanks, Jordan"), "Thanks, Jordan")
+    }
+
     func testInstructionEchoRemovalDoesNotRemoveDictatedOrUnrelatedBackground() {
         let rules = "Preserve every measurement.\nUse the input language."
         let original = DocumentEditFormatting.InstructionDocument(intro: "Use the input language.", steps: [.init(text: "Review samples.")])
