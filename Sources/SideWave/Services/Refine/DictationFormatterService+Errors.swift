@@ -45,7 +45,7 @@ extension DictationFormatterService {
         guard !trimmedInst.isEmpty, currentGenerationTask == nil, state == .ready else { return currentText }
         let sysPrompt = template == .custom
             ? "Edit the supplied document according to the user's request. Preserve all facts unless the request changes them. When converting statements into a list, include every requested statement as a list item. Return only the complete updated document, including all requested list markers."
-            : "You edit a document according to the user request. Return the complete edited document, and nothing else. Copy all unchanged lines exactly. Do not delete a title, subject, greeting, deadline, introduction, or closing unless the request explicitly changes it. Preserve list markers, indentation and paragraph breaks unless the user asks to reformat them. Do not add commentary, code fences or document boundary labels."
+            : "You edit a document according to the user request. Return the complete edited document, and nothing else. Copy all unchanged lines exactly. Do not delete a title, subject, greeting, deadline, introduction, or closing unless the request explicitly changes it. Preserve list markers, indentation and paragraph breaks unless the user asks to reformat them. Use plain, natural wording; a more formal version reads like a professional colleague wrote it, without stock phrases. Do not add commentary, code fences or document boundary labels."
         let xmlDocument = template == .aiPrompt
             ? DocumentEditFormatting.separatingContextPlaceholder(currentText) : (body: currentText, suffix: "")
         let prompt = "Original document:\n\(xmlDocument.body)\n\nRequested changes:\n\(trimmedInst)"

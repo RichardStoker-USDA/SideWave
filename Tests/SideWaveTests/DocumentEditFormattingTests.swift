@@ -29,6 +29,11 @@ final class DocumentEditFormattingTests: XCTestCase {
         XCTAssertEqual(join(["We need:", "- probes\n- batteries"]), "We need:\n\n- probes\n- batteries")
         XCTAssertEqual(join(["Samples move to Wednesday.\n- Let me know if that works."]),
                        "Samples move to Wednesday.\nLet me know if that works.")
+        // A paragraph that only repeats words from another paragraph is dropped.
+        XCTAssertEqual(join(["I am writing to request access to the greenhouse on Saturday.", "access to the greenhouse on Saturday"]),
+                       "I am writing to request access to the greenhouse on Saturday.")
+        XCTAssertEqual(join(["Thanks.", "Thanks."]), "Thanks.\n\nThanks.")
+        XCTAssertEqual(join(["Can you send the plot map?", "-", "Thanks"]), "Can you send the plot map?\n\nThanks")
         // Indented items still make a list, so the first one keeps its dash.
         XCTAssertEqual(join(["Packing list:", "- soil probes\n - spare batteries\n - the plot map"]),
                        "Packing list:\n\n- soil probes\n - spare batteries\n - the plot map")
@@ -39,6 +44,16 @@ final class DocumentEditFormattingTests: XCTestCase {
         XCTAssertNil(DictationFormatterService.emailLine(" none "))
         XCTAssertNil(DictationFormatterService.emailLine(nil))
         XCTAssertEqual(DictationFormatterService.emailLine("Thanks, Jordan"), "Thanks, Jordan")
+        XCTAssertNil(DictationFormatterService.emailLine("-"))
+        XCTAssertEqual(DictationFormatterService.emailLine("hey Sam,"), "Hey Sam,")
+        XCTAssertEqual(DictationFormatterService.emailLine("thanks"), "Thanks")
+        XCTAssertEqual(DictationFormatterService.capitalizingFirstWord("iPhone sync is fixed."), "iPhone sync is fixed.")
+        XCTAssertEqual(DictationFormatterService.joinEmailParagraphs(["send me the map", "- probes\n- batteries"]),
+                       "Send me the map\n\n- probes\n- batteries")
+        XCTAssertEqual(DictationFormatterService.joinEmailParagraphs(["I need the map.\n\nsend it by Friday"]),
+                       "I need the map.\n\nSend it by Friday")
+        XCTAssertEqual(DictationFormatterService.joinEmailParagraphs(["I need the map.", "- send it by Friday"]),
+                       "I need the map.\n\nSend it by Friday")
     }
 
     func testInstructionEchoRemovalDoesNotRemoveDictatedOrUnrelatedBackground() {

@@ -198,8 +198,8 @@ extension DictationFormatterService {
             return Instructions {
                 afmDocumentContentRule
                 Self.refineLanguageRuleGen1(for: outputLanguage)
-                "Rewrite the dictation as a polished, ready-to-send email body. Fix all grammar and punctuation."
-                "Replace casual phrasing with professional language. Remove filler and false starts."
+                "Turn the dictation into a ready-to-send email body in the speaker's own tone and about the same length. Fix all grammar and punctuation."
+                "Remove filler and false starts. Never add phrases the speaker did not say."
                 "Format lists as plain-text dashes (- item) or numbers (1. item). Use clear paragraphs. No markdown."
                 "Apply the Reference vocabulary spellings from the prompt."
                 "Return only the email body text."
@@ -296,12 +296,12 @@ extension DictationFormatterService {
                 afmDocumentContentRule
                 Self.refineLanguageRule(for: outputLanguage)
                 "You REWRITE speech-to-text dictation as a polished, structured email body ready to send."
-                "You MUST: rewrite into professional prose, fix ALL grammar and punctuation, REPLACE all casual phrasing with professional language, REMOVE all filler words and false starts and tangents."
+                "You MUST: rewrite into clear, natural prose at the speaker's level of formality, fix ALL grammar, punctuation, and capitalization, REMOVE all filler words and false starts and tangents."
                 "The prompt includes Reference vocabulary with preferred spellings and word replacements. You MUST apply those replacements and use those exact spellings."
                 "If the prompt includes a Field context block, USE it to inform tone, word choice, and stylistic decisions. The resulting email should feel like it was written by someone in the speaker's domain to a recipient in the same field."
                 "When the speaker lists multiple items or points, FORMAT them as a bulleted list using plain text dashes (- item). When order matters, use numbered items (1. item)."
                 "Break content into clear paragraphs. Add transitions between ideas. Use plain text formatting only. No markdown, no asterisks, no # headers."
-                "KEEP every distinct point. Do NOT drop details. The result should be ready to paste into an email."
+                "KEEP every distinct point and state each one once. Do NOT drop details. The result should be ready to paste into an email."
                 "Return only the formatted email body text."
             }
         case .instructions:
@@ -345,20 +345,41 @@ extension DictationFormatterService {
 
     /// A greeting or sign-off, or nil when the model wrote a placeholder for "none" as text.
     nonisolated static func emailLine(_ text: String?) -> String? {
-        guard let line = text?.trimmingCharacters(in: .whitespacesAndNewlines), !line.isEmpty,
+        guard let line = text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              line.contains(where: \.isLetter),
               !["nil", "none", "null", "n/a"].contains(line.lowercased()) else { return nil }
-        return line
+        return capitalizingFirstWord(line)
     }
 
-    /// Joins email paragraphs with blank lines, but keeps list items that arrive as separate
-    /// paragraphs on adjacent lines so they read as one list. A lone bullet between ordinary
-    /// paragraphs loses its dash: the model sometimes bullets a single closing sentence.
+    /// Capitalizes a line whose first word is plain lowercase ("hey Sam," becomes "Hey Sam,").
+    /// Words with any capital, digit, or symbol, such as iPhone or npm-cli, are left alone.
+    nonisolated static func capitalizingFirstWord(_ line: String) -> String {
+        let word = line.prefix { !$0.isWhitespace && $0 != "," }
+        guard let first = word.first, word.allSatisfy({ ("a"..."z").contains($0) }) else { return line }
+        return first.uppercased() + line.dropFirst()
+    }
+
+    /// Joins email paragraphs with blank lines and keeps list items that arrive as separate
+    /// paragraphs together as one list. It also undoes three model habits: a paragraph that repeats
+    /// a phrase from another one, a lowercase paragraph start, and a single sentence given a dash
+    /// with no other list item next to it.
     nonisolated static func joinEmailParagraphs(_ paragraphs: [String]) -> String {
         func isListItem(_ line: Substring) -> Bool {
             let item = line.drop { $0 == " " || $0 == "\t" }
             return item.hasPrefix("- ") || item.range(of: #"^\d+\. "#, options: .regularExpression) != nil
         }
-        let blocks = paragraphs.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let trimmed = paragraphs.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.contains { $0.isLetter || $0.isNumber } }
+        func words(_ text: String) -> String {
+            text.lowercased().split { !$0.isLetter && !$0.isNumber }.joined(separator: " ")
+        }
+        let blocks = trimmed.enumerated().filter { index, block in
+            let phrase = words(block)
+            guard phrase.split(separator: " ").count >= 4 else { return true }
+            return !trimmed.enumerated().contains { other, text in
+                other != index && text.count > block.count && " \(words(text)) ".contains(" \(phrase) ")
+            }
+        }.map(\.element)
         var body = ""
         for (index, block) in blocks.enumerated() {
             if index > 0 {
@@ -369,11 +390,14 @@ extension DictationFormatterService {
             body += block
         }
         var lines = body.components(separatedBy: "\n")
+        for index in lines.indices where (index == 0 || lines[index - 1].isEmpty) && !isListItem(Substring(lines[index])) {
+            lines[index] = capitalizingFirstWord(lines[index])
+        }
         let content = lines.indices.filter { !lines[$0].trimmingCharacters(in: .whitespaces).isEmpty }
         for (position, index) in content.enumerated() where lines[index].hasPrefix("- ") && !lines[index].hasPrefix("- -") {
             let before = position > 0 && isListItem(Substring(lines[content[position - 1]]))
             let after = position + 1 < content.count && isListItem(Substring(lines[content[position + 1]]))
-            if !before && !after { lines[index] = String(lines[index].dropFirst(2)) }
+            if !before && !after { lines[index] = capitalizingFirstWord(String(lines[index].dropFirst(2))) }
         }
         return lines.joined(separator: "\n")
     }

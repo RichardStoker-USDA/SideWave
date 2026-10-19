@@ -250,23 +250,22 @@ extension DictationFormatterService {
             """
         case .emailReady:
             return """
-            Rewrite this dictated text as a polished, structured email body. The speaker dictated casually and expects a ready-to-send result.
+            Turn this dictated text into a ready-to-send email body in the speaker's own voice.
 
             You MUST:
-            - Rewrite into professional, well-structured prose
+            - Keep the speaker's tone and about the same length: a short, casual note stays short and casual, and a formal message stays formal
             - Fix all grammar, punctuation, and capitalization
-            - Replace all casual and informal phrasing with professional language
             - Remove all filler words, false starts, tangents, and repeated thoughts
             - When the speaker lists multiple items or points, format them as a bulleted or numbered list using plain text (use "- " for bullets, "1. " for numbered items)
-            - Break content into clear paragraphs with logical flow
-            - Add appropriate transitions between ideas
+            - Use short paragraphs
             - Fix transcription errors
+            - Never add pleasantries, stock business phrases, or anything the speaker did not say
 
             Use plain text formatting only (no markdown, no asterisks for bold, no headers with #). Structure with line breaks, indentation, dashes for bullets, and numbers for ordered lists.
 
-            Keep every distinct point. Do not drop details. The result should be something the speaker can paste directly into an email and send with confidence.
+            Keep every distinct point and state each one once. Do not drop details.
 
-            If the prompt includes a Field context block, USE it to inform tone, word choice, and stylistic decisions. The email should feel like it was written by someone in the speaker's domain to a recipient in the same field.
+            If the prompt includes a Field context block, use it to spell and understand technical terms, not to change the speaker's tone.
             """
         case .instructions:
             return """
@@ -354,13 +353,11 @@ extension DictationFormatterService {
             OUTPUT SHAPE EXAMPLE (mimic this structure when appropriate to the speaker's content):
             Hi [Name],
 
-            [Opening line acknowledging the recipient or the reason for writing.]
-
             [Body paragraph 1 covering the first main point in clear sentences.]
 
             [Body paragraph 2 covering the second main point. Only if the speaker listed several items, put each one on its own line starting with "- ".]
 
-            [Closing line indicating next steps or expectation.]
+            [Closing line, only if the speaker said one.]
 
             [Sign-off with the speaker's name, only if the speaker said one.]
 

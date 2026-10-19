@@ -119,7 +119,7 @@ struct HelpRefineContent: View {
                 Text("Concise. Same meaning in fewer words.")
             }
             .font(.callout)
-            Text("Email, Instructions, AI Prompt, and Custom are document templates. They format the whole dictation after you finish and show it in the document window, where you can edit and copy it. Start dictating, or choose Open Document. Custom follows your Formatting Rules with no built-in style.")
+            Text("Email, Instructions, AI Prompt, and Custom are document templates. They format the whole dictation after you finish and show it in the document window, where you can edit and copy it. Start dictating, or choose Open Document. Email keeps your tone, so a quick note stays short and a formal one stays formal; ask for a change such as \"make it more formal\" to adjust it. Custom follows your Formatting Rules with no built-in style.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

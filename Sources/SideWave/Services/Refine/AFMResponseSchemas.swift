@@ -67,10 +67,10 @@ struct AFMEmailReadyOutput {
     var promptRepresentation: Prompt { Prompt(generatedContent) }
     var instructionsRepresentation: Instructions { Instructions(generatedContent) }
 
-    @Guide(description: "Greeting line — only if the speaker addressed a specific recipient by name (e.g. 'Hi Sarah,'). Leave nil if the speaker did not name a recipient. NEVER invent a name.")
+    @Guide(description: "Greeting line — only if the speaker addressed a specific recipient by name (e.g. 'Hi Sarah,'), capitalized and ending with a comma. Leave nil if the speaker did not name a recipient. NEVER invent a name.")
     var greeting: String?
 
-    @Guide(description: "Body paragraphs of the email. One entry per paragraph the speaker created. Plain text only — no markdown, no asterisks. When the speaker listed items, format that paragraph as bulleted lines starting with '- ' (one dash + space + item, one item per line within the paragraph string). KEEP every distinct point. Fix all grammar and punctuation. Replace casual phrasing with professional equivalents.")
+    @Guide(description: "Body paragraphs of the email. One entry per paragraph the speaker created. Plain text only — no markdown, no asterisks. When the speaker listed items, format that paragraph as bulleted lines starting with '- ' (one dash + space + item, one item per line within the paragraph string). KEEP every distinct point. Fix all grammar and punctuation. Keep the speaker's level of formality.")
     var paragraphs: [String]
 
     @Guide(description: "Sign-off block — only if the speaker explicitly said a sign-off (e.g. 'Thanks, Rich' or 'Best regards'). May span multiple lines. Leave nil if no sign-off was stated. NEVER invent a signature line.")

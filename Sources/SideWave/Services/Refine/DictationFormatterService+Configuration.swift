@@ -53,7 +53,7 @@ extension DictationFormatterService {
             case .standard: return "Correct grammar and punctuation while keeping your wording."
             case .professional: return "Use formal wording while preserving your meaning."
             case .concise: return "Remove repetition and shorten the text while preserving your meaning."
-            case .emailReady: return "Format an email with a subject, greeting, body, and sign-off."
+            case .emailReady: return "Format an email with a greeting, body, and sign-off, in your own tone."
             case .instructions: return "Organize instructions into numbered steps and supporting details."
             case .aiPrompt: return "Organize your instructions into an XML prompt."
             case .custom: return "Format the dictation using your own instructions."
