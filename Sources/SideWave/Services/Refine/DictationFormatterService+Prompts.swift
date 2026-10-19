@@ -347,7 +347,7 @@ extension DictationFormatterService {
 
     /// Example of a template's output shape, inserted into the prompt for the model to follow.
     /// Matters most for Apple Intelligence and helps Gemma E2B. Nil for prose templates.
-    nonisolated private static func templateOutputExample(template: Template) -> String? {
+    nonisolated static func templateOutputExample(template: Template) -> String? {
         switch template {
         case .emailReady:
             return """
@@ -358,10 +358,7 @@ extension DictationFormatterService {
 
             [Body paragraph 1 covering the first main point in clear sentences.]
 
-            [Body paragraph 2 covering the second main point. If multiple items, list them like:]
-            - First item
-            - Second item
-            - Third item
+            [Body paragraph 2 covering the second main point. Only if the speaker listed several items, put each one on its own line starting with "- ".]
 
             [Closing line indicating next steps or expectation.]
 
@@ -424,7 +421,7 @@ extension DictationFormatterService {
         }
     }
 
-    // Generic fallback — used by raw generation and prompt preview when
+    // Generic fallback; used by raw generation and prompt preview when
     // no template context is available.
     nonisolated static let systemInstructions = """
     You are a text cleanup assistant. You receive speech-to-text output and return clean, correctly formatted text. Output ONLY the corrected text. No explanations, no preamble, no markdown formatting, no quotes around the text.

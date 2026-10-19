@@ -5,6 +5,19 @@ import XCTest
 @testable import SideWave
 
 final class DocumentEditFormattingTests: XCTestCase {
+    /// Apple Intelligence copied literal example list items ("First item") into an email, so every
+    /// list line in a template's output example must be a bracketed placeholder.
+    @MainActor
+    func testTemplateOutputExamplesHaveNoLiteralListItems() {
+        for template in DictationFormatterService.Template.allCases {
+            guard let example = DictationFormatterService.templateOutputExample(template: template) else { continue }
+            for line in example.split(separator: "\n").map({ $0.trimmingCharacters(in: .whitespaces) })
+            where line.hasPrefix("- ") || line.range(of: #"^\d+\. "#, options: .regularExpression) != nil {
+                XCTAssertTrue(line.contains("["), "\(template.rawValue) example has a literal list item: \(line)")
+            }
+        }
+    }
+
     func testInstructionEchoRemovalDoesNotRemoveDictatedOrUnrelatedBackground() {
         let rules = "Preserve every measurement.\nUse the input language."
         let original = DocumentEditFormatting.InstructionDocument(intro: "Use the input language.", steps: [.init(text: "Review samples.")])
