@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.2 (2026-10-19)
+
+### Changed
+
+- The Email template keeps your tone. A quick note stays short and plain, and a formal message
+  stays formal, instead of every email turning stiff and formal. A "more formal" change in the
+  document window uses natural wording.
+
+### Fixed
+
+- Apple Intelligence emails no longer repeat a sentence as a bullet list or leave a lowercase
+  greeting or sign-off.
+
 ## 0.4.1 (2026-10-18)
 
 ### Fixed
