@@ -326,7 +326,7 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
     left: 0;
     height: 3px;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent), #5ac8fa);
+    background: var(--text-primary);
     z-index: 9999;
     transition: width 0.1s linear;
     pointer-events: none;
@@ -424,12 +424,8 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
   }
 
   .doc-nav-page-link.active {
-    color: var(--accent);
-    background: rgba(0, 113, 227, 0.08);
-  }
-
-  :global([data-theme="dark"]) .doc-nav-page-link.active {
-    background: rgba(41, 151, 255, 0.12);
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
   }
 
   /* TOC separator */
@@ -440,11 +436,9 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
   }
 
   .doc-toc-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
     padding: 0 14px;
     margin-bottom: 12px;
   }
@@ -501,11 +495,12 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
   /* ================================
      Article Typography
      ================================ */
+  /* The page title is set like the home page's refined lines; section heads use the system face. */
   .doc-article :global(h1) {
-    font-size: 2.75rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.08;
+    font-size: 2.6rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.06;
     margin-bottom: 16px;
   }
 
@@ -518,29 +513,33 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
     letter-spacing: -0.01em;
   }
 
+  .doc-article :global(.doc-updated) {
+    margin-top: 48px;
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+  }
+
   .doc-article :global(h2) {
-    font-size: 1.65rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    font-family: var(--font-text);
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.018em;
+    line-height: 1.2;
     margin-top: 64px;
     margin-bottom: 12px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border-subtle);
   }
 
   .doc-article :global(h2:first-of-type) {
-    border-top: none;
     margin-top: 0;
-    padding-top: 0;
   }
 
   .doc-article :global(h3) {
-    font-size: 1.3rem;
-    font-weight: 750;
-    letter-spacing: -0.02em;
-    margin-top: 40px;
-    margin-bottom: 12px;
+    font-family: var(--font-text);
+    font-size: 1.15rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin-top: 36px;
+    margin-bottom: 10px;
   }
 
   .doc-article :global(p) {
@@ -908,11 +907,11 @@ const nextPage = currentIndex < docPages.length - 1 ? docPages[currentIndex + 1]
     }
 
     .doc-article :global(h1) {
-      font-size: 1.75rem;
+      font-size: 2rem;
     }
 
     .doc-article :global(h2) {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
     }
 
     .doc-pagination {

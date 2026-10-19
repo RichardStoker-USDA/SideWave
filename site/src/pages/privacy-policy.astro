@@ -2,49 +2,49 @@
 import DocLayout from '../layouts/DocLayout.astro';
 ---
 
-<DocLayout title="Privacy Policy - SideWave" description="Local processing, storage, permissions, downloads, and optional client access in SideWave.">
+<DocLayout title="Privacy Policy - SideWave" description="What SideWave stores on your Mac, what it downloads, and how to delete it.">
   <h1>Privacy Policy</h1>
-  <p class="doc-lead">SideWave processes dictation and meeting recordings on your Mac. It stores local history and recovery data. Text you deliver to other apps follows those apps' privacy terms.</p>
+  <p class="doc-lead">SideWave has no server. Speech recognition and Refine run on your Mac, and your audio and text stay there unless you paste them into another app. This page lists what SideWave stores, when it goes online, and how to delete things.</p>
 
-  <h2>Local Processing and Storage</h2>
+  <h2>What stays on your Mac</h2>
+  <p>SideWave keeps its files in <code>~/Library/Application Support/SideWave/</code>.</p>
   <ul>
-    <li><strong>Dictation audio</strong>: Normal dictation processes microphone audio in memory. Finalized and provisional text can be written to recovery files. Recovery files are cleared after their text is saved to history, or after an explicit discard.</li>
-    <li><strong>Meeting audio</strong>: Audio is written to <code>~/Library/Application Support/SideWave/Meetings/InProgress/</code> during recording. Session folders use owner-only permissions. An interrupted meeting can be recovered from these files. Audio for a complete, saved transcript can remain while results are open for speaker reprocessing, then is removed when dismissed or cleaned up on a later launch. Partial transcripts and failed history saves retain their source audio. Unfinished audio remains until you finish processing or explicitly discard it, regardless of history retention.</li>
-    <li><strong>History</strong>: Dictation text and target-app metadata are stored in <code>history.json</code>; meeting transcripts and notes are stored in <code>meeting-history.json</code> under SideWave's Application Support folder. Available earlier recognition and refine stages can be retained with an entry.</li>
-    <li><strong>Vocabulary and speech profile</strong>: Custom glossaries, aliases, usage notes, and an optional speech profile stay in local SideWave storage. No glossary packs are bundled by default; optional bundles are downloaded on request, with manual updates by default and per-bundle automatic checks only after explicit opt-in. Local models can process text you provide to vocabulary assistance or the speech-profile builder.</li>
-    <li><strong>Document drafts</strong>: The current draft for each template and the documents in Recents are stored in <code>document_drafts.json</code>. A cancelled model edit restores the prior document. Clear document removes the active draft's content. Recents and History are separate.</li>
-    <li><strong>Settings</strong>: Preferences, including hotkeys, microphones, templates, output language, and retention, are stored in UserDefaults.</li>
-    <li><strong>Models</strong>: Speech and language weights are cached locally. The model-storage view shows app-managed caches and removal actions. Apple Intelligence assets are managed by macOS and require its feature to be enabled and ready.</li>
+    <li><strong>Dictation audio</strong> is processed in memory and never saved. While you dictate, the text so far goes to a recovery file, which is deleted once the text is in History or you discard it.</li>
+    <li><strong>History</strong> (<code>history.json</code>) holds each dictation's text, the app it went to, and the earlier recognition and Refine stages. It keeps 7 days by default, up to 500 entries. Settings &gt; Privacy can change that to 1, 3, 7, 14, 30, or 90 days, or Never, which keeps entries until the 500-entry limit. You can delete one entry or all of them.</li>
+    <li><strong>Meeting audio</strong>, if you turn on Meetings, is written to <code>Meetings/InProgress/</code> while you record, in folders only your account can open. It stays until you process or discard it, whatever your history setting. Transcripts and notes go in <code>meeting-history.json</code>.</li>
+    <li><strong>Vocabulary</strong>: your glossaries, aliases, usage notes, and speech profile.</li>
+    <li><strong>Documents</strong>: the current draft for each template and the documents in Recents, in <code>document_drafts.json</code>.</li>
+    <li><strong>Settings</strong> are stored in macOS user defaults.</li>
+    <li><strong>Models</strong>: speech models and Gemma stay in local caches. Settings &gt; Refine &gt; Cached Models removes Gemma downloads, and the full reset in Settings &gt; Advanced deletes everything, models included. macOS manages the Apple Intelligence models.</li>
   </ul>
-  <p>Storage errors are shown in the app. An unreadable history, document-draft, network-history, or vocabulary file is preserved rather than overwritten. Failed writes may leave recovery files longer than a normal successful session. Copy important text somewhere safe before quitting if a save error remains.</p>
+  <p>If a data file can't be read, SideWave leaves it in place instead of overwriting it, and the app shows the error. If a save keeps failing, copy anything important before you quit.</p>
 
-  <h2>Refine and Meeting Formatting</h2>
-  <p>Recognition uses CoreML. Refine, meeting formatting, vocabulary assistance, and speech-profile generation use Apple Intelligence or a local Gemma 4 model through MLX. These processing steps do not send their prompts to a SideWave cloud inference service. After the required assets are available, local inference can run offline.</p>
-  <p>Generated text can be inaccurate. Review output before sending it elsewhere.</p>
-
-  <h2>Other Apps</h2>
-  <p>Pasting into a browser, chat app, document service, or terminal sends text to that application. Its storage and network behavior are outside SideWave's control.</p>
-  <p>Owner-only file permissions protect against other local users. They do not prevent software running under your own account from accessing the same files.</p>
-
-  <h2>Network Activity</h2>
+  <h2>When SideWave goes online</h2>
   <ul>
-    <li><strong>Model preparation</strong>: SideWave fetches manifests and model files from Hugging Face and associated download hosts. The selected models and enabled features determine the size. Existing files are reused when valid; interrupted downloads may need repair.</li>
-    <li><strong>Glossary catalog</strong>: Opening the optional catalog fetches its index from GitHub. Downloading a bundle fetches the selected JSON file and checks its size, checksum, schema, and term count. Updates are manual by default. Enabling automatic updates permits a daily catalog check and changed bundle downloads while SideWave is open. Search runs locally over the fetched index. Personal vocabulary is never uploaded.</li>
-    <li><strong>Updates</strong>: Sparkle fetches the release feed from sidewave.dev and downloads releases from GitHub. SideWave asks once before checking automatically, and you can change that in Settings &gt; About. Sparkle's system-profile submission is off.</li>
-    <li><strong>Links</strong>: Opening online help, license pages, or project links uses your browser and those sites' policies.</li>
+    <li><strong>Model downloads</strong> from Hugging Face during setup, and when you pick a model that isn't on the Mac yet.</li>
+    <li><strong>Glossary bundles</strong>: opening the catalog fetches its index from GitHub, and installing a bundle downloads that one file. Bundles update only when you ask, unless you turn on daily checks for a bundle. Your own vocabulary is never uploaded.</li>
+    <li><strong>Updates</strong>: Sparkle reads the release feed at sidewave.dev and downloads new versions from GitHub. SideWave asks before it checks automatically, and Check for updates automatically in Settings &gt; About changes that later. Sparkle's system profile report is off.</li>
+    <li><strong>Links</strong> you click open in your browser.</li>
   </ul>
-  <p>Remote hosts receive ordinary request metadata, including your network address. SideWave has no built-in analytics or automatic crash-report upload service. The Data Transparency window retains app-managed requests and downloads until you clear the log, including failures. It stores host, path, byte count, and time, without request bodies, query strings, credentials, or transcript text. It is not a complete system network audit.</p>
+  <p>These hosts see ordinary request details, such as your IP address. SideWave has no analytics and no crash reporting. Help &gt; Data Transparency lists every download and update check with its host, path, size, and time, and never the request body or your text. It covers SideWave's own downloads, not everything on your network.</p>
 
-  <h2>Retention and Deletion</h2>
-  <p>Dictation history defaults to seven days and is capped at 500 entries. Retention is applied on launch and after dictation. Settings offers other periods or Keep Forever. Individual entries and all history can be deleted from the app. Export or copy important results before deleting them.</p>
-  <p>Unfinished meeting recordings remain on this Mac until you finish processing or explicitly discard them, regardless of history retention. Completed audio and discarded meetings have separate cleanup actions described above. Reset options distinguish restoring preferences from removing saved data; read the confirmation before choosing a full reset.</p>
+  <h2>Refine and other local models</h2>
+  <p>Refine, meeting notes, Describe Your Field, and the speech profile use Apple Intelligence or a Gemma 4 model on your Mac. Once the models are downloaded, all of it works offline. Model output can be wrong, so read it before you send it anywhere.</p>
 
-  <h2>Microphone and Accessibility Permissions</h2>
-  <p>SideWave explains permissions before requesting them. Microphone access is used for dictation, meetings, microphone tests, and enabled audio diagnostics. An optional standby setting can keep the input device open between dictations; disable it if you want the input closed while idle.</p>
-  <p>Accessibility is used for the global hotkey, target-window and text-field selection, and text delivery. Denying a permission prevents the corresponding operation and shows a recovery action. You can revoke either permission in System Settings &gt; Privacy &amp; Security.</p>
+  <h2>Other apps</h2>
+  <p>Text you paste into a browser, chat app, or terminal falls under that app's privacy terms. SideWave's owner-only file permissions keep other user accounts out of its files. They don't stop other software running under your own account.</p>
 
-  <h2>Source and Licenses</h2>
-  <p>SideWave's application source is licensed under Apache 2.0 and is available on <a href="https://github.com/RichardStoker-USDA/SideWave">GitHub</a>. Dependencies and model weights have their own licenses. Gemma 4 uses <a href="https://ai.google.dev/gemma/docs/core/model_card_4">Apache 2.0</a>; Parakeet TDT uses CC-BY-4.0. See <a href="/acknowledgments">Acknowledgments</a> for attribution.</p>
-  <p>For privacy questions, <a href="https://github.com/RichardStoker-USDA/SideWave/issues">open a project issue</a>. Do not include private transcripts, credentials, or unredacted diagnostic files in a public report.</p>
-  <p class="doc-lead" style="margin-top: 3rem; font-size: 0.85rem; color: var(--text-tertiary);">Last updated: October 16, 2026</p>
+  <h2>Permissions</h2>
+  <p>SideWave explains each permission before macOS asks for it, and if you deny one, it shows how to turn it back on. You can turn either off in System Settings &gt; Privacy &amp; Security.</p>
+  <ul>
+    <li><strong>Microphone</strong>: dictation, meetings, and Test Microphone. With Keep microphone on standby turned on, the input stays open between dictations and macOS shows the orange microphone indicator. SideWave throws standby audio away as it arrives; nothing is recorded until you press the shortcut.</li>
+    <li><strong>Accessibility</strong>: the global shortcut, finding the window and text field you started in, and pasting.</li>
+  </ul>
+
+  <h2>Source and licenses</h2>
+  <p>SideWave is open source under Apache 2.0, and the code is on <a href="https://github.com/RichardStoker-USDA/SideWave">GitHub</a>. Dependencies and model weights have their own licenses, listed in <a href="/acknowledgments">Acknowledgments</a>.</p>
+
+  <h2>Questions</h2>
+  <p><a href="https://github.com/RichardStoker-USDA/SideWave/issues">Open an issue</a> on GitHub. Leave out transcripts, credentials, and log files you haven't checked, since issues are public.</p>
+  <p class="doc-updated">Last updated October 16, 2026</p>
 </DocLayout>

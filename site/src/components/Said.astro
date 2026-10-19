@@ -1,0 +1,45 @@
+---
+// A line as it was spoken, over the same line written. Words in {braces} are the fillers Refine
+// drops; they show struck through in the draft gray.
+interface Props {
+  said: string;
+  wrote: string;
+  id?: string;
+  as?: 'h1' | 'h2' | 'p';
+}
+const { said, wrote, id, as = 'h2' } = Astro.props;
+const Tag = as;
+const parts = said.split(/(\{[^}]+\})/).filter(Boolean).map((part) =>
+  part.startsWith('{') ? { text: part.slice(1, -1), filler: true } : { text: part, filler: false });
+---
+
+<div class="said-wrote">
+  <p class="said" aria-hidden="true">{parts.map((p) => (p.filler ? <s>{p.text}</s> : p.text))}</p>
+  <Tag class="wrote" id={id} data-refine>{wrote}</Tag>
+</div>
+
+<style>
+  .said {
+    font-family: var(--font-said);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--text-draft);
+    margin: 0 0 0.45em;
+    max-width: 44ch;
+  }
+  .said s {
+    text-decoration-thickness: 1px;
+    text-decoration-color: currentColor;
+  }
+  .wrote {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.75rem, 1.9vw + 0.7rem, 2.5rem);
+    line-height: 1.06;
+    letter-spacing: -0.018em;
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 21ch;
+    text-wrap: balance;
+  }
+</style>

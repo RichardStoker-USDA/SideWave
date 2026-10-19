@@ -1,0 +1,33 @@
+---
+import screens from '../data/screens.json';
+
+// A window captured from the running app, in the theme that matches the page. The image includes
+// the window's own macOS shadow, so it is pulled outward by the shadow's width and the window's
+// edges line up with the column. Geometry comes from src/data/screens.json.
+interface Props {
+  name: keyof typeof screens;
+  alt: string;
+  class?: string;
+  eager?: boolean;
+}
+const { name, alt, class: className, eager = false } = Astro.props;
+const s = screens[name];
+const style = `--l:${s.left};--t:${s.top};--r:${s.right};--b:${s.bottom}`;
+---
+
+<figure class:list={['screen', className]} style={style}>
+  {['dark', 'light'].map((look) => (
+    <img class={`only-${look}`} src={`/media/app/${name}-${look}.webp`} width={s.w} height={s.h} alt={alt}
+         loading={eager ? 'eager' : 'lazy'} decoding="async" />
+  ))}
+</figure>
+
+<style>
+  .screen { margin: 0; }
+  .screen img {
+    width: calc(100% * (1 + var(--l) + var(--r)));
+    max-width: none;
+    height: auto;
+    margin: calc(-100% * var(--t)) 0 calc(-100% * var(--b)) calc(-100% * var(--l));
+  }
+</style>

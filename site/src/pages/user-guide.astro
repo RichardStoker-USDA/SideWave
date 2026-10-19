@@ -29,7 +29,7 @@ import DocLayout from '../layouts/DocLayout.astro';
   <p>The default shortcut is Right Option. One key covers several gestures:</p>
   <ul>
     <li><strong>Tap to start, tap to stop.</strong> Wait for Listening before you speak. After the second tap, SideWave finishes the last words and any Refine pass, then pastes.</li>
-    <li><strong>Hold for push-to-talk.</strong> Hold the key while you talk and release to send. A hold counts after half a second; you can change that in Settings &gt; Advanced. Push-to-talk pastes the recognized text unless you turn on its Refine option.</li>
+    <li><strong>Hold for push-to-talk.</strong> Hold the key while you talk and release to send. A press counts as a hold after half a second, measured from when recording is ready; Advanced view lets you change that in Settings &gt; Advanced. Push-to-talk pastes the recognized text unless you turn on its Refine option.</li>
     <li><strong>Double-tap to paste again.</strong> Two quick taps paste your last dictation into the app in front.</li>
     <li><strong>Escape</strong> stops without sending. The text waits on Home, where you can paste it, keep dictating, or discard it.</li>
     <li><strong>Control-Escape</strong> cancels. Any text so far is saved to History.</li>
@@ -43,7 +43,7 @@ import DocLayout from '../layouts/DocLayout.astro';
   <p>While you talk, a preview at the bottom of the screen shows the text in stages. Gray words are the live draft. Words turn solid as Parakeet confirms them, and Refine revises them as each phrase finishes. Drag the preview to move it, right-click it to lock the position, and use Settings &gt; Overlay to change its size or style.</p>
 
   <h2>Templates and Refine</h2>
-  <p>Refine is a local language model pass that fixes punctuation, filler words, and misheard terms. If it fails or times out, you get the recognized text instead. Choose the model on Home:</p>
+  <p>Refine is a local language model pass that fixes punctuation, filler words, and misheard terms. If it can't finish, the text stays on Home and in History instead of being pasted. Choose the model on Home:</p>
   <ul>
     <li><strong>Apple Intelligence</strong>, on Macs that support it, with Apple Intelligence turned on. Nothing extra to download.</li>
     <li><strong>Gemma 4 E2B, E4B, or 12B</strong>, which download once (about 3, 5.2, and 6.8 GB). 12B suits Macs with 24 GB of memory or more.</li>
@@ -66,15 +66,15 @@ import DocLayout from '../layouts/DocLayout.astro';
     <li><strong>Send hint to Refine</strong> tells the language model about the term, along with any usage note you add.</li>
   </ul>
   <p>Always include in Refine keeps a few important words in every Refine prompt. Keep that list short so it fits the model's context.</p>
-  <p>Create Words from a Description drafts terms from a sentence about your field using the local model; you review each one before saving. Speech Profile, in the same menu, summarizes how you talk from recent dictations and passes that to Refine.</p>
+  <p>Describe Your Field, in the menu at the bottom of the glossary list, drafts terms from a few sentences about your work using the local model; you review each one before saving. Speech Profile, in the same menu, summarizes how you talk from recent dictations and passes that to Refine.</p>
   <p>Browse Bundles lists optional glossaries from a public catalog. Bundles are read-only and update only when you ask, unless you turn on daily checks for one. Make a personal copy to edit a bundle. Glossaries import and export as JSON.</p>
 
   <h2>History and recovery</h2>
-  <p>History keeps recent dictations for seven days by default (Settings &gt; Privacy has 1 day to 90 days, or keep forever), up to 500 entries. Expand an entry to see the date, word count, and which model refined it. Show earlier stages reveals the recognized text and the live draft behind the final version.</p>
-  <p>Cancelled and failed sessions are saved too, labeled Not sent. If SideWave quits in the middle of a dictation, the next launch recovers what it can and labels it Recovered.</p>
+  <p>History keeps recent dictations for seven days by default, up to 500 entries. Settings &gt; Privacy offers 1, 3, 7, 14, 30, or 90 days, or Never, which keeps entries until the 500-entry limit. Expand an entry to see the date, word count, and which model refined it. Show earlier stages reveals the recognized text and the live draft behind the final version.</p>
+  <p>Cancelled dictations and failed pastes are saved there too. If SideWave quits in the middle of a dictation, the next launch recovers what it can and labels it Recovered.</p>
 
   <h2>Meetings</h2>
-  <p>Turn on Show Meetings in Settings &gt; Meetings to add a Meetings tab. SideWave records to files on your Mac as you go, then transcribes the recording, labels up to eight speakers, and can write notes with the local model. Speaker labels are estimates, so check them before you share notes. If recording is interrupted, the next launch offers to resume or process what was saved.</p>
+  <p>Turn on Show Meetings in Settings &gt; Meetings to add a Meeting tab. SideWave records to files on your Mac as you go, then transcribes the recording, labels up to eight speakers, and can write notes with the local model. Speaker labels are estimates, so check them before you share notes. If recording is interrupted, the next launch offers to resume or process what was saved.</p>
 
   <h2>Updates</h2>
   <p>On the second launch SideWave asks whether to check for updates automatically. Either way, SideWave &gt; Check for Updates checks right away. Sparkle verifies each update's signature before installing it, and releases are notarized by Apple.</p>

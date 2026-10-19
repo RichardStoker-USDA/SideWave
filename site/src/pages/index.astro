@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import WaveTitle from '../components/WaveTitle.astro';
-import SignalLine from '../components/SignalLine.astro';
+import Said from '../components/Said.astro';
+import Screen from '../components/Screen.astro';
 
 // The newest release in the appcast, so the page never names a version that isn't published.
 const appcast = fs.readFileSync(path.join(process.cwd(), 'public/appcast.xml'), 'utf8');
@@ -12,589 +13,226 @@ const version = appcast.match(/<sparkle:shortVersionString>([^<]+)</)?.[1];
 const download = 'https://github.com/RichardStoker-USDA/SideWave/releases/latest/download/SideWave.dmg';
 const repo = 'https://github.com/RichardStoker-USDA/SideWave';
 
-// One dictation, rendered from the app at each point the preview changes.
-const stages = [
-  { id: 'listening', label: 'Listening', alt: 'The SideWave preview listening, before any words arrive.' },
-  { id: 'draft', label: 'Draft', alt: 'The preview with a finished sentence in solid text and the newest words still gray.' },
-  { id: 'refining', label: 'Refine', alt: 'The preview while Refine checks a sentence, its words briefly tinted as they settle.' },
-  { id: 'refined', label: 'Done', alt: 'The preview with the whole dictation refined and ready to paste.' },
-];
-
-const screens = [
-  { id: 'home', label: 'Home', w: 1350, h: 1280,
-    caption: 'Readiness, the hotkey, and the choices you change most: template, Refine model, microphone, and where the text goes.' },
-  { id: 'history', label: 'History', w: 1350, h: 1280,
-    caption: 'Every dictation with the app it went to, the model that refined it, and the recognized text behind it.' },
-  { id: 'vocabulary', label: 'Vocabulary', w: 1010, h: 1280,
-    caption: 'A glossary for one field of work: the spelling you want, what it gets misheard as, and what it means.' },
-  { id: 'dictation', label: 'Dictation', w: 1350, h: 1280,
-    caption: 'Refine, filters, and formatting. Advanced view adds the tuning controls.' },
-  { id: 'settings', label: 'Settings', w: 1260, h: 1240,
-    caption: 'Appearance, the hotkey and its gestures, microphones, models, and privacy.' },
+const sections = [
+  {
+    id: 'anywhere',
+    said: '{so} it types into {like} the app you\'re already using',
+    wrote: 'It types into the app you\'re already using.',
+    body: ['Press your hotkey in any text field and talk. The preview shows a fast draft in gray while you speak. SideWave remembers the field you started in and finds it again before it pastes.'],
+    screen: { name: 'preview-draft', alt: 'The SideWave preview mid-sentence, with the live draft in gray.' },
+  },
+  {
+    id: 'switch',
+    said: 'look something up mid-sentence {um} the text still goes where you started',
+    wrote: 'Look something up mid-sentence. The text still goes where you started.',
+    body: [
+      'Switch apps while you talk. When you finish, SideWave brings back the window you started in and pastes there.',
+      'If that app closed or the paste is blocked, the text is saved to History. Escape stops without pasting and keeps the text on Home.',
+    ],
+    screen: { name: 'history', alt: 'SideWave History with dictations sent to Slack, Mail, Terminal, Notes, and Messages.' },
+  },
+  {
+    id: 'refine',
+    said: 'refine {uh} removes filler words and {you know} fixes grammar',
+    wrote: 'Refine removes filler words and fixes grammar.',
+    body: [
+      'Apple Intelligence or a Gemma 4 model refines the text on your Mac while you talk. Recognition confirms each stretch of speech and corrects the draft, then Refine fixes punctuation and grammar and drops filler words.',
+      'Standard keeps your wording, Professional makes it formal, and Concise makes it shorter. As Spoken skips Refine.',
+    ],
+    screen: { name: 'preview-refined', alt: 'The preview with the refined text: "Quick update on the irrigation trial, we finished sampling plots 4 through 9 on Tuesday, and the soil moisture readings look consistent with last week."' },
+  },
+  {
+    id: 'templates',
+    said: 'templates turn {like} what you say into {um} a document',
+    wrote: 'Templates turn what you say into a document.',
+    body: [
+      'Email, Instructions, AI Prompt, and Custom open a document window. Read it, edit it, or ask for a change by typing or speaking, like "make this a list."',
+      'Pick an output language to speak in one language and paste in another.',
+    ],
+    screen: { name: 'document', alt: 'The SideWave document window with an email written from one dictation.' },
+  },
+  {
+    id: 'jargon',
+    said: '{so} teach it {um} your field\'s jargon',
+    wrote: 'Teach it your field\'s jargon.',
+    body: ['A glossary holds the names, acronyms, and species your work uses. Recognition checks for them in the audio, and Refine gets their spelling and meaning. Download a bundle from the catalog or make your own.'],
+    screen: { name: 'vocabulary', alt: 'A SideWave glossary for field research with qPCR, evapotranspiration, and Brassica rapa.' },
+  },
+  {
+    id: 'local',
+    said: '{and} there\'s {like} no account and no analytics',
+    wrote: 'No account and no analytics.',
+    body: ['Speech recognition and Refine run on your Mac, so your speech and text aren\'t uploaded. SideWave goes online to download models, to fetch glossary bundles you add, and to check for updates if you allow it. Help > Data Transparency lists every download and update check.'],
+  },
 ];
 ---
 
 <BaseLayout title="SideWave: dictation for Mac">
   <main>
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-inner container-wide">
-        <WaveTitle />
-        <p class="hero-lead">Dictation that works the way you work.</p>
-        <p class="hero-sub">
-          Focus any text field, press your hotkey, and speak. A live preview floats on screen so you
-          see every word as it lands. Move between windows, keep music in your headphones, teach it
-          your jargon.
+    <header class="hero wrap">
+      <WaveTitle />
+      <div class="lede">
+        <Said as="p" said="{so} it's {um} dictation that runs on your Mac" wrote="Dictation that runs on your Mac." />
+        <p class="intro">
+          Click into a text field, press your hotkey, and talk. A preview shows your words while you
+          speak, and when you finish, SideWave pastes the text where you started.
         </p>
-        <div class="hero-actions">
-          <a href={download} class="btn btn-primary" id="download-btn">
-            <svg class="btn-icon btn-icon--download" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <svg class="btn-icon btn-icon--apple" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden>
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-            </svg>
-            <span class="btn-download-text">Download for Mac</span>
-          </a>
-          <a href={repo} class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View source</a>
-        </div>
-        <p class="hero-meta">
-          {version && <span>Version {version}</span>}
-          <span>macOS 26 or later</span>
-          <span>Apple silicon</span>
-          <span>Free and open source</span>
-        </p>
+        <a href={download} class="button" id="download-btn">
+          <svg class="apple" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          <span class="button-text">Download for Mac</span>
+        </a>
+        <p class="req">Free and open source. {version ? `Version ${version} needs` : 'Needs'} macOS 26 or later on Apple silicon.</p>
       </div>
+      <Screen name="home" class="hero-shot" eager alt="SideWave Home with the template, Refine model, microphone, destination, and shortcut." />
+    </header>
 
-      <figure class="preview" id="preview" aria-label="The SideWave preview during one dictation">
-        <div class="preview-stack">
-          {stages.map((s, i) => (
-            <div class={`preview-frame${i === 1 ? ' is-on' : ''}`} data-stage={s.id}>
-              <img class="only-dark" src={`/media/preview-${s.id}-dark.webp`} width="540" height="142" alt={s.alt} decoding="async" />
-              <img class="only-light" src={`/media/preview-${s.id}-light.webp`} width="540" height="142" alt={s.alt} decoding="async" />
-            </div>
-          ))}
+    {sections.map((s) => (
+      <section class={`say wrap${s.screen ? '' : ' say-text'}`} id={s.id} aria-labelledby={`${s.id}-title`}>
+        <div class="say-copy">
+          <Said id={`${s.id}-title`} said={s.said} wrote={s.wrote} />
+          {s.body.map((p) => <p class="body">{p}</p>)}
         </div>
-        <div class="preview-controls">
-          <ol class="preview-steps" aria-label="Preview stages">
-            {stages.map((s, i) => (
-              <li>
-                <button type="button" class="preview-step" data-stage={s.id} aria-pressed={i === 1 ? 'true' : 'false'}>
-                  <span class="preview-step-bar" aria-hidden="true"><span></span></span>
-                  {s.label}
-                </button>
-              </li>
-            ))}
-          </ol>
-          <button type="button" class="preview-pause" aria-label="Pause the preview">
-            <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9M11 3.5v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z" fill="currentColor"/></svg>
-          </button>
-        </div>
-        <figcaption>Rendered from the app. Gray words are the live draft; they turn solid once Refine has checked the sentence.</figcaption>
-      </figure>
-    </section>
+        {s.screen && <Screen name={s.screen.name} class={`say-shot shot-${s.id}`} alt={s.screen.alt} />}
+      </section>
+    ))}
 
-    <SignalLine />
-
-    <section class="section story" id="where" aria-labelledby="where-title">
-      <div class="container-wide story-grid">
-        <div class="story-copy">
-          <h2 id="where-title" class="settle">Wherever you were typing</h2>
-          <p>
-            Slack, Mail, a terminal, a note. SideWave remembers the app and the text field you
-            started in, so you can look something up in another window while you talk. It checks
-            the target again before it pastes.
-          </p>
-          <p>
-            If an app can't confirm the paste, the text waits in History instead of landing twice.
-            Press Escape to stop without sending, and the text stays on Home until you want it.
-          </p>
-        </div>
-        <figure class="shot shot-tall">
-          <img class="only-dark" src="/media/screens/history-dark.webp" width="1350" height="1280" loading="lazy" decoding="async" alt="SideWave History with dictations sent to Slack, Mail, Terminal, Notes, and Messages." />
-          <img class="only-light" src="/media/screens/history-light.webp" width="1350" height="1280" loading="lazy" decoding="async" alt="SideWave History with dictations sent to Slack, Mail, Terminal, Notes, and Messages." />
-        </figure>
-      </div>
-    </section>
-
-    <SignalLine />
-
-    <section class="section story story-flip" id="templates" aria-labelledby="templates-title">
-      <div class="container-wide story-grid">
-        <div class="story-copy">
-          <h2 id="templates-title" class="settle">Templates</h2>
-          <p>
-            Standard fixes grammar and filler words and keeps your voice. Professional and Concise
-            change the tone.
-          </p>
-          <p>
-            Email, Instructions, AI Prompt, and Custom write a document instead. Read it, edit it, or
-            say what to change, like "make the second paragraph shorter."
-          </p>
-          <p>
-            Pick an output language to dictate in one language and get the text in another.
-          </p>
-        </div>
-        <figure class="shot">
-          <img class="only-dark" src="/media/document-dark.webp" width="1520" height="1280" loading="lazy" decoding="async" alt="The SideWave document window with an email written from dictation." />
-          <img class="only-light" src="/media/document-light.webp" width="1520" height="1280" loading="lazy" decoding="async" alt="The SideWave document window with an email written from dictation." />
-        </figure>
-      </div>
-    </section>
-
-    <SignalLine />
-
-    <section class="section story" id="words" aria-labelledby="words-title">
-      <div class="container-wide story-grid">
-        <div class="story-copy">
-          <h2 id="words-title" class="settle">Teach it your jargon</h2>
-          <p>
-            Add the words a general speech model gets wrong: species, assays, tools, people. List
-            what each one gets misheard as, and add a note so Refine knows what it means.
-          </p>
-          <p>
-            Glossaries live on your Mac. Optional bundles add a curated word list for a field, and
-            they only update when you ask.
-          </p>
-        </div>
-        <figure class="shot shot-narrow">
-          <img class="only-dark" src="/media/screens/vocabulary-dark.webp" width="1010" height="1280" loading="lazy" decoding="async" alt="A SideWave glossary with qPCR, evapotranspiration, and species names." />
-          <img class="only-light" src="/media/screens/vocabulary-light.webp" width="1010" height="1280" loading="lazy" decoding="async" alt="A SideWave glossary with qPCR, evapotranspiration, and species names." />
-        </figure>
-      </div>
-    </section>
-
-    <SignalLine />
-
-    <section class="section app" id="app" aria-labelledby="app-title">
-      <div class="container-wide">
-        <div class="app-head">
-          <h2 id="app-title" class="settle">The app</h2>
-          <p>
-            Most of the time SideWave is a menu bar icon and a hotkey. Open it to change the
-            template, model, or microphone, look back through History, or manage your glossaries.
-          </p>
-        </div>
-        <div class="viewer">
-          <div class="viewer-bar" role="tablist" aria-label="SideWave screens">
-            {screens.map((s, i) => (
-              <button class="viewer-tab" role="tab" type="button" id={`tab-${s.id}`}
-                      aria-controls="viewer-panel" aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}
-                      data-screen={s.id} data-caption={s.caption} data-w={s.w} data-h={s.h}>{s.label}</button>
-            ))}
-          </div>
-          <div class="viewer-panel" id="viewer-panel" role="tabpanel" aria-labelledby="tab-home">
-            <img class="viewer-img" src="/media/screens/home-dark.webp" width="1350" height="1280" alt="SideWave Home" decoding="async" />
-            <p class="viewer-caption">{screens[0].caption}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <SignalLine />
-
-    <section class="section local" id="local" aria-labelledby="local-title">
-      <div class="container local-grid">
-        <h2 id="local-title" class="settle">It stays on your Mac</h2>
-        <div class="local-copy">
-          <p>
-            Speech recognition runs on the Neural Engine with NVIDIA Parakeet, and Refine uses Apple
-            Intelligence or Gemma 4 on your Mac. Dictation audio stays in memory and is never saved.
-            There's no account and no telemetry.
-          </p>
-          <p>
-            SideWave goes online for three things: downloading models, fetching glossary bundles you
-            ask for, and checking for updates if you allow it. Data Transparency in the Help menu
-            lists every request. The <a href="/privacy-policy">privacy policy</a> has the details.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section get" id="get" aria-labelledby="get-title">
-      <div class="container get-inner">
-        <h2 id="get-title" class="settle">Get SideWave</h2>
-        <p>
-          Free and open source under Apache 2.0, for macOS 26 or later on an Apple silicon Mac. Open
-          the DMG, drag SideWave to Applications, and follow setup. It explains each permission
-          before macOS asks, then downloads the speech models.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href={download}>Download for Mac</a>
-          <a class="btn btn-secondary" href="/user-guide">User guide</a>
-        </div>
-      </div>
+    <section class="closing wrap" aria-labelledby="get-title">
+      <h2 id="get-title" class="closing-title">SideWave is free and open source.</h2>
+      <p class="body">It needs a Mac with Apple silicon and macOS 26 or later. If you allow it, SideWave checks for a new version once a day and asks before installing it.</p>
+      <p class="closing-links">
+        <a href={download} class="button">Download for Mac</a>
+        <a href={repo} class="text-link" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+      </p>
     </section>
   </main>
 </BaseLayout>
 
 <style>
-  main { position: relative; z-index: 1; }
+  main { position: relative; }
+  .wrap { width: min(100% - 2 * var(--gutter), var(--page-width)); margin-inline: auto; }
 
-  /* Only one of each pair shows, matching the site theme. */
-  :global([data-theme='dark']) .only-light,
-  :global([data-theme='light']) .only-dark { display: none !important; }
+  .hero { padding-top: calc(var(--nav-height) + 7vh); text-align: center; }
+  .hero :global(.hero-title-wrap) { margin: 0 auto; }
+  .hero :global(.hero-title) { font-size: clamp(4.4rem, 15vw, 13.5rem); }
+  .lede { max-width: 620px; margin: 30px auto 0; }
+  .lede :global(.said), .lede :global(.wrote) { margin-inline: auto; }
+  .lede :global(.wrote) { font-size: clamp(1.9rem, 2.6vw + 0.6rem, 2.9rem); max-width: 19ch; }
+  .intro { max-width: 50ch; margin: 18px auto 0; font-size: 1.0625rem; }
+  .lede .button { margin-top: 30px; }
+  .req { margin: 14px auto 0; font-size: 0.875rem; color: var(--text-tertiary); }
+  .hero :global(.hero-shot) { max-width: 980px; margin: 72px auto 0; }
 
-  .hero {
-    padding: calc(var(--nav-height) + 7vh) 0 64px;
-    overflow: hidden;
-  }
-  .hero-inner {
-    display: flex;
-    flex-direction: column;
+  .button {
+    display: inline-flex;
     align-items: center;
-    text-align: center;
+    gap: 9px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1;
+    text-decoration: none;
+    transition: transform 0.18s ease, background-color 0.3s ease;
   }
-  .hero-lead {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(1.5rem, 2.2vw + 0.5rem, 2.3rem);
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-    color: var(--text-primary);
-    margin: 4px auto 18px;
-  }
-  .hero-sub {
-    font-size: clamp(1rem, 0.6vw + 0.8rem, 1.15rem);
-    line-height: 1.6;
-    max-width: 58ch;
-    margin: 0 auto 34px;
-  }
-  .hero-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
-  .btn-icon { flex-shrink: 0; }
-  .hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px 20px;
-    margin-top: 22px;
-    font-size: 14px;
-    color: var(--text-tertiary);
-  }
+  .button:hover { color: var(--bg-primary); text-decoration: none; transform: translateY(-1px); }
+  .button:active { transform: translateY(0); }
+  .apple { margin-top: -2px; }
 
-  /* The preview: four real states, one at a time. */
-  .preview {
-    width: min(100% - 32px, 620px);
-    margin: 72px auto 0;
-  }
-  .preview-stack {
-    position: relative;
-    aspect-ratio: 540 / 142;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: var(--shadow-lg);
-  }
-  .preview-frame {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-  .preview-frame.is-on { opacity: 1; }
-  .preview-frame img { width: 100%; height: 100%; display: block; object-fit: cover; }
-  .preview-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 18px;
-  }
-  .preview-steps {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    flex: 1;
-  }
-  .preview-step {
-    width: 100%;
-    display: grid;
-    gap: 8px;
-    padding: 0;
-    border: 0;
-    background: none;
-    font: 500 13px/1 var(--font-text);
-    color: var(--text-tertiary);
-    text-align: left;
-    cursor: pointer;
-  }
-  .preview-step[aria-pressed='true'] { color: var(--text-primary); }
-  .preview-step-bar {
-    display: block;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--border-subtle);
-    overflow: hidden;
-  }
-  .preview-step-bar span {
-    display: block;
-    height: 100%;
-    width: 0;
-    background: var(--text-secondary);
-  }
-  .preview-step[aria-pressed='true'] .preview-step-bar span {
-    width: 100%;
-    transition: width var(--stage-ms, 2600ms) linear;
-  }
-  .preview.is-paused .preview-step[aria-pressed='true'] .preview-step-bar span { transition: none; }
-  .preview-pause {
-    width: 30px;
-    height: 30px;
-    flex: none;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-  }
-  .preview-pause svg { width: 13px; height: 13px; }
-  .preview-pause .icon-play,
-  .preview.is-paused .preview-pause .icon-pause { display: none; }
-  .preview.is-paused .preview-pause .icon-play { display: block; }
-  .preview figcaption {
-    margin-top: 14px;
-    font-size: 13px;
-    color: var(--text-tertiary);
-    text-align: center;
-  }
-
-  /* Story sections: copy beside a real app image. */
-  .story-grid {
+  .say {
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: clamp(40px, 6vw, 96px);
+    gap: 72px;
     align-items: center;
+    padding-top: 136px;
   }
-  .story-flip .story-copy { order: 2; }
-  .story-copy p { max-width: 46ch; }
-  .story-copy h2 + p { margin-top: 24px; }
-  .story-copy p + p { margin-top: 14px; }
-  .shot img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 14px;
-    box-shadow: var(--shadow-lg), 0 0 0 1px var(--hairline);
-  }
-  .shot-narrow { max-width: 520px; justify-self: center; }
+  .say-text { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .say-copy .body { max-width: 46ch; margin-top: 18px; }
+  .say-copy :global(.said-wrote) + .body { margin-top: 24px; }
+  .say :global(.shot-jargon) { max-width: 560px; justify-self: end; width: 100%; }
 
-  /* Headings settle from the draft gray, word by word, the first time they scroll in. */
-  .settle :global(.w) { transition: color 0.45s ease; }
-  .settle.is-draft :global(.w) { color: var(--text-draft); }
+  .closing { padding: 150px 0 30px; }
+  .closing-title {
+    font-weight: 500;
+    font-size: clamp(1.9rem, 2.6vw + 0.6rem, 2.9rem);
+    letter-spacing: -0.02em;
+    max-width: 19ch;
+  }
+  .closing .body { max-width: 52ch; margin-top: 16px; }
+  .closing-links { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: 30px; }
+  .text-link { font-weight: 600; }
 
-  .app-head { max-width: 620px; margin: 0 auto 40px; text-align: center; }
-  .app-head p { margin-top: 18px; }
-  .viewer { display: grid; justify-items: center; gap: 24px; }
-  .viewer-bar {
-    display: inline-flex;
-    gap: 2px;
-    padding: 4px;
-    border-radius: 100px;
-    border: 1px solid var(--hairline-strong);
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    max-width: 100%;
-    overflow-x: auto;
-  }
-  .viewer-tab {
-    font: 500 14px/1 var(--font-text);
-    color: var(--text-secondary);
-    background: transparent;
-    border: 0;
-    border-radius: 100px;
-    padding: 9px 16px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .viewer-tab:hover { color: var(--text-primary); }
-  .viewer-tab[aria-selected='true'] {
-    color: var(--text-primary);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm);
-  }
-  .viewer-panel { width: 100%; display: grid; justify-items: center; gap: 18px; }
-  .viewer-img {
-    width: min(100%, 675px);
-    height: auto;
-    display: block;
-    border-radius: 14px;
-    box-shadow: var(--shadow-lg), 0 0 0 1px var(--hairline);
-    transition: opacity 0.18s ease;
-  }
-  .viewer-img.swapping { opacity: 0; }
-  .viewer-caption { max-width: 560px; text-align: center; font-size: 15px; min-height: 3em; }
-
-  .local-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    gap: 48px;
-    align-items: start;
-  }
-  .local-copy p + p { margin-top: 16px; }
-
-  .get { padding-top: 40px; }
-  .get-inner { text-align: center; max-width: 720px; }
-  .get-inner p { margin: 20px auto 30px; max-width: 58ch; }
-
-  @media (max-width: 900px) {
-    .story-grid, .local-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-    .story-flip .story-copy { order: 0; }
-  }
-  @media (max-width: 600px) {
-    .container-wide, .container { padding: 0 16px; }
-    .section { padding: 84px 0; }
-    .hero-actions .btn { flex: 1 1 100%; }
-    .preview-step { font-size: 12px; }
-    .viewer-tab { padding: 8px 11px; font-size: 13px; }
-    .viewer-bar { justify-content: flex-start; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .preview-frame, .viewer-img, .settle :global(.w) { transition: none; }
+  @media (max-width: 820px) {
+    .hero :global(.hero-shot) { margin-top: 52px; }
+    .say, .say-text { grid-template-columns: 1fr; gap: 32px; padding-top: 96px; }
+    .say :global(.shot-jargon) { justify-self: stretch; max-width: none; }
+    .closing { padding-top: 110px; }
   }
 </style>
 
 <script>
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const STAGE_MS = 2600;
-  let previewTimer = 0;
-  let themeObserver: MutationObserver | null = null;
-
-  function theme(): 'light' | 'dark' {
-    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  }
-
-  // Download button: the Apple mark on a Mac, and a plain note elsewhere.
+  // On a Mac the button shows the Apple mark; elsewhere it says the app is for macOS.
   function initDownload() {
-    const btn = document.getElementById('download-btn');
-    if (!btn) return;
-    const ua = navigator.userAgent.toLowerCase();
-    const isMac = (navigator.platform || '').toLowerCase().includes('mac') || ua.includes('macintosh');
-    if (isMac) {
-      btn.querySelector('.btn-icon--download')?.setAttribute('hidden', '');
-      btn.querySelector('.btn-icon--apple')?.removeAttribute('hidden');
-    } else {
-      const text = btn.querySelector('.btn-download-text');
-      if (text) text.textContent = 'Download (macOS only)';
-    }
+    const isMac = /mac/i.test(navigator.platform || '') || /macintosh/i.test(navigator.userAgent);
+    if (isMac) return;
+    document.querySelectorAll<HTMLElement>('#download-btn').forEach((btn) => {
+      btn.querySelector('.apple')?.setAttribute('hidden', '');
+      const text = btn.querySelector('.button-text');
+      if (text) text.textContent = 'Download for macOS';
+    });
   }
 
-  function initPreview() {
-    const root = document.getElementById('preview');
-    if (!root) return;
-    const frames = Array.from(root.querySelectorAll<HTMLElement>('.preview-frame'));
-    const steps = Array.from(root.querySelectorAll<HTMLButtonElement>('.preview-step'));
-    const pause = root.querySelector<HTMLButtonElement>('.preview-pause');
-    root.style.setProperty('--stage-ms', `${STAGE_MS}ms`);
-    let index = 1;
-    let paused = reduceMotion.matches;
-
-    const show = (i: number) => {
-      index = i;
-      frames.forEach((f, n) => f.classList.toggle('is-on', n === i));
-      steps.forEach((s, n) => s.setAttribute('aria-pressed', n === i ? 'true' : 'false'));
-    };
-    const schedule = () => {
-      clearTimeout(previewTimer);
-      if (paused) return;
-      previewTimer = window.setTimeout(() => { show((index + 1) % frames.length); schedule(); }, STAGE_MS);
-    };
-    const setPaused = (value: boolean) => {
-      paused = value;
-      root.classList.toggle('is-paused', paused);
-      pause?.setAttribute('aria-label', paused ? 'Play the preview' : 'Pause the preview');
-      schedule();
-    };
-    steps.forEach((s, n) => s.addEventListener('click', () => { show(n); setPaused(true); }));
-    pause?.addEventListener('click', () => setPaused(!paused));
-    new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) clearTimeout(previewTimer); else schedule();
-    }).observe(root);
-    setPaused(paused);
-  }
-
-  // Wrap each heading word so it can settle from the draft gray, once.
-  function initSettle() {
-    if (reduceMotion.matches) return;
-    const headings = Array.from(document.querySelectorAll<HTMLElement>('.settle'));
-    headings.forEach((h) => {
-      if (h.dataset.split) return;
-      h.dataset.split = '1';
-      const words = (h.textContent ?? '').trim().split(/\s+/);
-      h.innerHTML = words.map((w) => `<span class="w">${w}</span>`).join(' ');
-      h.classList.add('is-draft');
+  // Refined lines settle the way the preview's words do: draft gray, a short pass of color, then
+  // ink. Once per visit, never with Reduce Motion.
+  function initRefine() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let seen = false;
+    try { seen = sessionStorage.getItem('sw-refined') === '1'; } catch {}
+    if (seen) return;
+    // Lines already on screen at load stay as they are; only the ones you scroll to settle.
+    const lines = Array.from(document.querySelectorAll<HTMLElement>('[data-refine]'))
+      .filter((l) => l.getBoundingClientRect().top > window.innerHeight);
+    const hues = ['#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#0a84ff', '#bf5af2'];
+    lines.forEach((line) => {
+      if (line.dataset.split) return;
+      line.dataset.split = '1';
+      const words = (line.textContent ?? '').trim().split(/\s+/);
+      line.textContent = '';
+      words.forEach((w, i) => {
+        const span = document.createElement('span');
+        span.className = 'rw';
+        span.textContent = w;
+        span.style.setProperty('--hue', hues[i % hues.length]);
+        span.style.setProperty('--i', String(i));
+        line.append(span, i < words.length - 1 ? ' ' : '');
+      });
+      line.classList.add('is-draft');
     });
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        const h = e.target as HTMLElement;
-        io.unobserve(h);
-        h.querySelectorAll<HTMLElement>('.w').forEach((w, n) => { w.style.transitionDelay = `${120 + n * 90}ms`; });
-        requestAnimationFrame(() => h.classList.remove('is-draft'));
+        io.unobserve(e.target);
+        e.target.classList.remove('is-draft');
+        e.target.classList.add('is-refining');
       }
-    }, { rootMargin: '0px 0px -15% 0px' });
-    headings.forEach((h) => io.observe(h));
+    }, { rootMargin: '0px 0px -12% 0px' });
+    lines.forEach((l) => io.observe(l));
+    try { sessionStorage.setItem('sw-refined', '1'); } catch {}
   }
 
-  function initViewer() {
-    const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.viewer-tab'));
-    const img = document.querySelector<HTMLImageElement>('.viewer-img');
-    const caption = document.querySelector<HTMLElement>('.viewer-caption');
-    const panel = document.getElementById('viewer-panel');
-    if (!tabs.length || !img || !caption || !panel) return;
-
-    const showScreen = (tab: HTMLButtonElement, animate: boolean) => {
-      const src = `/media/screens/${tab.dataset.screen}-${theme()}.webp`;
-      caption.textContent = tab.dataset.caption ?? '';
-      panel.setAttribute('aria-labelledby', tab.id);
-      img.alt = `SideWave ${tab.textContent?.trim()}`;
-      if (img.getAttribute('src') === src) return;
-      const apply = () => {
-        img.src = src;
-        img.width = Number(tab.dataset.w);
-        img.height = Number(tab.dataset.h);
-        img.style.width = `min(100%, ${Number(tab.dataset.w) / 2}px)`;
-      };
-      if (!animate || reduceMotion.matches) { apply(); return; }
-      const next = new Image();
-      next.src = src;
-      img.classList.add('swapping');
-      next.decode().catch(() => {}).finally(() => { apply(); requestAnimationFrame(() => img.classList.remove('swapping')); });
-    };
-    const select = (tab: HTMLButtonElement, focus: boolean) => {
-      tabs.forEach((t) => {
-        const on = t === tab;
-        t.setAttribute('aria-selected', on ? 'true' : 'false');
-        t.tabIndex = on ? 0 : -1;
-      });
-      if (focus) tab.focus();
-      showScreen(tab, true);
-    };
-    tabs.forEach((tab, i) => {
-      tab.addEventListener('click', () => select(tab, false));
-      tab.addEventListener('keydown', (e) => {
-        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (step) { e.preventDefault(); select(tabs[(i + step + tabs.length) % tabs.length], true); }
-        if (e.key === 'Home') { e.preventDefault(); select(tabs[0], true); }
-        if (e.key === 'End') { e.preventDefault(); select(tabs[tabs.length - 1], true); }
-      });
-    });
-    const refresh = () => {
-      const active = tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0];
-      showScreen(active, false);
-    };
-    refresh();
-    themeObserver?.disconnect();
-    themeObserver = new MutationObserver(refresh);
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  }
-
-  document.addEventListener('astro:page-load', () => {
-    initDownload();
-    initPreview();
-    initSettle();
-    initViewer();
-  });
-  document.addEventListener('astro:before-swap', () => clearTimeout(previewTimer));
+  document.addEventListener('astro:page-load', () => { initDownload(); initRefine(); });
 </script>
+
+<style is:global>
+  [data-refine] .rw { display: inline-block; }
+  [data-refine].is-draft .rw { color: var(--text-draft); }
+  [data-refine].is-refining .rw { animation: sw-refine 0.9s ease both; animation-delay: calc(var(--i) * 55ms + 80ms); }
+  @keyframes sw-refine {
+    0% { color: var(--text-draft); }
+    35% { color: var(--hue); }
+    100% { color: var(--text-primary); }
+  }
+</style>

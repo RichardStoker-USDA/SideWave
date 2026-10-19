@@ -1,0 +1,50 @@
+{
+  "home": {
+    "w": 1600,
+    "h": 1344,
+    "left": 0.063,
+    "top": 0.042,
+    "right": 0.063,
+    "bottom": 0.076
+  },
+  "history": {
+    "w": 1600,
+    "h": 1344,
+    "left": 0.063,
+    "top": 0.042,
+    "right": 0.063,
+    "bottom": 0.076
+  },
+  "vocabulary": {
+    "w": 1600,
+    "h": 1344,
+    "left": 0.063,
+    "top": 0.042,
+    "right": 0.063,
+    "bottom": 0.076
+  },
+  "document": {
+    "w": 1600,
+    "h": 1564,
+    "left": 0.0693,
+    "top": 0.0462,
+    "right": 0.0693,
+    "bottom": 0.0836
+  },
+  "preview-draft": {
+    "w": 1002,
+    "h": 461,
+    "left": 0.0,
+    "top": 0.0,
+    "right": 0.0,
+    "bottom": 0.0
+  },
+  "preview-refined": {
+    "w": 1002,
+    "h": 461,
+    "left": 0.0,
+    "top": 0.0,
+    "right": 0.0,
+    "bottom": 0.0
+  }
+}

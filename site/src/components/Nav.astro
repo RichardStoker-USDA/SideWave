@@ -9,9 +9,9 @@ import ThemeToggle from './ThemeToggle.astro';
     <a href="/" class="nav-wordmark">SideWave</a>
 
     <ul class="nav-links" role="list">
+      <li><a href="/#refine" class="nav-link">Refine</a></li>
       <li><a href="/#templates" class="nav-link">Templates</a></li>
-      <li><a href="/#words" class="nav-link">Vocabulary</a></li>
-      <li><a href="/#app" class="nav-link">The app</a></li>
+      <li><a href="/#jargon" class="nav-link">Jargon</a></li>
       <li><a href="/#local" class="nav-link">Privacy</a></li>
       <li class="nav-dropdown" id="docs-dropdown">
         <button
@@ -74,9 +74,9 @@ import ThemeToggle from './ThemeToggle.astro';
 <!-- Mobile overlay -->
 <div class="nav-mobile-overlay" id="mobile-nav" role="dialog" aria-label="Navigation menu">
   <ul class="mobile-nav-links" role="list">
+    <li><a href="/#refine" class="mobile-nav-link">Refine</a></li>
     <li><a href="/#templates" class="mobile-nav-link">Templates</a></li>
-    <li><a href="/#words" class="mobile-nav-link">Vocabulary</a></li>
-    <li><a href="/#app" class="mobile-nav-link">The app</a></li>
+    <li><a href="/#jargon" class="mobile-nav-link">Jargon</a></li>
     <li><a href="/#local" class="mobile-nav-link">Privacy</a></li>
   </ul>
   <hr class="mobile-nav-divider" />
@@ -218,38 +218,24 @@ import ThemeToggle from './ThemeToggle.astro';
       }, { signal });
     }
 
-    // Active link highlighting via IntersectionObserver
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    if (sections.length > 0 && navLinks.length > 0) {
-      const navHeight = parseInt(
-        getComputedStyle(document.documentElement).getPropertyValue('--nav-height')
-      ) || 52;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const id = entry.target.getAttribute('id');
-              navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href === `/#${id}` || href === `#${id}`) {
-                  link.classList.add('active');
-                } else {
-                  link.classList.remove('active');
-                }
-              });
-            }
-          });
-        },
-        { rootMargin: `-${navHeight}px 0px -50% 0px`, threshold: 0 }
-      );
-
-      sections.forEach(section => observer.observe(section));
-
-      // Disconnect observer when listeners are aborted
-      signal.addEventListener('abort', () => observer.disconnect());
+    // Highlight the link for the part of the page under the top third of the window.
+    const targets = Array.from(document.querySelectorAll<HTMLElement>('section[id]'));
+    const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav-link'));
+    if (targets.length > 0 && navLinks.length > 0) {
+      let pending = false;
+      const update = () => {
+        pending = false;
+        const line = window.innerHeight * 0.33;
+        let current: string | null = null;
+        for (const t of targets) {
+          if (t.getBoundingClientRect().top <= line) current = t.id;
+        }
+        navLinks.forEach((link) => link.classList.toggle('active', current !== null && link.getAttribute('href') === `/#${current}`));
+      };
+      window.addEventListener('scroll', () => {
+        if (!pending) { pending = true; requestAnimationFrame(update); }
+      }, { passive: true, signal });
+      update();
     }
   }
 
