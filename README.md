@@ -11,7 +11,7 @@ drag SideWave to Applications. Requires macOS 26 or later on an Apple silicon Ma
 ## Using it
 
 1. Open SideWave and follow setup. It explains Microphone and Accessibility access before macOS
-   asks, then downloads the speech models and shows the real download size and progress.
+   asks, then downloads the speech models and shows the download size and progress.
 2. Click into the text field you want to write in.
 3. Tap **Right Option** to start, wait for Listening, speak, and tap again to finish. Hold the key
    instead for push-to-talk; release to send.
@@ -26,8 +26,8 @@ adds the expert controls; it changes what's shown, not the engine.
 - **Recognition**: NVIDIA Parakeet TDT v3 through FluidAudio and Core ML, with a streaming live
   preview while you talk. Parakeet Ultra and the older v2 model are available in Settings.
 - **Refine**: Apple Intelligence on Macs that support it, or Gemma 4 E2B, E4B, or 12B through MLX.
-  It fixes recognition errors, punctuation, and filler words. If Refine fails or times out, you get
-  the recognized text instead.
+  It fixes recognition errors, punctuation, and filler words. If Refine can't finish, SideWave
+  keeps the text on Home and in History instead of pasting it.
 - **Templates**: Standard, Professional, and Concise paste into your app. Email, Instructions,
   AI Prompt, and Custom open a document window where you can read, edit, and change the result
   by typing or speaking an instruction.
@@ -35,7 +35,7 @@ adds the expert controls; it changes what's shown, not the engine.
 - **Vocabulary**: glossaries for names and terms, with replacement aliases and hints for Refine.
   Optional glossary bundles come from the [catalog](glossaries/README.md).
 - **History**: recent dictations with the recognized text and earlier stages, kept for 7 days by
-  default. Failed or cancelled sessions are saved there, not lost.
+  default. Failed and cancelled sessions are saved there too.
 - **Meetings** (optional): record a conversation, label up to eight speakers, and write local
   meeting notes.
 
@@ -43,7 +43,7 @@ adds the expert controls; it changes what's shown, not the engine.
 
 Recognition, Refine, and meeting notes run on your Mac. SideWave has no accounts and no analytics.
 It goes online to download models, to fetch glossary bundles you ask for, and to check for updates
-if you allow it. Help > Data Transparency shows each of those requests.
+if you allow it. Help > Data Transparency lists every download and update check.
 
 History, vocabulary, documents, and settings stay in your user folder. Text you send to another
 app follows that app's privacy rules. See the [privacy policy](https://sidewave.dev/privacy-policy/).
@@ -62,6 +62,10 @@ python3 -m unittest discover -s Tests -p 'test_*.py'
 
 Debug builds are named SideWave Dev and use their own bundle ID, so their permissions and data
 are separate from the release app.
+
+SideWave isn't sandboxed. Pasting into other apps needs Accessibility access, and the global
+shortcut needs an event tap; the App Sandbox allows neither. Releases are signed with Developer
+ID, notarized, and use the hardened runtime.
 
 The repository also holds `SideWave2`, a smaller app built on `SideWaveKit`. It's a reference for
 a cleaner architecture and has fewer features. Its tests run as `SideWaveKitTests` in the
@@ -105,10 +109,12 @@ The site in `site/` is built with Astro into `docs/`, which GitHub Pages serves 
 | [Swift Markdown](https://github.com/swiftlang/swift-markdown) | 0.8.0 | Meeting notes | Apache 2.0 |
 | [Sparkle](https://github.com/sparkle-project/Sparkle) | 2.10.0 | Updates | MIT |
 
-Model weights have their own licenses: Parakeet TDT and Parakeet Ultra use CC-BY-4.0, the live
-preview model (Parakeet Realtime EOU) uses the NVIDIA Open Model License, the CTC vocabulary model
-uses Apache 2.0, Silero VAD uses MIT, Gemma 4 uses Apache 2.0, and Nemotron 3 diarization uses
-OpenMDW-1.1. See [ACKNOWLEDGMENTS](ACKNOWLEDGMENTS) for attribution.
+These bring in smaller packages, listed in [ACKNOWLEDGMENTS](ACKNOWLEDGMENTS). Model weights have
+their own licenses. Parakeet TDT v3 and v2, Parakeet Ultra, and Parakeet TDT-CTC 110M use
+CC-BY-4.0. Parakeet Realtime EOU and Parakeet Unified use the NVIDIA Open Model License. Silero
+VAD uses MIT, Gemma 4 uses Apache 2.0, and Nemotron 3 Diarization uses OpenMDW-1.1.
+`scripts/third_party_notices.py` builds ACKNOWLEDGMENTS and the app's Acknowledgments window from
+the resolved packages.
 
 ## License
 

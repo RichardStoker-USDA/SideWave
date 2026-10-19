@@ -11,7 +11,7 @@ SideWave is open. No checks run at startup unless a bundle has that explicit opt
 Search runs locally over the downloaded index. Catalog and file transfers appear in
 Data Transparency. No vocabulary, audio, transcripts, or usage data are uploaded.
 
-Updates atomically replace publisher content in that subscription only. The pack's
+Updates atomically replace publisher content in that subscription only. The bundle's
 local identity, enabled state, template links, automatic-update preference, and
 hidden words remain intact. Failed integrity checks or writes keep the previous
 active version. Removing an entry from the catalog does not delete installed words.
