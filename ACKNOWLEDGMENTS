@@ -1,120 +1,174 @@
 ACKNOWLEDGMENTS
-===============
 
-This software incorporates and depends on the following open-source projects
-and models. Their respective licenses and attributions are listed below.
-
-
-1. NVIDIA Parakeet TDT v3 (0.6B)
----------------------------------
-Speech recognition model by NVIDIA Corporation.
-Licensed under the Creative Commons Attribution 4.0 International License (CC-BY-4.0).
-https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
-https://creativecommons.org/licenses/by/4.0/
+SideWave uses the models and code below. Settings > About > Acknowledgments in the app
+shows every license and notice file in full. scripts/third_party_notices.py writes this list.
 
 
-2. FluidAudio SDK
------------------
-Swift SDK for on-device speech recognition on Apple platforms by FluidInference.
-Licensed under the Apache License, Version 2.0.
-https://github.com/FluidInference/FluidAudio
+Speech models
+-------------
 
-CoreML model conversion of NVIDIA Parakeet by FluidInference.
-https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v3-coreml
+NVIDIA Parakeet TDT v3 (0.6B)
+  NVIDIA, converted to Core ML by FluidInference
+  Confirms what you said, one segment at a time.
+  License: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/)
+  https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
 
+NVIDIA Parakeet Realtime EOU 120M
+  NVIDIA, converted to Core ML by FluidInference
+  Writes the gray live draft and notices when you stop talking.
+  License: NVIDIA Open Model License (https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/)
+  https://huggingface.co/nvidia/parakeet_realtime_eou_120m-v1
 
-3. Silero VAD v6
------------------
-Voice activity detection model for speech boundary detection.
-Licensed under the MIT License.
-https://github.com/snakers4/silero-vad
+Parakeet Ultra
+  Moondream, from NVIDIA Parakeet; converted to Core ML by FluidInference
+  An optional recognition model.
+  License: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/)
+  https://huggingface.co/FluidInference/parakeet-ultra-coreml
 
+NVIDIA Parakeet TDT v2 (0.6B)
+  NVIDIA, converted to Core ML by FluidInference
+  An optional English-only recognition model.
+  License: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/)
+  https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2
 
-4. CTC 110M
------------------
-CTC encoder model for vocabulary boosting during finalization.
-Licensed under the Apache License, Version 2.0.
-https://huggingface.co/nvidia/parakeet-ctc-0.11b
+NVIDIA Parakeet TDT-CTC 110M
+  NVIDIA, converted to Core ML by FluidInference
+  Checks finished segments against your glossary terms.
+  License: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/)
+  https://huggingface.co/nvidia/parakeet-tdt_ctc-110m
 
+NVIDIA Parakeet Unified EN 0.6B
+  NVIDIA, converted to Core ML by FluidInference
+  The live transcript during a meeting, on Macs with 16 GB of memory or more.
+  License: NVIDIA Open Model License (https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/)
+  https://huggingface.co/nvidia/parakeet-unified-en-0.6b
 
-5. Sparkle
------------------
-Auto-updater framework for macOS applications.
-Licensed under the MIT License.
-https://github.com/sparkle-project/Sparkle
-https://github.com/sparkle-project/Sparkle/blob/2.x/LICENSE
+NVIDIA Nemotron 3 Diarization
+  NVIDIA, converted to Core ML by FluidInference
+  Labels up to eight speakers in a meeting.
+  License: OpenMDW-1.1
+  https://huggingface.co/FluidInference/nemotron-3-diarization-coreml
 
-
-6. MLX Swift LM
------------------
-On-device large language model inference for Apple Silicon via MLX. Powers
-Refine, document editing, vocabulary assistance, and meeting note formatting.
-Licensed under the MIT License.
-https://github.com/ml-explore/mlx-swift-lm
-
-
-7. Gemma 4 (E2B, E4B, and 12B)
------------------
-Open language models by Google DeepMind for local text processing.
-All three use 4-bit MLX quantizations from the mlx-community
-HuggingFace organization and run entirely on the user's Mac.
-Licensed under the Apache License, Version 2.0.
-https://ai.google.dev/gemma/docs/core/model_card_4
-
-
-8. Apple Foundation Models (Apple Intelligence)
------------------
-On-device language model framework on macOS 26 Tahoe and later. Available as
-an alternative Refine backend. Managed by the operating system; no
-model weights ship with SideWave. Use governed by Apple's SDK and OS terms.
-https://developer.apple.com/documentation/foundationmodels
+Silero VAD v6
+  The Silero team
+  Finds where speech starts and stops.
+  License: MIT (https://github.com/snakers4/silero-vad/blob/master/LICENSE)
+  https://github.com/snakers4/silero-vad
 
 
-9. swift-huggingface / swift-transformers (Tokenizers)
------------------
-Swift bindings used by MLX Swift LM for HuggingFace Hub downloads and
-tokenizer loading.
-Licensed under the Apache License, Version 2.0.
-https://github.com/huggingface/swift-transformers
+Language models
+---------------
+
+Gemma 4 (E2B, E4B, and 12B)
+  Google DeepMind, as 4-bit MLX conversions from mlx-community
+  Refine, document edits, vocabulary suggestions, and meeting notes. Downloaded when you pick one.
+  License: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+  https://ai.google.dev/gemma/docs/core/model_card_4
+
+Apple Foundation Models
+  Apple
+  Refine on Macs with Apple Intelligence turned on. The model comes with macOS; SideWave downloads nothing for it.
+  License: Part of macOS
+  https://developer.apple.com/documentation/foundationmodels
 
 
-10. NeMo Text Processing
------------------
-Inverse text normalization (numbers, dates, currency), included through FluidAudio.
-Licensed under the Apache License, Version 2.0.
-https://github.com/NVIDIA/NeMo-text-processing
+Code
+----
 
+FluidAudio 0.17.7
+  FluidInference
+  Runs the speech models, voice detection, and speaker labels.
+  License: Apache-2.0
+  https://github.com/FluidInference/FluidAudio
+  Includes NeMo Text Processing, through text-processing-rs (Apache-2.0 and MIT), fastcluster (BSD-2-Clause), VBx (Apache-2.0), Kokoro text front ends (Apache-2.0, MIT, and BSD), kokoro-coreml (Apache-2.0).
 
-11. Swift Markdown and cmark-gfm
------------------
-Markdown parsing for formatted meeting notes by the Swift project authors.
-Swift Markdown is licensed under Apache License 2.0 with Runtime Library Exception.
-cmark-gfm includes BSD-2-Clause and MIT licensed components.
-https://github.com/swiftlang/swift-markdown
-https://github.com/swiftlang/swift-cmark
+MLX Swift 0.32.3
+  Apple
+  Runs Gemma on the GPU.
+  License: MIT
+  https://github.com/ml-explore/mlx-swift
+  Includes MLX (MIT), MLX C (MIT), metal-cpp (Apache-2.0), {fmt} (MIT), JSON for Modern C++ (MIT).
 
+MLX Swift LM 3.32.3
+  Apple
+  Loads Gemma and generates text with it.
+  License: MIT
+  https://github.com/ml-explore/mlx-swift-lm
 
-12. Parakeet Ultra
------------------
-Optional speech recognition model based on NVIDIA Parakeet.
-Post-training by Moondream; CoreML conversion by FluidInference.
-Licensed under Creative Commons Attribution 4.0 International (CC-BY-4.0).
-https://huggingface.co/FluidInference/parakeet-ultra-coreml
-https://creativecommons.org/licenses/by/4.0/
+Swift Transformers 1.3.5
+  Hugging Face
+  Tokenizers for Gemma.
+  License: Apache-2.0
+  https://github.com/huggingface/swift-transformers
 
+Swift Jinja 2.5.1
+  Hugging Face
+  Chat templates for Gemma.
+  License: Apache-2.0
+  https://github.com/huggingface/swift-jinja
 
-13. NVIDIA Nemotron 3 Diarization
------------------
-Speaker diarization model by NVIDIA, with CoreML conversion by FluidInference.
-Licensed under OpenMDW-1.1.
-https://huggingface.co/FluidInference/nemotron-3-diarization-coreml
+Swift Hugging Face 0.9.0
+  Hugging Face
+  Model downloads.
+  License: Apache-2.0
+  https://github.com/huggingface/swift-huggingface
 
+EventSource 1.4.1
+  Mattt
+  Server-sent events for Swift Hugging Face.
+  License: MIT
+  https://github.com/mattt/eventsource
 
-14. NVIDIA Parakeet Realtime EOU 120M
------------------
-Streaming speech recognition for the live preview, by NVIDIA, with CoreML
-conversion by FluidInference.
-Licensed by NVIDIA Corporation under the NVIDIA Open Model License.
-https://huggingface.co/nvidia/parakeet_realtime_eou_120m-v1
-https://huggingface.co/FluidInference/parakeet-realtime-eou-120m-coreml
-https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/
+yyjson 0.12.0
+  YaoYuan
+  Reads model configuration files for Swift Transformers.
+  License: MIT
+  https://github.com/ibireme/yyjson
+
+Swift Markdown 0.8.0
+  Apple and the Swift project authors
+  Documents and meeting notes.
+  License: Apache-2.0 with Runtime Library Exception
+  https://github.com/swiftlang/swift-markdown
+
+cmark-gfm 0.9.0
+  John MacFarlane, GitHub, and contributors
+  The Markdown parser under Swift Markdown.
+  License: BSD-2-Clause and MIT
+  https://github.com/swiftlang/swift-cmark
+
+Sparkle 2.10.0
+  The Sparkle project
+  Checks for and installs updates.
+  License: MIT, with bsdiff, sais-lite, and Ed25519 notices
+  https://github.com/sparkle-project/Sparkle
+
+Swift Collections 1.4.1
+  Apple and the Swift project authors
+  Data structures for Swift Transformers and Swift Jinja.
+  License: Apache-2.0 with Runtime Library Exception
+  https://github.com/apple/swift-collections
+
+Swift Numerics 1.1.1
+  Apple and the Swift project authors
+  Math functions for MLX Swift.
+  License: Apache-2.0 with Runtime Library Exception
+  https://github.com/apple/swift-numerics
+
+Swift Atomics 1.3.0
+  Apple and the Swift project authors
+  Required by SwiftNIO.
+  License: Apache-2.0 with Runtime Library Exception
+  https://github.com/apple/swift-atomics
+
+SwiftNIO 2.104.0
+  Apple and the SwiftNIO project authors
+  Required by EventSource.
+  License: Apache-2.0
+  https://github.com/apple/swift-nio
+
+Swift Crypto 4.5.2
+  Apple and the Swift Crypto project authors
+  Checksums for downloaded model files in Swift Transformers and Swift Hugging Face.
+  License: Apache-2.0
+  https://github.com/apple/swift-crypto

@@ -1,0 +1,359 @@
+{
+  "excluded": {
+    "swift-syntax": "Builds macros at compile time; nothing from it ships in the app.",
+    "swift-asn1": "Resolved for swift-crypto; the app links none of it.",
+    "swift-system": "Resolved for swift-nio; the app links none of it."
+  },
+  "models": [
+    {
+      "id": "parakeet-tdt-v3",
+      "group": "Speech models",
+      "name": "NVIDIA Parakeet TDT v3 (0.6B)",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "Confirms what you said, one segment at a time.",
+      "license": "CC-BY-4.0",
+      "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+      "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "parakeet-eou",
+      "group": "Speech models",
+      "name": "NVIDIA Parakeet Realtime EOU 120M",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "Writes the gray live draft and notices when you stop talking.",
+      "license": "NVIDIA Open Model License",
+      "url": "https://huggingface.co/nvidia/parakeet_realtime_eou_120m-v1",
+      "licenseURL": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "parakeet-ultra",
+      "group": "Speech models",
+      "name": "Parakeet Ultra",
+      "by": "Moondream, from NVIDIA Parakeet; converted to Core ML by FluidInference",
+      "purpose": "An optional recognition model.",
+      "license": "CC-BY-4.0",
+      "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml",
+      "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "parakeet-tdt-v2",
+      "group": "Speech models",
+      "name": "NVIDIA Parakeet TDT v2 (0.6B)",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "An optional English-only recognition model.",
+      "license": "CC-BY-4.0",
+      "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2",
+      "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "parakeet-ctc",
+      "group": "Speech models",
+      "name": "NVIDIA Parakeet TDT-CTC 110M",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "Checks finished segments against your glossary terms.",
+      "license": "CC-BY-4.0",
+      "url": "https://huggingface.co/nvidia/parakeet-tdt_ctc-110m",
+      "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "parakeet-unified",
+      "group": "Speech models",
+      "name": "NVIDIA Parakeet Unified EN 0.6B",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "The live transcript during a meeting, on Macs with 16 GB of memory or more.",
+      "license": "NVIDIA Open Model License",
+      "url": "https://huggingface.co/nvidia/parakeet-unified-en-0.6b",
+      "licenseURL": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/",
+      "note": "SideWave downloads this model only when you ask for live meeting transcripts. It isn't part of the app."
+    },
+    {
+      "id": "nemotron-diarization",
+      "group": "Speech models",
+      "name": "NVIDIA Nemotron 3 Diarization",
+      "by": "NVIDIA, converted to Core ML by FluidInference",
+      "purpose": "Labels up to eight speakers in a meeting.",
+      "license": "OpenMDW-1.1",
+      "url": "https://huggingface.co/FluidInference/nemotron-3-diarization-coreml",
+      "licenseURL": "https://huggingface.co/FluidInference/nemotron-3-diarization-coreml",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "silero-vad",
+      "group": "Speech models",
+      "name": "Silero VAD v6",
+      "by": "The Silero team",
+      "purpose": "Finds where speech starts and stops.",
+      "license": "MIT",
+      "url": "https://github.com/snakers4/silero-vad",
+      "licenseURL": "https://github.com/snakers4/silero-vad/blob/master/LICENSE",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "gemma-4",
+      "group": "Language models",
+      "name": "Gemma 4 (E2B, E4B, and 12B)",
+      "by": "Google DeepMind, as 4-bit MLX conversions from mlx-community",
+      "purpose": "Refine, document edits, vocabulary suggestions, and meeting notes. Downloaded when you pick one.",
+      "license": "Apache-2.0",
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "licenseURL": "https://www.apache.org/licenses/LICENSE-2.0",
+      "note": "SideWave downloads this model when you first need it. It isn't part of the app."
+    },
+    {
+      "id": "apple-foundation-models",
+      "group": "Language models",
+      "name": "Apple Foundation Models",
+      "by": "Apple",
+      "purpose": "Refine on Macs with Apple Intelligence turned on. The model comes with macOS; SideWave downloads nothing for it.",
+      "license": "Part of macOS",
+      "url": "https://developer.apple.com/documentation/foundationmodels",
+      "note": "macOS provides this model. SideWave doesn't download or include it."
+    }
+  ],
+  "packages": [
+    {
+      "identity": "fluidaudio",
+      "name": "FluidAudio",
+      "by": "FluidInference",
+      "purpose": "Runs the speech models, voice detection, and speaker labels.",
+      "license": "Apache-2.0",
+      "files": [
+        "LICENSE"
+      ],
+      "includes": [
+        {
+          "name": "NeMo Text Processing, through text-processing-rs",
+          "license": "Apache-2.0 and MIT",
+          "files": [
+            "ThirdPartyLicenses/NemoTextProcessing-LICENSE.md"
+          ]
+        },
+        {
+          "name": "fastcluster",
+          "license": "BSD-2-Clause",
+          "files": [
+            "ThirdPartyLicenses/fastcluster-LICENSE.md"
+          ]
+        },
+        {
+          "name": "VBx",
+          "license": "Apache-2.0",
+          "files": [
+            "ThirdPartyLicenses/vbx-LICENSE.md"
+          ]
+        },
+        {
+          "name": "Kokoro text front ends",
+          "license": "Apache-2.0, MIT, and BSD",
+          "files": [
+            "ThirdPartyLicenses/JapaneseG2P-LICENSE.md",
+            "ThirdPartyLicenses/KokoroAneSpanishFrenchG2P-LICENSE.md"
+          ]
+        },
+        {
+          "name": "kokoro-coreml",
+          "license": "Apache-2.0",
+          "files": [
+            "ThirdPartyLicenses/KokoroANE-v3/NOTICE",
+            "ThirdPartyLicenses/KokoroANE-v3/mattmireles-LICENSE"
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "mlx-swift",
+      "name": "MLX Swift",
+      "by": "Apple",
+      "purpose": "Runs Gemma on the GPU.",
+      "license": "MIT",
+      "files": [
+        "LICENSE"
+      ],
+      "includes": [
+        {
+          "name": "MLX",
+          "license": "MIT",
+          "files": [
+            "Source/Cmlx/mlx/LICENSE"
+          ]
+        },
+        {
+          "name": "MLX C",
+          "license": "MIT",
+          "files": [
+            "Source/Cmlx/mlx-c/LICENSE"
+          ]
+        },
+        {
+          "name": "metal-cpp",
+          "license": "Apache-2.0",
+          "files": [
+            "Source/Cmlx/metal-cpp/LICENSE.txt"
+          ]
+        },
+        {
+          "name": "{fmt}",
+          "license": "MIT",
+          "files": [
+            "Source/Cmlx/fmt/LICENSE"
+          ]
+        },
+        {
+          "name": "JSON for Modern C++",
+          "license": "MIT",
+          "files": [
+            "Source/Cmlx/json/LICENSE.MIT"
+          ]
+        }
+      ]
+    },
+    {
+      "identity": "mlx-swift-lm",
+      "name": "MLX Swift LM",
+      "by": "Apple",
+      "purpose": "Loads Gemma and generates text with it.",
+      "license": "MIT",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "swift-transformers",
+      "name": "Swift Transformers",
+      "by": "Hugging Face",
+      "purpose": "Tokenizers for Gemma.",
+      "license": "Apache-2.0",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "swift-jinja",
+      "name": "Swift Jinja",
+      "by": "Hugging Face",
+      "purpose": "Chat templates for Gemma.",
+      "license": "Apache-2.0",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "swift-huggingface",
+      "name": "Swift Hugging Face",
+      "by": "Hugging Face",
+      "purpose": "Model downloads.",
+      "license": "Apache-2.0",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "eventsource",
+      "name": "EventSource",
+      "by": "Mattt",
+      "purpose": "Server-sent events for Swift Hugging Face.",
+      "license": "MIT",
+      "files": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "identity": "yyjson",
+      "name": "yyjson",
+      "by": "YaoYuan",
+      "purpose": "Reads model configuration files for Swift Transformers.",
+      "license": "MIT",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "swift-markdown",
+      "name": "Swift Markdown",
+      "by": "Apple and the Swift project authors",
+      "purpose": "Documents and meeting notes.",
+      "license": "Apache-2.0 with Runtime Library Exception",
+      "files": [
+        "NOTICE.txt",
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "identity": "swift-cmark",
+      "name": "cmark-gfm",
+      "by": "John MacFarlane, GitHub, and contributors",
+      "purpose": "The Markdown parser under Swift Markdown.",
+      "license": "BSD-2-Clause and MIT",
+      "files": [
+        "COPYING"
+      ]
+    },
+    {
+      "identity": "sparkle",
+      "name": "Sparkle",
+      "by": "The Sparkle project",
+      "purpose": "Checks for and installs updates.",
+      "license": "MIT, with bsdiff, sais-lite, and Ed25519 notices",
+      "files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "identity": "swift-collections",
+      "name": "Swift Collections",
+      "by": "Apple and the Swift project authors",
+      "purpose": "Data structures for Swift Transformers and Swift Jinja.",
+      "license": "Apache-2.0 with Runtime Library Exception",
+      "files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "identity": "swift-numerics",
+      "name": "Swift Numerics",
+      "by": "Apple and the Swift project authors",
+      "purpose": "Math functions for MLX Swift.",
+      "license": "Apache-2.0 with Runtime Library Exception",
+      "files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "identity": "swift-atomics",
+      "name": "Swift Atomics",
+      "by": "Apple and the Swift project authors",
+      "purpose": "Required by SwiftNIO.",
+      "license": "Apache-2.0 with Runtime Library Exception",
+      "files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "identity": "swift-nio",
+      "name": "SwiftNIO",
+      "by": "Apple and the SwiftNIO project authors",
+      "purpose": "Required by EventSource.",
+      "license": "Apache-2.0",
+      "files": [
+        "NOTICE.txt",
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "identity": "swift-crypto",
+      "name": "Swift Crypto",
+      "by": "Apple and the Swift Crypto project authors",
+      "purpose": "Checksums for downloaded model files in Swift Transformers and Swift Hugging Face.",
+      "license": "Apache-2.0",
+      "files": [
+        "NOTICE.txt",
+        "LICENSE.txt"
+      ]
+    }
+  ]
+}
