@@ -1,0 +1,372 @@
+---
+// Captures of one fixed 1440x900 pt area of the desktop, played in order. The wallpaper stays
+// put, so only the app changes from frame to frame. Each frame has a camera: the area of the stage
+// to fit in view, in stage points, with a tighter one (m) for narrow screens.
+interface Frame { name: string; chapter: number; ms: number; fade: number; d: number[]; m: number[]; alt: string }
+
+const full = [0, 0, 1440, 900];
+const speaking = { d: [200, 30, 1040, 850], m: [330, 130, 780, 740] };
+const windowShot = { d: full, m: [260, 70, 920, 760] };
+const frames: Frame[] = [
+  { name: 'idle', chapter: 0, ms: 1300, fade: 900, d: full, m: [320, 50, 800, 620],
+    alt: 'A TextEdit note about an irrigation trial, with the cursor at the end.' },
+  { name: 'listening', chapter: 0, ms: 900, fade: 300, ...speaking,
+    alt: 'The SideWave preview below the note, listening.' },
+  { name: 'draft1', chapter: 0, ms: 650, fade: 180, ...speaking,
+    alt: 'The preview showing the first words of the draft in gray.' },
+  { name: 'draft2', chapter: 0, ms: 650, fade: 180, ...speaking,
+    alt: 'The gray draft growing as the speaker talks.' },
+  { name: 'draft3', chapter: 0, ms: 900, fade: 180, ...speaking,
+    alt: 'The gray draft with most of the sentence.' },
+  { name: 'refined', chapter: 0, ms: 2400, fade: 420, ...speaking,
+    alt: 'The preview with the refined text: a quick update that plots 4 through 9 were sampled on Tuesday and the soil moisture readings look consistent with last week.' },
+  { name: 'pasted', chapter: 0, ms: 2800, fade: 700, d: speaking.d, m: [320, 50, 800, 620],
+    alt: 'The refined text pasted into the TextEdit note.' },
+  { name: 'home', chapter: 1, ms: 4200, fade: 900, ...windowShot,
+    alt: 'SideWave Home with the template, Refine model, microphone, destination, and shortcut.' },
+  { name: 'document', chapter: 2, ms: 4800, fade: 900, d: full, m: [300, 40, 840, 820],
+    alt: 'The document window with an email written from one dictation.' },
+  { name: 'history', chapter: 3, ms: 4200, fade: 900, ...windowShot,
+    alt: 'History with dictations sent to Slack, Mail, Terminal, Notes, and Messages.' },
+  { name: 'vocabulary', chapter: 4, ms: 4200, fade: 900, ...windowShot,
+    alt: 'A glossary for field research with qPCR, evapotranspiration, and Brassica rapa.' },
+];
+const chapters = [
+  { label: 'Dictate', caption: 'Talk in any text field. The gray draft keeps up while you speak, and the refined text is pasted where you started.' },
+  { label: 'Home', caption: 'Choose the template, Refine model, and microphone on Home.' },
+  { label: 'Email', caption: 'Document templates such as Email turn one dictation into a document you can edit.' },
+  { label: 'History', caption: 'History keeps each dictation and the app it went to.' },
+  { label: 'Vocabulary', caption: 'Glossaries teach recognition and Refine the words your field uses.' },
+];
+// Shown before playback starts, without JavaScript, and with Reduce Motion.
+const start = frames.findIndex((f) => f.name === 'refined');
+---
+
+<figure class="reel" data-reel aria-label="SideWave in use"
+        data-frames={JSON.stringify(frames.map(({ alt, ...f }) => f))}
+        data-chapters={JSON.stringify(chapters)} data-start={start}>
+  <div class="reel-stage">
+    <div class="reel-world">
+      {frames.map((f, i) => (
+        <div class:list={['reel-frame', i === start && 'is-on']} aria-hidden={i === start ? 'false' : 'true'}>
+          {['dark', 'light'].map((look) => (
+            <img class={`only-${look}`} src={`/media/hero/${f.name}-${look}.webp`} width="2400" height="1500"
+                 alt={f.alt} loading={i === start ? 'eager' : 'lazy'} decoding="async" draggable="false" />
+          ))}
+        </div>
+      ))}
+    </div>
+    <button type="button" class="reel-toggle" aria-label="Pause" hidden>
+      <svg class="icon-pause" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.6" height="9" rx="0.8"/><rect x="7.4" y="1.5" width="2.6" height="9" rx="0.8"/></svg>
+      <svg class="icon-play" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.2 1.8v8.4a.7.7 0 0 0 1.05.6l7-4.2a.7.7 0 0 0 0-1.2l-7-4.2a.7.7 0 0 0-1.05.6z"/></svg>
+    </button>
+  </div>
+  <figcaption class="reel-bar">
+    <div class="reel-chapters" role="group" aria-label="Chapters">
+      {chapters.map((c, i) => (
+        <button type="button" class="reel-chip" data-chapter={i} aria-current={i === 0 ? 'step' : 'false'}>
+          <span class="reel-chip-label">{c.label}</span>
+          <span class="reel-chip-track" aria-hidden="true"><span class="reel-chip-fill"></span></span>
+        </button>
+      ))}
+    </div>
+    <p class="reel-caption">{chapters[0].caption}</p>
+  </figcaption>
+</figure>
+
+<style>
+  .reel { margin: 0; }
+  .reel-stage {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 22px;
+    background: #e3e5ec;
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle);
+    isolation: isolate;
+    /* Safari clips transformed children to the radius only with a mask. */
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+  :global([data-theme='dark']) .reel-stage { background: #121520; }
+  .reel-world {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    transform-origin: 0 0;
+    transition: transform 1.3s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+  }
+  .reel-frame {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    --fade: 900ms;
+    transition:
+      opacity var(--fade) cubic-bezier(0.4, 0, 0.2, 1),
+      transform calc(var(--fade) * 1.5) cubic-bezier(0.2, 0.7, 0.2, 1),
+      filter var(--fade) ease;
+  }
+  .reel-frame.is-on { opacity: 1; }
+  .reel-frame.is-top { z-index: 2; }
+  .reel-frame.is-enter:not(.is-on) { transform: scale(1.025); filter: blur(6px); }
+  .reel-frame img { display: block; width: 100%; height: 100%; user-select: none; }
+
+  .reel-bar { margin-top: 22px; }
+  .reel-chapters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; width: min(100%, 560px); margin: 0 auto; }
+  .reel-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--text-tertiary);
+    font: 500 0.8125rem/1.2 var(--font-text);
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  .reel-chip:hover, .reel-chip[aria-current='step'] { color: var(--text-primary); }
+  .reel-chip-track { position: relative; height: 2px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .reel-chip-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--text-primary);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .reel-chip[aria-current='step'] .reel-chip-fill { transform: scaleX(var(--p, 1)); }
+  .reel-toggle {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.12);
+    color: #1d1d1f;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    backdrop-filter: blur(14px) saturate(1.6);
+    transition: transform 0.2s ease;
+  }
+  :global([data-theme='dark']) .reel-toggle {
+    background: rgba(40, 40, 46, 0.62);
+    color: #f2f2f4;
+    box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .reel-toggle:hover { transform: scale(1.06); }
+  .reel-toggle[hidden] { display: none; }
+  .reel-toggle svg { fill: currentColor; }
+  .reel-toggle .icon-play, .reel-toggle.is-paused .icon-pause { display: none; }
+  .reel-toggle.is-paused .icon-play { display: block; }
+  .reel-caption {
+    max-width: 52ch;
+    min-height: 3em;
+    margin: 16px auto 0;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+  .reel-chip:focus-visible, .reel-toggle:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; border-radius: 6px; }
+  .reel-toggle:focus-visible { border-radius: 50%; }
+
+  @media (max-width: 640px) {
+    .reel-stage { aspect-ratio: 1 / 1; border-radius: 18px; }
+    /* Without the script, fill the square with the middle of the frame. */
+    .reel-world { transform: translateX(-30%) scale(1.6); }
+    .reel-chapters { gap: 8px; }
+    .reel-chip { font-size: 0.75rem; }
+    .reel-toggle { top: 10px; right: 10px; width: 30px; height: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reel-world, .reel-frame { transition: none; }
+  }
+</style>
+
+<script>
+  type Frame = { name: string; chapter: number; ms: number; fade: number; d: number[]; m: number[] };
+  type Chapter = { label: string; caption: string };
+
+  const STAGE_W = 1440;
+  const STAGE_H = 900;
+  let teardown: Array<() => void> = [];
+
+  function initReel(root: HTMLElement) {
+    const frames: Frame[] = JSON.parse(root.dataset.frames ?? '[]');
+    const chapters: Chapter[] = JSON.parse(root.dataset.chapters ?? '[]');
+    const stage = root.querySelector<HTMLElement>('.reel-stage')!;
+    const world = root.querySelector<HTMLElement>('.reel-world')!;
+    const els = Array.from(root.querySelectorAll<HTMLElement>('.reel-frame'));
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('.reel-chip'));
+    const caption = root.querySelector<HTMLElement>('.reel-caption')!;
+    const toggle = root.querySelector<HTMLButtonElement>('.reel-toggle')!;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let current = Number(root.dataset.start ?? 0);
+    let chapter = frames[current].chapter;
+    let playing = !reduce.matches;
+    let visible = false;
+    let elapsed = 0;
+    let last = 0;
+    let raf = 0;
+    let settle = 0;
+
+    const chapterMs = chapters.map((_, c) => frames.filter((f) => f.chapter === c).reduce((a, f) => a + f.ms, 0));
+    const before = frames.map((f, i) => frames.slice(0, i).filter((g) => g.chapter === f.chapter).reduce((a, g) => a + g.ms, 0));
+
+    // Fit the frame's camera rectangle in the stage, never showing past the capture's edges.
+    function aim(i: number, ms: number) {
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      if (!W || !H) return;
+      const [x, y, w, h] = W / H > 1.3 ? frames[i].d : frames[i].m;
+      const aspect = STAGE_W / STAGE_H;
+      const width = Math.max(Math.min((W * STAGE_W) / w, ((H * STAGE_H) / h) * aspect), W, H * aspect);
+      const height = width / aspect;
+      const tx = Math.min(0, Math.max(W - width, W / 2 - ((x + w / 2) / STAGE_W) * width));
+      const ty = Math.min(0, Math.max(H - height, H / 2 - ((y + h / 2) / STAGE_H) * height));
+      world.style.transitionDuration = `${reduce.matches ? 0 : ms}ms`;
+      world.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${width / W})`;
+    }
+
+    function image(i: number) {
+      const look = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      const img = els[i].querySelector<HTMLImageElement>(`img.only-${look}`);
+      if (img && img.loading === 'lazy') img.loading = 'eager';
+      return img;
+    }
+
+    function loaded(i: number) {
+      const img = image(i);
+      return !!img && img.complete && img.naturalWidth > 0;
+    }
+
+    // Shows a frame once its image can be drawn, so a jump never reveals an empty stage.
+    function showWhenReady(i: number) {
+      const img = image(i);
+      const ready = img ? img.decode().catch(() => {}) : Promise.resolve();
+      ready.then(() => { if (current !== i) show(i); });
+    }
+
+    function markChapter(c: number) {
+      chapter = c;
+      chips.forEach((chip, j) => {
+        chip.setAttribute('aria-current', j === c ? 'step' : 'false');
+        chip.style.removeProperty('--p');
+      });
+      caption.textContent = chapters[c].caption;
+    }
+
+    function show(next: number) {
+      const prev = current;
+      if (next === prev) return;
+      const f = frames[next];
+      const newChapter = f.chapter !== frames[prev].chapter;
+      const fade = reduce.matches ? 0 : f.fade;
+      els.forEach((el, j) => {
+        if (j === prev || j === next) return;
+        el.classList.remove('is-on', 'is-top', 'is-enter');
+      });
+      const out = els[prev];
+      const into = els[next];
+      out.classList.remove('is-top', 'is-enter');
+      into.style.setProperty('--fade', `${fade}ms`);
+      into.classList.toggle('is-enter', newChapter && fade > 0);
+      into.classList.add('is-top');
+      void into.offsetWidth;
+      into.classList.add('is-on');
+      out.setAttribute('aria-hidden', 'true');
+      into.setAttribute('aria-hidden', 'false');
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => { if (current === next) out.classList.remove('is-on'); }, fade + 60);
+      current = next;
+      elapsed = 0;
+      aim(next, newChapter ? 1300 : 1500);
+      if (newChapter) markChapter(f.chapter);
+    }
+
+    function progress() {
+      const chip = chips[chapter];
+      const p = Math.min(1, (before[current] + Math.min(elapsed, frames[current].ms)) / chapterMs[chapter]);
+      chip.style.setProperty('--p', p.toFixed(4));
+    }
+
+    function tick(t: number) {
+      raf = 0;
+      if (!playing || !visible || held || document.hidden) { last = 0; return; }
+      if (last) elapsed += Math.min(t - last, 100);
+      last = t;
+      const next = (current + 1) % frames.length;
+      // Hold on the current frame until the next one has loaded.
+      if (elapsed >= frames[current].ms && loaded(next)) show(next);
+      progress();
+      raf = requestAnimationFrame(tick);
+    }
+
+    // Keyboard focus on the chapter buttons holds the current frame.
+    let held = false;
+
+    function run() { if (!raf && playing && visible && !held && !document.hidden) raf = requestAnimationFrame(tick); }
+
+    function setPlaying(on: boolean) {
+      playing = on;
+      toggle.classList.toggle('is-paused', !on);
+      toggle.setAttribute('aria-label', on ? 'Pause' : 'Play');
+      last = 0;
+      run();
+    }
+
+    chips.forEach((chip) => chip.addEventListener('click', () => {
+      const c = Number(chip.dataset.chapter);
+      const target = reduce.matches && c === 0 ? Number(root.dataset.start) : frames.findIndex((f) => f.chapter === c);
+      if (target !== current) showWhenReady(target);
+      else { elapsed = 0; progress(); }
+      run();
+    }));
+    const bar = root.querySelector<HTMLElement>('.reel-chapters')!;
+    const onFocusIn = (e: FocusEvent) => { if ((e.target as HTMLElement).matches(':focus-visible')) held = true; };
+    const onFocusOut = () => { held = false; last = 0; run(); };
+    bar.addEventListener('focusin', onFocusIn);
+    bar.addEventListener('focusout', onFocusOut);
+    // Turning on Reduce Motion while the page is open stops playback.
+    const onMotion = () => { if (reduce.matches) setPlaying(false); };
+    reduce.addEventListener('change', onMotion);
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => setPlaying(!playing));
+    setPlaying(playing);
+
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; run(); }, { threshold: 0.35 });
+    io.observe(stage);
+    const ro = new ResizeObserver(() => aim(current, 0));
+    ro.observe(stage);
+    const onVisibility = () => { last = 0; run(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    aim(current, 0);
+    progress();
+
+    teardown.push(() => {
+      if (raf) cancelAnimationFrame(raf);
+      window.clearTimeout(settle);
+      io.disconnect();
+      ro.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+      reduce.removeEventListener('change', onMotion);
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-reel]').forEach(initReel);
+  });
+  document.addEventListener('astro:before-swap', () => {
+    teardown.forEach((fn) => fn());
+    teardown = [];
+  });
+</script>

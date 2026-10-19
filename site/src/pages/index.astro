@@ -5,6 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import WaveTitle from '../components/WaveTitle.astro';
 import Said from '../components/Said.astro';
 import Screen from '../components/Screen.astro';
+import HeroReel from '../components/HeroReel.astro';
 
 // The newest release in the appcast, so the page never names a version that isn't published.
 const appcast = fs.readFileSync(path.join(process.cwd(), 'public/appcast.xml'), 'utf8');
@@ -19,7 +20,7 @@ const sections = [
     said: '{so} it types into {like} the app you\'re already using',
     wrote: 'It types into the app you\'re already using.',
     body: ['Press your hotkey in any text field and talk. The preview shows a fast draft in gray while you speak. SideWave remembers the field you started in and finds it again before it pastes.'],
-    screen: { name: 'preview-draft', alt: 'The SideWave preview mid-sentence, with the live draft in gray.' },
+    screen: { name: 'note-pasted', tile: true, alt: 'A TextEdit note with the dictated update pasted at the cursor.' },
   },
   {
     id: 'switch',
@@ -39,7 +40,7 @@ const sections = [
       'Apple Intelligence or a Gemma 4 model refines the text on your Mac while you talk. Recognition confirms each stretch of speech and corrects the draft, then Refine fixes punctuation and grammar and drops filler words.',
       'Standard keeps your wording, Professional makes it formal, and Concise makes it shorter. As Spoken skips Refine.',
     ],
-    screen: { name: 'preview-refined', alt: 'The preview with the refined text: "Quick update on the irrigation trial, we finished sampling plots 4 through 9 on Tuesday, and the soil moisture readings look consistent with last week."' },
+    screen: { name: 'preview-refined', tile: true, alt: 'The preview with the refined text: a quick update that plots 4 through 9 were sampled on Tuesday and the soil moisture readings look consistent with last week.' },
   },
   {
     id: 'templates',
@@ -85,7 +86,7 @@ const sections = [
         </a>
         <p class="req">Free and open source. {version ? `Version ${version} needs` : 'Needs'} macOS 26 or later on Apple silicon.</p>
       </div>
-      <Screen name="home" class="hero-shot" eager alt="SideWave Home with the template, Refine model, microphone, destination, and shortcut." />
+      <div class="hero-reel"><HeroReel /></div>
     </header>
 
     {sections.map((s) => (
@@ -94,7 +95,7 @@ const sections = [
           <Said id={`${s.id}-title`} said={s.said} wrote={s.wrote} />
           {s.body.map((p) => <p class="body">{p}</p>)}
         </div>
-        {s.screen && <Screen name={s.screen.name} class={`say-shot shot-${s.id}`} alt={s.screen.alt} />}
+        {s.screen && <Screen name={s.screen.name} class={`say-shot shot-${s.id}${s.screen.tile ? ' tile' : ''}`} alt={s.screen.alt} />}
       </section>
     ))}
 
@@ -122,7 +123,7 @@ const sections = [
   .intro { max-width: 50ch; margin: 18px auto 0; font-size: 1.0625rem; }
   .lede .button { margin-top: 30px; }
   .req { margin: 14px auto 0; font-size: 0.875rem; color: var(--text-tertiary); }
-  .hero :global(.hero-shot) { max-width: 980px; margin: 72px auto 0; }
+  .hero-reel { max-width: 1120px; margin: 72px auto 0; text-align: left; }
 
   .button {
     display: inline-flex;
@@ -153,6 +154,7 @@ const sections = [
   .say-copy .body { max-width: 46ch; margin-top: 18px; }
   .say-copy :global(.said-wrote) + .body { margin-top: 24px; }
   .say :global(.shot-jargon) { max-width: 560px; justify-self: end; width: 100%; }
+  .say :global(.tile) { overflow: hidden; border-radius: 18px; box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle); }
 
   .closing { padding: 150px 0 30px; }
   .closing-title {
@@ -166,7 +168,7 @@ const sections = [
   .text-link { font-weight: 600; }
 
   @media (max-width: 820px) {
-    .hero :global(.hero-shot) { margin-top: 52px; }
+    .hero-reel { margin-top: 52px; }
     .say, .say-text { grid-template-columns: 1fr; gap: 32px; padding-top: 96px; }
     .say :global(.shot-jargon) { justify-self: stretch; max-width: none; }
     .closing { padding-top: 110px; }

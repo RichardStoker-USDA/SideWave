@@ -213,6 +213,12 @@ img {
 /* Images that come in a light and a dark render: only the one for the current theme shows. */
 [data-theme='dark'] .only-light,
 [data-theme='light'] .only-dark { display: none !important; }
+/* Without the theme script, follow the system setting. */
+:root:not([data-theme]) .only-dark { display: none !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .only-dark { display: revert !important; }
+  :root:not([data-theme]) .only-light { display: none !important; }
+}
 
 ::selection {
   background-color: var(--text-primary);
