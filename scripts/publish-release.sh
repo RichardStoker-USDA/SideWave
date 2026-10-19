@@ -31,7 +31,8 @@ build="$(awk -F'"' '/^    CURRENT_PROJECT_VERSION:/ {print $2; exit}' project.ym
 out="$ROOT/build/release/$version-$build"
 dmg="$out/SideWave.dmg"
 item="$out/appcast-item.xml"
-[ -f "$dmg" ] && [ -f "$item" ] || fail "No release output in $out. Run scripts/release.sh first."
+[ -f "$dmg" ] && [ -f "$item" ] && [ -f "$out/source-commit" ] || fail "No release output in $out. Run scripts/release.sh first."
+[ ! -e "$out/testing-build" ] || fail "$out is a testing build (--allow-dirty, --skip-notarize, or --install). Build again from a clean main."
 [ "$(git branch --show-current)" = main ] || fail "Publish from main."
 [ -z "$(git status --porcelain)" ] || fail "The working tree has changes."
 xcrun stapler validate "$dmg" >/dev/null || fail "SideWave.dmg isn't notarized."
@@ -51,8 +52,9 @@ body = match.group(1).strip()
 Path(notes_md).write_text(body + "\n")
 
 def inline(s):
-    s = html.escape(s, quote=False)
-    s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+    s = html.escape(s, quote=True)
+    # Links to http(s) pages only; the escaping above keeps quotes out of the href.
+    s = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)", r'<a href="\2">\1</a>', s)
     return re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
 
 parts, items, para = [], [], []
@@ -114,7 +116,7 @@ if gh release view "v$version" --repo "$REPO" >/dev/null 2>&1; then
     echo "Release v$version already has this SideWave.dmg."
 else
     # Tag the commit the build came from; main may have moved on since.
-    source_commit="$(cat "$out/source-commit" 2>/dev/null || git rev-parse HEAD)"
+    source_commit="$(cat "$out/source-commit")"
     git merge-base --is-ancestor "$source_commit" HEAD || fail "The build's commit isn't on main."
     git ls-remote --exit-code origin >/dev/null 2>&1 || fail "Can't reach origin."
     gh release create "v$version" "$dmg" --repo "$REPO" --target "$source_commit" \

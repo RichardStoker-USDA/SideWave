@@ -69,6 +69,8 @@ rm -rf "$out"
 mkdir -p "$out"
 app="$out/SideWave.app"
 git rev-parse HEAD > "$out/source-commit"
+# Builds made for testing can't be published.
+if $allow_dirty || ! $notarize || [ -n "$install_path" ]; then touch "$out/testing-build"; fi
 echo "SideWave $version ($build), signing as: $sign_id"
 
 step "Building"
@@ -103,6 +105,10 @@ codesign --verify --deep --strict "$app"
 python3 scripts/validate_release.py "$app" > "$out/validation.json"
 
 if [ -n "$install_path" ]; then
+    case "$install_path" in
+        */SideWave.app|*/SideWave\ Dev.app) ;;
+        *) fail "--install takes a path ending in SideWave.app." ;;
+    esac
     step "Installing at $install_path"
     # Ask the running copy to quit normally so it saves its state.
     swift -e 'import AppKit; NSRunningApplication.runningApplications(withBundleIdentifier: "com.sidewave.app").forEach { $0.terminate() }' 2>/dev/null || true

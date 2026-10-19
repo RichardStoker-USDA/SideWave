@@ -25,11 +25,15 @@ def require(condition, message):
         raise ValueError(message)
 
 
+TEAM_ID = "54ZH296UH3"
+
+
 def inspect_code(path):
     run("Signature verification", "codesign", "--verify", "--deep", "--strict", str(path))
     _, metadata = run("Signature metadata", "codesign", "-d", "--verbose=4", str(path))
     metadata = metadata.decode()
     require("Authority=Developer ID Application:" in metadata, f"{path.name}: Developer ID Application signing is required.")
+    require(f"TeamIdentifier={TEAM_ID}" in metadata, f"{path.name}: must be signed by team {TEAM_ID}.")
     flags = re.search(r"\bflags=0x([0-9a-fA-F]+)", metadata)
     require(flags and int(flags[1], 16) & 0x10000, f"{path.name}: Hardened runtime is required.")
     require("Timestamp=" in metadata, f"{path.name}: A secure signing timestamp is required.")
