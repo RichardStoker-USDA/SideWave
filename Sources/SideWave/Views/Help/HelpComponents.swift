@@ -99,11 +99,11 @@ struct HelpHotkeyFlow: View {
         HStack(alignment: .top, spacing: Spacing.xs) {
             node(icon: nil, key: keyLabel, title: "Press", detail: "Tap to start")
             connector
-            node(icon: "waveform", key: nil, title: "Speak", detail: "Overlay shows live text")
+            node(icon: "waveform", key: nil, title: "Speak", detail: "The preview shows your words")
             connector
-            node(icon: nil, key: keyLabel, title: "Finish", detail: "Tap again, then wait for processing")
+            node(icon: nil, key: keyLabel, title: "Finish", detail: "Tap again")
             connector
-            node(icon: "text.cursor", key: nil, title: "Output", detail: "Paste or review a document")
+            node(icon: "text.cursor", key: nil, title: "Paste", detail: "Or open a document")
         }
         .frame(maxWidth: .infinity)
     }
@@ -162,7 +162,7 @@ struct HelpOverlayStatesCard: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Text("How words settle in the overlay")
                 .font(.headline)
-            Text("The streaming model shows a provisional draft while you talk. Parakeet then processes each segment with more context and confirms or corrects it. Refine can revise the confirmed text again. The stronger text tone follows your light or dark appearance; it does not guarantee that every word is correct. Review the delivered result.")
+            Text("The streaming model writes a fast gray draft while you talk. Parakeet then confirms or corrects each segment, and Refine can revise it again. Solid text can still contain mistakes, so read it before you send it.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

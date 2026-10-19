@@ -27,7 +27,7 @@ struct HelpGettingStartedContent: View {
                 HelpDeepLinkButton(label: "Change shortcut", systemImage: "keyboard", targetPage: nil, targetSettingsTab: .settingsGeneral, spotlightKey: "hotkey")
             }
             HelpItem(title: "Tap to start and finish", content: "Use one tap at each end of a dictation. Double-tap to paste the last result again. Choose Tap to Toggle, Hold to Talk beside Shortcut on Home if you also want to hold the key while speaking and release to finish.")
-            HelpItem(title: "Keep unfinished words", content: "Escape stops an ordinary dictation and keeps it as Paused dictation on Home without pasting. Control-Escape discards it. A document keeps its own draft and pending additions.")
+            HelpItem(title: "Keep unfinished words", content: "Escape stops an ordinary dictation and keeps it as Paused dictation on Home without pasting. Control-Escape cancels it and saves what was captured to History. A document keeps its own draft and pending additions.")
             HelpInternalButton(label: "All shortcut behaviors", systemImage: "keyboard", targetSection: .hotkeySetup)
         }
 
@@ -179,60 +179,60 @@ struct HelpHowDictationWorksContent: View {
     var body: some View {
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("The Flow")
+                Text("From hotkey to paste")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     flowStep("1.", "Press the hotkey to start dictating.")
                     flowStep("2.", "A small panel appears while SideWave gets ready, then the full preview with the wave.")
                     flowStep("3.", "When the preview shows Listening, speak naturally. Live text appears in the preview as you talk.")
-                    flowStep("4.", "With live Refine enabled, the local model cleans up completed segments. As spoken keeps recognition text without a model refinement pass.")
-                    flowStep("5.", "Tap the hotkey again to finish. SideWave shows progress while remaining recognition or refinement completes. The optional Rewrite and finish gesture requests a full-session pass.")
-                    flowStep("6.", "Ordinary dictation is delivered to the selected app. Document templates show the result in a preview for review, editing, and copying.")
+                    flowStep("4.", "With Refine on, the local model cleans up each finished segment. As spoken skips Refine.")
+                    flowStep("5.", "Tap the hotkey again to finish. The preview shows progress while the last segment is recognized and refined.")
+                    flowStep("6.", "SideWave pastes into the app you chose. Document templates open the result in the document window.")
                 }
             }
         }
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Behind the scenes")
+                Text("The stages")
                     .font(.headline)
 
                 HelpItem(
                     title: "Audio Capture",
-                    content: "SideWave captures audio from your selected input. The chosen engine preset controls whether the streaming preview runs alongside the main recognizer."
+                    content: "SideWave records from the microphone you chose. The Dictation Mode decides whether the streaming draft runs alongside the main recognizer."
                 )
 
                 HelpItem(
                     title: "Live Draft (Parakeet EOU 120M)",
-                    content: "A dedicated streaming recognizer processes the audio in 160-millisecond chunks and paints the gray draft text in the overlay almost as fast as you speak. It favors speed over accuracy, so the draft can mishear. That's expected. The main transcriber below corrects it as each segment finalizes, which is why gray words sometimes change as they turn white. This model also detects when you've finished an utterance, and Smart Push-to-Talk uses its instant text for the fast paste on release."
+                    content: "A streaming recognizer reads the audio in 160-millisecond chunks and writes the gray draft almost as fast as you speak. It trades accuracy for speed, so the draft can mishear. The main transcriber corrects it as each segment finalizes, which is why gray words can change as they turn solid. This model also detects the end of an utterance, and Smart Push-to-Talk pastes its text on release."
                 )
 
                 HelpItem(
                     title: "VAD Segmentation",
-                    content: "During dictation, Voice Activity Detection (Silero VAD) monitors the audio stream and finds natural pauses in your speech. These pauses become segment boundaries, so the transcription engine processes manageable chunks rather than one long stream."
+                    content: "Silero VAD marks speech and pauses in the audio. Depending on the refine cadence, a pause can end a segment, so the transcriber works on short stretches of speech."
                 )
 
                 HelpItem(
                     title: "Parakeet TDT Transcription",
-                    content: "Each audio segment goes through NVIDIA's Parakeet TDT model, a 600-million parameter speech recognition model running on the Apple Neural Engine. It sees the whole segment with full context, so its output is the authority: it confirms the streaming draft's words or replaces them, and only its text moves on to the stages below."
+                    content: "Each segment goes through NVIDIA Parakeet TDT, a 600-million-parameter model on the Apple Neural Engine. It sees the whole segment, so its text replaces the draft, and only its text moves on to the stages below."
                 )
 
                 HelpItem(
                     title: "CTC Vocabulary Boosting",
-                    content: "When any Vocabulary glossary is enabled, every entry, regardless of scope, is fed to the CTC 110M model for acoustic-evidence-based boosting. The CTC rescorer scores both your vocabulary terms and the main model's output against the actual audio frames, and only replaces the original word when your term has stronger acoustic evidence. This catches proper nouns, technical jargon, and other words the main model might miss or misspell. Boosting runs on the live preview (throttled to once per ~1.5 seconds) and at every segment finalization, so vocabulary corrections appear in real time."
+                    content: "With a glossary turned on, the CTC 110M model scores your terms and the transcriber's words against the audio. It swaps in a term only when the audio matches it better than the original word. This runs on the live preview about every 1.5 seconds and again on each finished segment."
                 )
 
                 HelpItem(
                     title: "Paste",
-                    content: "SideWave chooses a delivery method for the target field and checks the result when the app exposes readable text. It can use Accessibility, simulated keys, or clipboard paste. If delivery fails, the output is kept for recovery and manual copying."
+                    content: "SideWave picks a delivery method for the target field: Accessibility, simulated keys, or a clipboard paste. It checks the result when the app exposes its text. If delivery fails, the text is saved to History."
                 )
             }
         }
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Segment Architecture")
+                Text("Segments")
                     .font(.headline)
 
                 Text("SideWave doesn't wait until you stop talking to transcribe. Audio is split into segments of at most 14.8 seconds, because the Parakeet encoder handles at most 15 seconds per pass. A pause can end a segment early once it has at least 3 seconds of audio.")
@@ -245,7 +245,7 @@ struct HelpHowDictationWorksContent: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Each segment is transcribed independently. The model does not currently carry context from the previous segment. Within a segment, the model sees all accumulated audio and gets progressively more accurate as you keep speaking. Once recognition finalizes a segment, the speech model starts the next one. Refine may use preceding text as context and can revise the final wording.")
+                Text("Each segment is transcribed on its own; the speech model doesn't carry context from the previous segment. Within a segment it sees all the audio so far, so its text improves as you keep speaking. Refine can use the preceding text as context.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -257,7 +257,7 @@ struct HelpHowDictationWorksContent: View {
                 Text("If SideWave crashes mid-dictation")
                     .font(.headline)
 
-                Text("Finalized text is written to a local recovery journal, and provisional text is checkpointed about every 1.5 seconds. After an interruption, available text is recovered into History. Journals are removed after history saves successfully. Disk failures or unwritten updates can still leave gaps; copy important text if a storage error appears.")
+                Text("Finished segments are written to a recovery journal on this Mac, and the segment in progress is saved about every 1.5 seconds. After a crash, SideWave recovers that text into History at the next launch and then deletes the journal. A disk error can still leave gaps.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -266,10 +266,10 @@ struct HelpHowDictationWorksContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Why the Live Preview Changes")
+                Text("Why the preview changes")
                     .font(.headline)
 
-                Text("While you're speaking, a polling loop re-transcribes the current segment every 0.4 to 0.8 seconds. Because the model sees more audio on each poll, it may revise earlier words as it gains context. A word that looked like \"their\" with 2 seconds of audio might become \"there\" once the model has 5 seconds. This is expected; the text after the whole segment is processed is the most accurate.")
+                Text("While you speak, SideWave transcribes the current segment again every 0.4 to 0.8 seconds. With more audio, the model can revise earlier words: \"their\" after 2 seconds might become \"there\" after 5. The text for a finished segment is the most accurate.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -278,20 +278,19 @@ struct HelpHowDictationWorksContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Text Processing Pipeline")
+                Text("Text cleanup")
                     .font(.headline)
 
-                Text("When a segment finalizes, the text goes through several processing steps before it becomes part of your final output:")
+                Text("Each finished segment goes through these steps before Refine:")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    pipelineStep("1.", "Filler word removal", "Strips \"um\", \"uh\", \"like\", and similar filler words.")
-                    pipelineStep("2.", "Text normalization (ITN)", "Converts spoken numbers, dates, times, and currency to written form.")
-                    pipelineStep("3.", "Profanity filter", "Replaces profanity with milder alternatives (if enabled).")
-                    pipelineStep("4.", "Vocabulary substitutions", "Applies aliases from every enabled glossary whose scope includes substitution.")
-
+                    pipelineStep("1.", "Filler words", "Removes \"um\", \"uh\", \"hmm\", and similar sounds.")
+                    pipelineStep("2.", "Text normalization", "Writes spoken numbers, dates, times, and amounts as digits.")
+                    pipelineStep("3.", "Profanity filter", "If turned on, masks profanity with asterisks or swaps in milder words.")
+                    pipelineStep("4.", "Vocabulary replacements", "Swaps in your spelling for words set to Replace at dictation, in every glossary that's on.")
                 }
             }
         }
@@ -301,14 +300,14 @@ struct HelpHowDictationWorksContent: View {
                 Text("Processing time / audio time")
                     .font(.headline)
 
-                Text("Advanced view shows processing time divided by audio duration. A value of 0.5x means 10 seconds of audio took 5 seconds to transcribe. Lower values mean faster processing. This measures recognition work, not total time spent downloading, loading, refining, or delivering text.")
+                Text("Advanced view shows processing time divided by audio length. At 0.5x, 10 seconds of audio took 5 seconds to transcribe. It counts recognition only, not loading, refining, or pasting.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
 
-        HelpHint("Home > Advanced shows live segment counts, recognition confidence, and Processing / audio while dictating. The ratio is processing time divided by audio duration; a lower value is faster.")
+        HelpHint("Home in Advanced view shows live segment counts, recognition confidence, and Processing / audio while you dictate.")
 
         HelpCard {
             HelpPipelineDiagram()
@@ -392,7 +391,7 @@ struct HelpPipelineDiagram: View {
     private let stages = [
         PipelineStage(id: 0, label: "Mic", title: "Audio Capture", description: "Audio enters the pipeline once the microphone is ready. Wait for Listening before speaking."),
         PipelineStage(id: 1, label: "Draft", title: "Streaming Preview", description: "A streaming recognizer shows a gray draft almost immediately. It is a fast first guess that the next stage corrects."),
-        PipelineStage(id: 2, label: "VAD", title: "Voice Segmentation", description: "Silero VAD finds natural pauses so segments break on complete thoughts."),
+        PipelineStage(id: 2, label: "VAD", title: "Voice Segmentation", description: "Silero VAD detects speech and the pauses that can end a segment."),
         PipelineStage(id: 3, label: "TDT", title: "Parakeet Transcriber", description: "The 600M-parameter model turns each segment into text on the Neural Engine, confirming or correcting the draft."),
         PipelineStage(id: 4, label: "CTC", title: "Vocabulary Boosting", description: "When your terms match the audio better, the CTC model swaps them in."),
         PipelineStage(id: 5, label: "ITN", title: "Text Normalization", description: "Spoken numbers, dates, and currency become their written form."),
@@ -403,7 +402,7 @@ struct HelpPipelineDiagram: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Text("The Pipeline, Stage by Stage")
                 .font(.headline)
-            Text("These stages run locally when enabled. Your engine preset, glossaries, and Refine choices determine which stages are used. The streaming preview runs alongside the main recognizer:")
+            Text("Every stage runs on this Mac. Your Dictation Mode, glossaries, and Refine settings decide which ones run:")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -428,7 +427,7 @@ struct HelpPipelineDiagram: View {
                 exampleLine("You say", "so um we should use sign it for scientific research at a r s", color: .secondary)
                 exampleLine("Gray draft shows", "so um we should use sign at for scientific research at a rs", color: .secondary)
                 exampleLine("TDT confirms", "we should use sign it for scientific research at ARS", color: .primary)
-                exampleLine("Vocabulary boost", "\"sign it\" becomes SCINet, it matches the audio better", color: Color.accentColor)
+                exampleLine("Vocabulary check", "\"sign it\" becomes SCINet because the audio matches it better", color: Color.accentColor)
                 exampleLine("Refined", "We should use SCINet for scientific research at ARS.", color: .primary, bold: true)
             }
             .padding(Spacing.md)

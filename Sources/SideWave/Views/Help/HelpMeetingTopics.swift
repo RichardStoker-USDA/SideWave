@@ -11,9 +11,9 @@ struct HelpMeetingTranscriptionContent: View {
     var body: some View {
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("What a Diarized Meeting Looks Like")
+                Text("Speaker labels")
                     .font(.headline)
-                Text("SideWave figures out who spoke when, then labels the transcript by speaker. Nemotron 3 supports up to eight speaker slots. Similar voices, overlap, distance, and room noise can still affect assignment; review speaker labels before sharing.")
+                Text("SideWave works out who spoke when and labels the transcript by speaker, up to eight speakers. Similar voices, crosstalk, distance, and room noise can mix up labels, so check them before you share.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -35,10 +35,10 @@ struct HelpMeetingTranscriptionContent: View {
                         .foregroundStyle(.secondary)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        transcriptRow(speaker: "Speaker 1", time: "0:00", text: "Hi, let's examine the wheat genetics data in SCINet.", color: .blue)
+                        transcriptRow(speaker: "Speaker 1", time: "0:00", text: "Let's go through the wheat trial data first.", color: .blue)
                         transcriptRow(speaker: "Speaker 2", time: "0:20", text: "I finished running the ANOVA test this morning.", color: .green)
-                        transcriptRow(speaker: "Speaker 3", time: "0:40", text: "Excellent, the results look very promising.", color: .purple)
-                        transcriptRow(speaker: "Speaker 4", time: "1:00", text: "Should we document these in the USDA-ARS base?", color: .pink)
+                        transcriptRow(speaker: "Speaker 3", time: "0:40", text: "The north plots came out ahead again.", color: .purple)
+                        transcriptRow(speaker: "Speaker 4", time: "1:00", text: "Should we add these to the shared notes?", color: .pink)
                     }
                     .padding(Spacing.sm)
                     .background(.ultraThinMaterial)
@@ -49,10 +49,10 @@ struct HelpMeetingTranscriptionContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("How It Works")
+                Text("How it works")
                     .font(.headline)
 
-                Text("Audio is written to disk as you record, and speaker identification runs alongside the recording. On supported Macs with the live model prepared, a draft transcript also builds during the meeting. When you stop, SideWave processes all saved audio with the final speaker model and speech recognizer. Progress stays visible until the complete transcript is ready.")
+                Text("Audio is saved to disk as you record, and speaker identification runs during the recording. On Macs with 16 GB of memory or more, a live transcript can build too. When you stop, SideWave runs the final speaker and speech passes over all the saved audio and shows progress until the transcript is ready.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -61,29 +61,29 @@ struct HelpMeetingTranscriptionContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("The Pipeline")
+                Text("The steps")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    pipelineStep("1.", "Record", "Audio is queued to local storage as it arrives. Interrupted recordings can be recovered from the audio that reached disk.")
-                    pipelineStep("2.", "Identify speakers", "Nemotron 3 tracks up to eight speakers. The final pass reads all recorded parts and uses the more accurate speaker preset.")
-                    pipelineStep("3.", "Transcribe", "The Parakeet TDT model converts speech to text, then text normalization converts spoken numbers and dates to written form.")
-                    pipelineStep("4.", "Merge", "Each word is matched to the speaker whose turn overlaps it most, producing the final speaker-labeled transcript.")
+                    pipelineStep("1.", "Record", "Audio goes to disk as it arrives, so an interrupted recording can be recovered.")
+                    pipelineStep("2.", "Identify speakers", "Nemotron 3 tracks up to eight speakers; the final pass uses its more accurate setting.")
+                    pipelineStep("3.", "Transcribe", "Parakeet TDT writes the text, and spoken numbers and dates become digits.")
+                    pipelineStep("4.", "Merge", "Each word goes to the speaker whose turn overlaps it most.")
                 }
             }
         }
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("If Something Interrupts the Meeting")
+                Text("If a meeting is interrupted")
                     .font(.headline)
 
-                Text("SideWave writes audio during recording and offers interrupted meetings at the next launch. Continue Recording adds more audio; Transcribe processes saved audio; Keep for Later leaves it on this Mac; Discard Recording deletes it. Audio still in memory, disk errors, or damaged storage can leave gaps. A recovered partial transcript is labeled and its recording is kept.")
+                Text("At the next launch, SideWave offers the interrupted meeting: Continue Recording adds to it, Transcribe processes the saved audio, Keep for Later leaves it for another time, and Discard Recording deletes it. Audio that hadn't reached disk is lost, and a partial transcript is labeled as partial.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Quitting during a recording asks first, and Stop & Keep preserves the meeting for next launch the same way. Closing the window doesn't stop the recording: the SideWave menu bar menu shows the recording time and Stop and Transcribe.")
+                Text("Quitting during a recording asks first; Stop & Keep saves the meeting for later. Closing the window doesn't stop the recording, and the menu bar menu shows the time and Stop and Transcribe.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -92,29 +92,24 @@ struct HelpMeetingTranscriptionContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Recording Scenarios")
+                Text("Rooms and microphones")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    tipRow("Single conference mic, 4+ people around a table", "Best case when the mic is centered and the room is quiet. Ask everyone to lean in when they speak.")
-                    tipRow("Audio interface or external mixer", "SideWave records one selected input. Route the participants into that input and check its channel with Test Microphone. It does not independently record several microphone devices.")
-                    tipRow("Laptop mic with remote callers on speakerphone", "Hard case. Remote voices often merge because the speakerphone re-emits them. Ask remotes to join by their own mic if possible.")
-                    tipRow("Noisy room or loud HVAC", "Diarization struggles. Recording still works but speaker labels may drift. Move to a quiet room if you can, or re-run speaker detection after recording.")
+                    tipRow("One conference mic, several people at a table", "Works best with the mic in the middle of a quiet room.")
+                    tipRow("Audio interface or mixer", "SideWave records one input. Route everyone into it and check the channel with Test Microphone.")
+                    tipRow("Laptop mic with remote callers on speaker", "Remote voices often merge into one speaker, because they all come from the same loudspeaker.")
+                    tipRow("Noisy room", "Speaker labels can drift. Identify Speakers can run again on the saved audio afterward.")
                 }
             }
         }
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Speakers and Names")
+                Text("Speakers and names")
                     .font(.headline)
 
-                Text("Detection is automatic, with up to eight speaker slots. You can rename speakers and rerun detection from the saved audio. A requested speaker count cannot force reliable identities.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text("After transcription, click any speaker's name on the transcript to rename it (Speaker 1 becomes Alice). Names flow into every AI-generated format, so minutes and action items attribute statements to real people. If the voice split looks wrong, Identify Speakers re-splits the transcript without re-recording. Names carry over when the re-run lands on the same speaker slots, so give attributions a quick check afterward.")
+                                Text("Click a speaker's name in the transcript to rename it, and meeting notes use the new names. If the split looks wrong, Identify Speakers runs again on the saved audio. Names carry over when a speaker keeps the same slot, so check them afterward.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -123,29 +118,29 @@ struct HelpMeetingTranscriptionContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Getting Started")
+                Text("Getting started")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    tipRow("Enable the feature", "In Settings > Meetings, turn on Show Meetings in the main window. Meetings does not require Experimental Features.")
-                    tipRow("Start a meeting", "A Meeting tab appears in the toolbar when the feature is enabled. Switch to it and click New Meeting. Prepare the meeting models in the tab before recording. The setup sheet lets you choose and test the microphone. The two speaker models total about 380 MB; speech and optional live transcription have separate downloads. If preparation fails, retry it before recording.")
-                    tipRow("Stop and transcribe", "Click Stop & Transcribe when the meeting ends, or Stop & Keep to process it later from Unfinished recordings. The final pass reads the saved audio and speaker information. Progress stays visible; longer meetings take longer even when a live draft is available.")
-                    tipRow("Format the result", "Format with AI turns the transcript into Meeting Minutes, a Full Report, a Summary, Action Items, Key Decisions, or a Custom format you describe yourself. Apple Intelligence formats on any Mac that has it enabled; Gemma handles the longest meetings on 16 GB or more.")
+                    tipRow("Turn it on", "In Settings > Meetings, turn on Show Meetings in the main window.")
+                    tipRow("Start a meeting", "Open the Meeting tab and prepare its models; the speaker models are about 380 MB, and the optional live transcript about 600 MB. Then click New Meeting, choose and test the microphone, and start.")
+                    tipRow("Stop and transcribe", "Click Stop & Transcribe when the meeting ends, or Stop & Keep to process it later from Unfinished recordings. Longer meetings take longer to process.")
+                    tipRow("Write notes", "Format with AI turns the transcript into Meeting Minutes, a Full Report, a Summary, Action Items, Key Decisions, or a Custom format you describe. Gemma handles the longest meetings on Macs with 16 GB or more.")
                 }
             }
         }
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Privacy and Audio")
+                Text("Privacy and audio")
                     .font(.headline)
 
-                Text("Speaker identification, transcription, and meeting formatting run locally. You can copy or export the resulting transcript, including a formatted Markdown (.md) file.")
+                Text("Speaker identification, transcription, and meeting notes run on your Mac. Copy the transcript or save it as a Markdown (.md) file.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Audio is deleted when you dismiss a complete, saved transcript. Interrupted meetings, partial transcripts, and failed saves keep their audio for recovery. Unfinished audio is kept until you process or discard it, regardless of history retention. Keep for Later asks again at the next launch. Delete Audio & Close or Discard Recording removes it. A partial transcript is labeled because some speech may be missing.")
+                Text("Audio is deleted once a complete transcript is saved and closed. Interrupted meetings, partial transcripts, and failed saves keep their audio until you process or discard it, whatever your History setting. Delete Audio & Close or Discard Recording removes it.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -244,7 +239,7 @@ struct HelpVADContent: View {
                 Text("How pauses are found")
                     .font(.headline)
                 
-                Text("SideWave's local voice activity detector marks speech and pauses in the live audio. With live Refine on, the refine cadence decides whether a pause ends a segment: Standard waits for the 14.8-second ceiling, Faster ends it after about 3 seconds of silence, and Aggressive after about 2. Macs with 16 GB of memory or more start on Faster. Without live Refine, pauses of about 3 seconds end segments. The timeline below shows a segment closing on a 3-second pause:")
+                Text("A voice activity detector marks speech and pauses as you talk. With Refine on, the refine cadence decides whether a pause ends a segment: Standard waits for the 14.8-second limit, Faster ends a segment after about 3 seconds of silence, and Aggressive after about 2. Macs with 16 GB of memory or more start on Faster. Without Refine, a pause of about 3 seconds ends a segment.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -268,7 +263,7 @@ struct HelpVADContent: View {
                     
                     HStack {
                         Spacer()
-                        Text("On the Faster cadence, a segment splits after about 3 seconds of silence. Standard skips pause splits and waits for the 14.8-second ceiling.")
+                        Text("Faster: a 3-second pause ends the segment.")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -280,10 +275,10 @@ struct HelpVADContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Why Silence Detection Matters")
+                Text("Why pauses matter")
                     .font(.headline)
 
-                Text("SideWave runs Voice Activity Detection (VAD) locally on your Mac's CPU so it doesn't compete with the speech models on the Neural Engine. VAD watches the audio for speech and marks where you pause. Under the Standard cadence those pauses don't split the segment; each one runs to the 14.8-second ceiling before it goes to the Parakeet TDT transcriber and then Refine (Gemma 4 or Apple Intelligence). Faster and Aggressive close a segment after about 3 or 2 seconds of silence, so shorter thoughts get refined sooner. Document templates use a 5-second pause. Change the cadence in Settings > Refine > Expert, shown in Advanced view.")
+                Text("A finished segment goes to Parakeet and then Refine, so ending segments at pauses gets shorter thoughts refined sooner, at the cost of more processing. Document templates end segments at 5-second pauses. Change the cadence in Settings > Refine > Expert, in Advanced view.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

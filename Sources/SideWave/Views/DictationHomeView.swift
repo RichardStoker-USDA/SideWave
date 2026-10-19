@@ -669,8 +669,8 @@ private struct DictationAdvancedControls: View {
 
     private var pipelineOptions: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            PreferenceRow(label: "Engine preset") {
-                ChoiceMenu(title: "Engine preset", value: ["full": "Complete", "standard": "Basic", "speedy": "Minimalistic"][experience] ?? "Complete", selection: Binding(
+            PreferenceRow(label: "Dictation Mode") {
+                ChoiceMenu(title: "Dictation Mode", value: ["full": "Complete", "standard": "Basic", "speedy": "Minimalistic"][experience] ?? "Complete", selection: Binding(
                     get: { experience }, set: { ExperiencePreset.apply($0, appState: appState) }
                 )) {
                     Text("Complete").tag("full")

@@ -20,10 +20,10 @@ struct HelpOverlayContent: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    let confirmed = Text("We should use SCINet for scientific research ")
+                    let confirmed = Text("We should run the assembly on SCINet, ")
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
-                    let provisional = Text("at ARS because it's a powerful hpc platform\u{2026}")
+                    let provisional = Text("because the lab server keeps running out\u{2026}")
                         .font(.system(.body, design: .rounded, weight: .regular))
                         .foregroundStyle(.secondary.opacity(0.6))
                     Text("\(confirmed)\(provisional)")
@@ -45,9 +45,9 @@ struct HelpOverlayContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("Why Words Don't Jump Around")
+                Text("Why words don't jump around")
                     .font(.headline)
-                Text("As the recognizer gains context it revises earlier words, fixing punctuation, joining contractions, or correcting a misheard sound. SideWave aligns incoming words with the visible text to preserve reading position. Draft text stays gray while confirmed text settles into place. Reduce Motion uses a quieter transition.")
+                Text("As the recognizer hears more, it revises earlier words: punctuation, contractions, a misheard sound. SideWave lines up the new words with the text on screen so your place stays put. Reduce Motion uses a quieter transition.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -58,16 +58,16 @@ struct HelpOverlayContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("Position and appearance")
                     .font(.headline)
-                Text("The preview floats above other windows at the bottom center of your main display, just above the Dock. Its visible card stays anchored there as text appears. You can customize its placement:")
+                Text("The preview floats above other windows at the bottom center of your main display, above the Dock, and grows upward as text arrives.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    bulletRow("Drag to Move", "Drag the preview to any connected display. SideWave remembers where you put it for the next session.")
-                    bulletRow("Lock Position", "Right-click the overlay and choose Lock Position to pin it in place. While locked, dragging is disabled until you unlock it.")
-                    bulletRow("Reset Position", "Right-click the preview or open Settings > Overlay and choose Reset Position to return it to the bottom center of your main display.")
-                    bulletRow("Size and style", "Settings > Overlay sets the size, the text style (Standard or Cinematic), the wave color, wave sensitivity, and the Liquid Glass background. Text size follows the size you choose. Right-click the preview to expand it.")
+                    bulletRow("Move", "Drag the preview anywhere, on any display. SideWave remembers the spot.")
+                    bulletRow("Lock Position", "Right-click the preview and choose Lock Position to stop it from moving.")
+                    bulletRow("Reset Position", "Right-click the preview, or open Settings > Overlay, and choose Reset Position to put it back.")
+                    bulletRow("Size and style", "Settings > Overlay sets the size, the text style (Standard or Cinematic), the wave color and sensitivity, and the Liquid Glass background. Right-click the preview and choose Expand Overlay for more room.")
                 }
             }
         }
@@ -93,9 +93,9 @@ struct HelpAudioDevicesContent: View {
     var body: some View {
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Microphone Selection")
+                Text("Choosing a microphone")
                     .font(.headline)
-                Text("SideWave lists the built-in, USB, and wireless inputs connected to your Mac and updates the list as devices come and go. Choose your microphone on Home or in Settings > Microphone.")
+                Text("SideWave lists the built-in, USB, and wireless inputs on your Mac and updates the list as devices come and go. Choose one on Home or in Settings > Microphone.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -110,10 +110,10 @@ struct HelpAudioDevicesContent: View {
                     Image(systemName: "bolt.horizontal.fill")
                         .foregroundStyle(Color.accentColor)
                         .accessibilityHidden(true)
-                    Text("Microphone Standby Session")
+                    Text("Microphone standby")
                         .font(.headline)
                 }
-                Text("Keep mic on standby in Settings > Microphone is off by default. Enabling it keeps the capture path warm between sessions and can reduce startup delay. Device switching and Bluetooth negotiation may still take time. Wait for Listening before speaking. Keeping input open uses power, and macOS may show its microphone indicator. Turn standby off when you prefer to release the device between sessions.")
+                Text("Keep microphone on standby, in Settings > Microphone, is off by default. Turned on, it keeps the input open between dictations so recording starts faster. It uses some power, and macOS shows its microphone indicator while the input is open.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -126,15 +126,15 @@ struct HelpAudioDevicesContent: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(Color.warningAmber)
                         .accessibilityHidden(true)
-                    Text("Bluetooth Headset Constraints")
+                    Text("Bluetooth headsets")
                         .font(.headline)
                 }
-                Text("Using a Bluetooth headset for input can switch it to a call profile with lower microphone or playback quality. The result depends on the headset and macOS version. Test the selected device before relying on it for a long session.")
+                Text("Using a Bluetooth headset as the microphone can switch it to a call profile, which lowers both microphone and playback quality.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                Text("For the best results, record with your Mac's built-in microphone or a wired USB mic and keep output on your Bluetooth headphones. Setup, Home, and Settings > Microphone show a note when a Bluetooth microphone is selected.")
+                Text("For the best results, record with the Mac's built-in microphone or a USB mic and keep listening on your Bluetooth headphones. Setup, Home, and Settings > Microphone show a note when a Bluetooth microphone is selected.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -143,9 +143,9 @@ struct HelpAudioDevicesContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("Visualizer Levels")
+                Text("The wave")
                     .font(.headline)
-                Text("The preview's wave follows your live audio level, measured in decibels relative to full scale (dBFS). If it looks too flat or too jumpy for your room, change Wave sensitivity in Settings > Overlay. It doesn't affect recognition.")
+                Text("The preview's wave follows your microphone level. If it looks too flat or too jumpy, change Wave sensitivity in Settings > Overlay. It doesn't affect recognition.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -162,13 +162,9 @@ struct HelpAudioDevicesContent: View {
 struct HelpAudioRoutingExamples: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Two Ways to Route Audio")
+            Text("Two ways to set up audio")
                 .font(.headline)
-            Text("The difference between a clean setup and a tinny one comes down to what handles the mic:")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
+            
             routingProfile(
                 icon: "checkmark.circle.fill",
                 tint: .green,
@@ -229,9 +225,9 @@ struct HelpHistoryContent: View {
     var body: some View {
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                Text("What an Entry Keeps")
+                Text("What an entry keeps")
                     .font(.headline)
-                Text("History keeps the output, source app, and any available earlier text stages. Recognition is an estimate of what was spoken; it is not an audio record.")
+                Text("Each entry keeps the final text, the app it went to, and the earlier text stages. History stores text only, never audio.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -248,20 +244,20 @@ struct HelpHistoryContent: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text("26 words")
+                        Text("19 words")
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.tertiary)
                     }
 
                     historyTextBlock(
                         label: "Refined",
-                        text: "We should use SCINet for scientific research at ARS because it is a very powerful and useful HPC platform.",
+                        text: "I was thinking we should run the assembly on SCINet, because the lab server keeps running out of memory.",
                         italic: false,
                         color: .primary
                     )
                     historyTextBlock(
-                        label: "Recognition text (Show earlier stages)",
-                        text: "\"so, um, i was thinking that, you know, we should probably use SCINet for scientific research at ARS because, well, it's a very powerful and useful HPC platform, you know?\"",
+                        label: "Recognized text (under Show earlier stages)",
+                        text: "\"so um i was thinking we should probably you know run the assembly on sign it because the lab server keeps uh running out of memory\"",
                         italic: true,
                         color: .secondary
                     )
@@ -276,9 +272,9 @@ struct HelpHistoryContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("Compare available stages")
+                Text("Earlier stages")
                     .font(.headline)
-                Text("An entry expands in the same scroll pane. Show earlier stages reveals the available speech-recognition and provisional text. A model name appears only when refinement actually ran. Unrefined push-to-talk sessions have no refinement badge.")
+                Text("Expand an entry and choose Show earlier stages to see the recognized text and the live draft. The Refine model's name and badge appear only when Refine ran.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -287,9 +283,9 @@ struct HelpHistoryContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("Search & Filter")
+                Text("Search and copy")
                     .font(.headline)
-                Text("The History search field filters titles, target apps, model names, final text, and available earlier stages. Use Copy on a row, or its menu to copy the recognized text or live draft, or to delete the entry.")
+                Text("Search matches titles, apps, model names, final text, and earlier stages. Copy is on each row; its menu also copies the recognized text or live draft, or deletes the entry.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -298,9 +294,9 @@ struct HelpHistoryContent: View {
 
         HelpCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("Storage & Retention")
+                Text("Storage and retention")
                     .font(.headline)
-                Text("History lives in SideWave's local Application Support folder. Set how long entries are kept with Keep history in Settings > Privacy or at the bottom of History; older entries are removed automatically. Copy any entry's text from the History tab, and save meeting transcripts as a Markdown (.md) file from the meeting view.")
+                Text("History is stored in SideWave's Application Support folder on this Mac. Set how long entries stay with Keep history in Settings > Privacy or at the bottom of History; older entries are deleted automatically.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
