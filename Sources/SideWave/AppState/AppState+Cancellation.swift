@@ -62,6 +62,30 @@ extension AppState {
         return .original(original)
     }
 
+    /// Refines each pending run with the text before it as context and keeps refined runs as they
+    /// are. Fails as a whole, like `finishIncrementalRefinement`, if any run can't be refined.
+    func finishPendingRuns(
+        _ runs: [StagedTranscript.FinalPassRun],
+        after prefix: String,
+        onStream: @escaping @Sendable (String) -> Void
+    ) async -> DictationFormatterService.RefinementResult {
+        let original = runs.map(\.text).reduce(prefix, RefinementWindow.join)
+        var assembled = prefix
+        for (index, run) in runs.enumerated() {
+            guard run.pending else {
+                assembled = RefinementWindow.join(assembled, run.text)
+                continue
+            }
+            let rest = runs[(index + 1)...].map(\.text).reduce("", RefinementWindow.join)
+            let result = await finishIncrementalRefinement(refinedBody: assembled, unrefinedTail: run.text) { text in
+                onStream(RefinementWindow.join(text, rest))
+            }
+            guard result.completed else { return .original(original) }
+            assembled = result.text
+        }
+        return .refined(assembled)
+    }
+
     /// A failed final pass never sends partly refined text to another app.
     func preserveUnfinishedRefinement(_ text: String) {
         isCleaningUp = false

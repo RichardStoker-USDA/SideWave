@@ -53,6 +53,22 @@ struct RefinementWindow: Sendable {
         return (String(text[..<boundary]), String(text[boundary...]).trimmingCharacters(in: .whitespaces))
     }
 
+    /// The words through the first sentence end, at most 64, and the rest. Pending text that stops
+    /// mid-sentence takes this head from the refined text after it, so the stop pass refines the
+    /// whole sentence across the junction.
+    static func splitLeadingSentence(_ text: String) -> (head: String, rest: String) {
+        let words = text.split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return ("", "") }
+        let limit = min(words.count, 64)
+        let end = (0..<limit).first { endsSentence(words[$0]) }.map { $0 + 1 } ?? limit
+        let boundary = words[end - 1].endIndex
+        return (String(text[..<boundary]), String(text[boundary...]).trimmingCharacters(in: .whitespaces))
+    }
+
+    static func endsSentence(_ text: String) -> Bool {
+        text.split(whereSeparator: \.isWhitespace).last.map(endsSentence) ?? false
+    }
+
     static func join(_ first: String, _ second: String) -> String {
         let left = first.trimmingCharacters(in: .whitespacesAndNewlines)
         let right = second.trimmingCharacters(in: .whitespacesAndNewlines)

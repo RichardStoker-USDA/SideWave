@@ -195,9 +195,8 @@ final class ManualTranslationProbeTests: XCTestCase {
     }
 
     /// A held (source-language) span in the MIDDLE of otherwise-translated spans
-    /// must be routed OUT of the reused body and INTO the stop-time tail, so the
-    /// final pass re-covers it instead of pasting English. Without this the
-    /// positional body/tail split buries the English segment in the body forever.
+    /// must be marked pending, so the final pass re-covers it instead of pasting
+    /// English. A positional split would bury the English segment in refined text.
     @MainActor
     func testHeldSpanRoutesIntoStopTail() {
         let staged = StagedTranscript()
@@ -208,13 +207,11 @@ final class ManualTranslationProbeTests: XCTestCase {
         let id3 = staged.ingestTdtCommitted("Sarah will double check the figures")
         staged.refineSpan(spanID: id3, refinedText: "Sarah 会核对这些数字。")
 
-        let (body, tail) = staged.refinedBodyAndUnrefinedTail(includeRawEouTail: false)
-        // Held English segment is excluded from the reused body...
-        XCTAssertFalse(body.contains("twelve percent"), "held English segment leaked into the reused body")
-        XCTAssertTrue(body.contains("今天"), "the translated prefix should remain the body")
-        // ...and lands in the tail (with the trailing translated span) for the
-        // stop-time re-translate pass.
-        XCTAssertTrue(tail.contains("twelve percent"), "held English segment should route into the stop-time tail")
+        let runs = staged.finalPassRuns(includeRawEouTail: false)
+        // The held segment stops mid-sentence, so it takes the next sentence along for the retry.
+        XCTAssertEqual(runs.map(\.pending), [false, true])
+        XCTAssertTrue(runs[0].text.contains("今天"), "the translated prefix stays refined")
+        XCTAssertTrue(runs[1].text.contains("twelve percent"), "held English segment goes to the stop pass")
     }
 
     /// Runs one arm end to end, prints the aggregate + per-segment scores, and

@@ -55,9 +55,64 @@ final class FinalRefinementTests: XCTestCase {
         let third = try XCTUnwrap(transcript.ingestTdtCommitted("The last sample is ready."))
         transcript.markRefinedNoChange(spanID: first)
         transcript.markRefinedNoChange(spanID: third)
-        let split = transcript.refinedBodyAndUnrefinedTail(includeRawEouTail: false)
-        XCTAssertEqual(split.body, "The first sample is frozen.")
-        XCTAssertEqual(split.tail, "The the second sample needs review. The last sample is ready.")
+        XCTAssertEqual(transcript.finalPassRuns(includeRawEouTail: false), [
+            .init(text: "The first sample is frozen.", pending: false),
+            .init(text: "The the second sample needs review.", pending: true),
+            .init(text: "The last sample is ready.", pending: false),
+        ])
+    }
+
+    func testDeclinedSpanMidSessionKeepsLaterRefinedText() async throws {
+        let transcript = StagedTranscript()
+        let first = try XCTUnwrap(transcript.ingestTdtCommitted("The samples are frozen."))
+        _ = transcript.ingestTdtCommitted("um we sent the the report to")
+        let third = try XCTUnwrap(transcript.ingestTdtCommitted("Sarah on Friday. The labels are done."))
+        let fourth = try XCTUnwrap(transcript.ingestTdtCommitted("The freezer is at minus eighty."))
+        for id in [first, third, fourth] { transcript.markRefinedNoChange(spanID: id) }
+        let runs = transcript.finalPassRuns(includeRawEouTail: false)
+        XCTAssertEqual(runs, [
+            .init(text: "The samples are frozen.", pending: false),
+            .init(text: "um we sent the the report to Sarah on Friday.", pending: true),
+            .init(text: "The labels are done. The freezer is at minus eighty.", pending: false),
+        ], "Only the declined span and the rest of its sentence go back to the model")
+
+        let state = AppState()
+        state.dictationFormatter.disable()
+        let settled = await state.finishPendingRuns([runs[0], runs[2]], after: "Earlier text.", onStream: { _ in })
+        XCTAssertTrue(settled.completed)
+        XCTAssertEqual(settled.text, "Earlier text. The samples are frozen. The labels are done. The freezer is at minus eighty.")
+        let failed = await state.finishPendingRuns(runs, after: "Earlier text.", onStream: { _ in })
+        XCTAssertFalse(failed.completed)
+        XCTAssertEqual(failed.text, "Earlier text. " + runs.map(\.text).joined(separator: " "),
+                       "A failed stop pass keeps the whole session, not the part before the failure")
+    }
+
+    func testBorrowedSentenceKeepsTheParagraphBreakAfterIt() async throws {
+        let transcript = StagedTranscript()
+        _ = transcript.ingestTdtCommitted("we sent the report to")
+        let refined = try XCTUnwrap(transcript.ingestTdtCommitted("Sarah on Friday.\n\nThe labels are done."))
+        transcript.markRefinedNoChange(spanID: refined)
+        let runs = transcript.finalPassRuns(includeRawEouTail: false)
+        XCTAssertEqual(runs.map(\.pending), [true, false])
+        XCTAssertEqual(runs[0].text, "we sent the report to Sarah on Friday.")
+        let state = AppState()
+        state.dictationFormatter.disable()
+        let failed = await state.finishPendingRuns(runs, after: "", onStream: { _ in })
+        XCTAssertEqual(failed.text, "we sent the report to Sarah on Friday.\n\nThe labels are done.")
+        let settled = await state.finishPendingRuns([.init(text: "The samples are frozen.", pending: false), runs[1]],
+                                                    after: "", onStream: { _ in })
+        XCTAssertEqual(settled.text, "The samples are frozen.\n\nThe labels are done.")
+    }
+
+    func testLeadingSentenceSplitIsBounded() {
+        XCTAssertTrue(RefinementWindow.splitLeadingSentence("Sarah on Friday. The labels are done.")
+            == ("Sarah on Friday.", "The labels are done."))
+        let unpunctuated = (0..<100).map { "word\($0)" }.joined(separator: " ")
+        let split = RefinementWindow.splitLeadingSentence(unpunctuated)
+        XCTAssertEqual(split.head.split(separator: " ").count, 64)
+        XCTAssertEqual(RefinementWindow.join(split.head, split.rest), unpunctuated)
+        XCTAssertTrue(RefinementWindow.endsSentence("Done. "))
+        XCTAssertFalse(RefinementWindow.endsSentence("sent the report to"))
     }
 
     func testBoundaryContextDoesNotFalselyCountAsRefined() throws {
@@ -66,9 +121,10 @@ final class FinalRefinementTests: XCTestCase {
         let second = try XCTUnwrap(transcript.ingestTdtCommitted("Before lunch."))
         transcript.applyBoundaryMerge(prevSpanID: first, prevTextWithoutBoundary: "The the samples are ready.",
                                       currSpanID: second, currRefinedText: "Send them before lunch.")
-        let split = transcript.refinedBodyAndUnrefinedTail(includeRawEouTail: false)
-        XCTAssertTrue(split.body.isEmpty)
-        XCTAssertTrue(split.tail.contains("The the samples"))
+        XCTAssertEqual(transcript.finalPassRuns(includeRawEouTail: false), [
+            .init(text: "The the samples are ready.", pending: true),
+            .init(text: "Send them before lunch.", pending: false),
+        ])
     }
 
     func testCompletedCaptureDoesNotRunAnotherModelPass() async {

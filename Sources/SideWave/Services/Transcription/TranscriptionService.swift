@@ -321,12 +321,10 @@ final class TranscriptionService {
     /// correction and Refine, shown in History's earlier stages. Empty when multi-stage was off.
     var lastSessionEouRawText: String = ""
 
-    /// The paste text split at stop, before cleanup resets the transcript. The body is what live
-    /// refine already polished; the tail is what it never reached. AppState's stop pass refines
-    /// only the tail, with the body as context, so no text is refined twice. Both empty when
-    /// multi-stage was off.
-    var lastSessionRefinedBody: String = ""
-    var lastSessionUnrefinedTail: String = ""
+    /// The paste text split at stop into refined and pending runs, before cleanup resets the
+    /// transcript. AppState's stop pass refines only the pending runs, with the text before each as
+    /// context, so no text is refined twice. Empty when multi-stage was off.
+    var lastSessionFinalPassRuns: [StagedTranscript.FinalPassRun] = []
 
     /// Serial worker that owns the per-segment refine queue. Refine tasks
     /// run sequentially so two segments don't fight `DictationFormatter`'s

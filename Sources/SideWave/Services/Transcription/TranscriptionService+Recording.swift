@@ -53,8 +53,7 @@ extension TranscriptionService {
         lastCommittedEouWordCount = 0
         lastSessionOriginalText = ""
         lastSessionEouRawText = ""
-        lastSessionRefinedBody = ""
-        lastSessionUnrefinedTail = ""
+        lastSessionFinalPassRuns = []
         translateRefineKeptSourceLanguage = false
         translateHeldSegmentCount = 0
         // Start the interval clock now, so the first interval finalize happens N seconds in rather
@@ -500,9 +499,7 @@ extension TranscriptionService {
             if multiStageActive {
                 lastSessionOriginalText = stagedTranscript.originalText(includeRawEouTail: includeRawEouTail)
                 lastSessionEouRawText = stagedTranscript.eouRawText()
-                let (refinedBody, unrefinedTail) = stagedTranscript.refinedBodyAndUnrefinedTail(includeRawEouTail: includeRawEouTail)
-                lastSessionRefinedBody = refinedBody
-                lastSessionUnrefinedTail = unrefinedTail
+                lastSessionFinalPassRuns = stagedTranscript.finalPassRuns(includeRawEouTail: includeRawEouTail)
                 let staged = skipRefine
                     ? stagedTranscript.originalText(includeRawEouTail: includeRawEouTail)
                     : stagedTranscript.finalText(includeRawEouTail: includeRawEouTail)
@@ -638,9 +635,7 @@ extension TranscriptionService {
 
             lastSessionOriginalText = stagedTranscript.originalText(includeRawEouTail: includeRawEouTail)
             lastSessionEouRawText = stagedTranscript.eouRawText()
-            let (refinedBody, unrefinedTail) = stagedTranscript.refinedBodyAndUnrefinedTail(includeRawEouTail: includeRawEouTail)
-            lastSessionRefinedBody = refinedBody
-            lastSessionUnrefinedTail = unrefinedTail
+            lastSessionFinalPassRuns = stagedTranscript.finalPassRuns(includeRawEouTail: includeRawEouTail)
             let staged = skipRefine
                 ? stagedTranscript.originalText(includeRawEouTail: includeRawEouTail)
                 : stagedTranscript.finalText(includeRawEouTail: includeRawEouTail)

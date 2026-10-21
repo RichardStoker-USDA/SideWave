@@ -326,12 +326,11 @@ extension AppState {
                     cleanedText = assembledRaw
                 }
             } else if performRefinement {
-                let stagedBody = transcriptionService.lastSessionRefinedBody
-                let stagedTail = transcriptionService.lastSessionUnrefinedTail
-                let needsEntireText = accumulatedSessionNeedsRefinement || (stagedBody.isEmpty && stagedTail.isEmpty)
-                let body = needsEntireText ? "" : RefinementWindow.join(continuedPrefix, stagedBody)
-                let tail = needsEntireText ? assembledRaw : stagedTail
-                let result = await finishIncrementalRefinement(refinedBody: body, unrefinedTail: tail) { [weak self] text in
+                let stagedRuns = transcriptionService.lastSessionFinalPassRuns
+                let needsEntireText = accumulatedSessionNeedsRefinement || stagedRuns.isEmpty
+                let runs = needsEntireText ? [StagedTranscript.FinalPassRun(text: assembledRaw, pending: true)] : stagedRuns
+                let prefix = needsEntireText ? "" : continuedPrefix
+                let result = await finishPendingRuns(runs, after: prefix) { [weak self] text in
                     Task { @MainActor [weak self] in
                         guard let self, self.isCleaningUp else { return }
                         self.cleanupStreamingText = text
@@ -343,7 +342,7 @@ extension AppState {
                 let translationStillPending = !language.isMatch
                     && transcriptionService.translateRefineKeptSourceLanguage
                     && TranscriptionService.translateLikelyFailed(output: result.text,
-                        input: RefinementWindow.join(body, tail), target: language)
+                        input: runs.map(\.text).reduce(prefix, RefinementWindow.join), target: language)
                 finalRefinementCompleted = result.completed && !translationStillPending
             } else {
                 // No force-refine, refine disabled/skipped, or session too

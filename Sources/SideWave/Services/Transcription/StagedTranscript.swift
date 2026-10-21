@@ -105,9 +105,9 @@ final class StagedTranscript {
     private(set) var confirmedSpans: [Span] = []
 
     /// Spans whose translate refine failed after retries and still hold source-language text. They
-    /// aren't pasted as the translation: `refinedBodyAndUnrefinedTail` starts the unrefined tail at
-    /// the earliest held span, so the stop pass translates it and everything after. Empty when not
-    /// translating or when nothing failed. Cleared on `reset()`.
+    /// aren't pasted as the translation: `finalPassRuns` marks them pending, so the stop pass
+    /// translates them again. Empty when not translating or when nothing failed. Cleared on
+    /// `reset()`.
     private(set) var heldSourceLanguageSpanIDs: Set<UUID> = []
 
     /// Words at the leading edge of EOU's live transcript that haven't been
@@ -364,8 +364,8 @@ final class StagedTranscript {
     }
 
     /// Marks a span whose translate refine failed after retries. It becomes `.refined` so the
-    /// preview doesn't look unfinished, but `refinedBodyAndUnrefinedTail` sends it and everything
-    /// after to the stop pass for another try. Does nothing if the span is gone.
+    /// preview doesn't look unfinished, but `finalPassRuns` sends it to the stop pass for another
+    /// try. Does nothing if the span is gone.
     func markHeldSourceLanguage(spanID: UUID) {
         guard let idx = confirmedSpans.firstIndex(where: { $0.id == spanID }) else { return }
         confirmedSpans[idx].stage = .refined
@@ -661,24 +661,50 @@ final class StagedTranscript {
         return Self.fixSentenceBoundaryCapitalization(joined)
     }
 
-    /// Only a contiguous run of successful passes belongs in the refined body.
-    /// A failed earlier span and all later text remain eligible for the final pass.
-    func refinedBodyAndUnrefinedTail(includeRawEouTail: Bool = true) -> (body: String, tail: String) {
-        let beyondTdt = includeRawEouTail ? uncoveredEouTailForPaste() : ""
-        let firstPending = confirmedSpans.firstIndex {
-            $0.stage != .refined || heldSourceLanguageSpanIDs.contains($0.id)
-        } ?? confirmedSpans.endIndex
-        let bodyEndIdx = firstPending - 1
-        let body = bodyEndIdx >= 0
-            ? confirmedSpans[...bodyEndIdx].map(\.text)
-                .filter { !$0.isEmpty }
-                .joined(separator: " ")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            : ""
-        var tailParts = confirmedSpans[(bodyEndIdx + 1)...].map(\.text).filter { !$0.isEmpty }
-        if !beyondTdt.isEmpty { tailParts.append(beyondTdt) }
-        let tail = tailParts.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-        return (Self.fixSentenceBoundaryCapitalization(body), tail)
+    /// One stretch of the session for the stop pass: refined text, or text that still needs a refine.
+    struct FinalPassRun: Equatable, Sendable {
+        var text: String
+        var pending: Bool
+    }
+
+    /// The session in order as refined and pending runs. A span whose real-time refine failed or
+    /// was refused stays pending without sending the refined text after it back through the model,
+    /// so one declined span early in a long dictation doesn't make the stop pass redo the session.
+    /// A pending run that stops mid-sentence takes the rest of that sentence from the refined run
+    /// after it, so the junction is refined as one sentence. Streaming words beyond TDT coverage
+    /// join the last run as pending.
+    func finalPassRuns(includeRawEouTail: Bool = true) -> [FinalPassRun] {
+        var runs: [FinalPassRun] = []
+        func append(_ text: String, pending: Bool) {
+            let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return }
+            if let last = runs.last, last.pending == pending {
+                runs[runs.count - 1].text = last.text + " " + text
+            } else {
+                runs.append(FinalPassRun(text: text, pending: pending))
+            }
+        }
+        for span in confirmedSpans {
+            append(span.text, pending: span.stage != .refined || heldSourceLanguageSpanIDs.contains(span.id))
+        }
+        append(includeRawEouTail ? uncoveredEouTailForPaste() : "", pending: true)
+        for index in runs.indices.dropLast() where runs[index].pending
+            && !RefinementWindow.endsSentence(runs[index].text) {
+            let split = RefinementWindow.splitLeadingSentence(runs[index + 1].text)
+            runs[index].text = RefinementWindow.join(runs[index].text, split.head)
+            runs[index + 1].text = split.rest
+        }
+        // Rejoin without trimming, so a paragraph break after a borrowed sentence survives.
+        let moved = runs.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        runs = []
+        for run in moved {
+            if let last = runs.last, last.pending == run.pending {
+                runs[runs.count - 1].text = RefinementWindow.join(last.text, run.text)
+            } else {
+                runs.append(run)
+            }
+        }
+        return runs.map { $0.pending ? $0 : FinalPassRun(text: Self.fixSentenceBoundaryCapitalization($0.text), pending: false) }
     }
 
     /// Capitalizes a lowercase letter after `.`, `!`, or `?` and a space. TDT decides
