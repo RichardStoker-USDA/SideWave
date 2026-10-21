@@ -61,7 +61,9 @@ struct ScrollbackContainer<Content: View>: View {
             }
             .scrollIndicators(growsFromTop ? .automatic : .never)
             .defaultScrollAnchor(.bottom)
-            .frame(height: height)
+            // Gives up height when the panel is shorter than the card, rather than making the card
+            // taller than the panel.
+            .frame(minHeight: min(height, 60), maxHeight: height)
             // More than 4 pt above the bottom counts as scrolled away; smaller drift from text
             // growth doesn't.
             .onScrollGeometryChange(for: Bool.self) { geometry in

@@ -224,6 +224,36 @@ final class OverlayMotionTests: XCTestCase {
                             liquidGlass: true, isRefining: refining, refiningBackend: backend, reduceMotion: reduced, sampleTime: time)
     }
 
+    /// A long refine in the expanded preview made the card taller than its panel. AppKit grew the
+    /// panel to fit, the card measured the larger panel, and during a resize the two never settled:
+    /// AppKit raised an exception after repeated constraint passes and the app quit mid-refine.
+    func testRefiningPreviewNeverResizesItsPanel() async throws {
+        let defaults = UserDefaults.standard
+        let saved = defaults.object(forKey: "overlayExpanded")
+        defer { if let saved { defaults.set(saved, forKey: "overlayExpanded") } else { defaults.removeObject(forKey: "overlayExpanded") } }
+        let appState = AppState()
+        appState.cleanupStatus = "Finishing remaining text"
+        appState.cleanupStreamingText = String(repeating: "The soil moisture readings for plots four through nine look consistent with last week. ", count: 60)
+        appState.isCleaningUp = true
+        appState.dictationFormatter.state = .generating
+        for (expanded, size) in [(true, DictationOverlayController.expandedSize), (false, DictationOverlayController.collapsedSize)] {
+            defaults.set(expanded, forKey: "overlayExpanded")
+            let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
+                                styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+            panel.isReleasedWhenClosed = false
+            let host = NSHostingView(rootView: AnyView(DictationOverlayContent(appState: appState).environment(appState)))
+            host.sizingOptions = []
+            host.frame = NSRect(origin: .zero, size: size)
+            panel.contentView = host
+            defer { panel.contentView = nil }
+            for _ in 0..<3 {
+                panel.display()
+                try await Task.sleep(for: .milliseconds(100))
+            }
+            XCTAssertEqual(panel.frame, NSRect(origin: .zero, size: size), "expanded: \(expanded)")
+        }
+    }
+
     private func pixels<V: View>(_ view: V) throws -> Data {
         let host = NSHostingView(rootView: view.frame(width: 500, height: 40)
             .background(Color.black).environment(\.colorScheme, .dark))

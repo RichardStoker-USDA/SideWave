@@ -375,7 +375,7 @@ struct DictationOverlayContent: View {
         }
         #endif
         // Keep the visible card at the panel's bottom in every session phase.
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .bottomPinnedInPanel()
         .onGeometryChange(for: CGSize.self) { $0.size } action: { overlayViewportSize = $0 }
         .animation(reduceMotion ? nil : Animate.appleSnappy, value: overlayExpanded)
         .animation(reduceMotion ? nil : Animate.appleSnappy, value: effectiveWidth)
@@ -528,3 +528,23 @@ struct ListeningPlaceholder: View {
     }
 }
 
+/// Takes the size the panel offers and pins its content to the bottom. The size never depends on
+/// the content: a card taller than the panel made AppKit grow the panel, and during a resize
+/// animation that looped until AppKit raised an exception.
+private struct BottomPinnedInPanel: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            subview.place(at: CGPoint(x: bounds.midX, y: bounds.maxY), anchor: .bottom, proposal: ProposedViewSize(bounds.size))
+        }
+    }
+}
+
+private extension View {
+    func bottomPinnedInPanel() -> some View {
+        BottomPinnedInPanel { self }
+    }
+}

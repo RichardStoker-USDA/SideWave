@@ -139,6 +139,7 @@ final class DictationOverlayController {
     private var escapeMonitor: Any?
     private var windowDrag = OverlayWindowDrag()
     private nonisolated(unsafe) var appearanceObserver: NSObjectProtocol?
+    private var observedAppearance = UserDefaults.standard.string(forKey: "appearance") ?? "system"
     private var showGeneration = 0
     var onDismiss: (() -> Void)?
     /// Called on plain Escape: soft stop (save text, don't paste).
@@ -146,7 +147,9 @@ final class DictationOverlayController {
 
     private init() {
         // Watch for appearance preference changes so the overlay panel updates
-        // even when the SwiftUI DictationOverlayContent view isn't alive
+        // even when the SwiftUI DictationOverlayContent view isn't alive. Every settings write
+        // posts this notification, including the overlay's own menu items, so it redraws only
+        // when the appearance changed.
         appearanceObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
             object: nil,
@@ -154,7 +157,9 @@ final class DictationOverlayController {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 let mode = UserDefaults.standard.string(forKey: "appearance") ?? "system"
-                self?.updateAppearance(mode)
+                guard let self, mode != self.observedAppearance else { return }
+                self.observedAppearance = mode
+                self.updateAppearance(mode)
             }
         }
     }
