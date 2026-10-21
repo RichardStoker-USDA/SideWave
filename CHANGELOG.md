@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.3 (2026-10-20)
+
+### Fixed
+
+- SideWave no longer quits when you expand, shrink, or resize the preview while it refines a long
+  dictation.
+- Finishing a long dictation no longer stalls on Refining after Apple Intelligence declined part of
+  it. The final pass refines only the parts that still need it, not everything after the first
+  declined part.
+
 ## 0.4.2 (2026-10-19)
 
 ### Changed

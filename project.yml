@@ -23,16 +23,16 @@ settings:
     ENABLE_APP_SANDBOX: NO
     ENABLE_HARDENED_RUNTIME: YES
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "0.4.2"
-    CURRENT_PROJECT_VERSION: "33"
+    MARKETING_VERSION: "0.4.3"
+    CURRENT_PROJECT_VERSION: "34"
   configs:
     Debug:
       # A high build number keeps dev builds apart from the release in Finder and Spotlight.
       CURRENT_PROJECT_VERSION: "9999"
-      MARKETING_VERSION: "0.4.2-dev"
+      MARKETING_VERSION: "0.4.3-dev"
     DebugAG:
       CURRENT_PROJECT_VERSION: "9999"
-      MARKETING_VERSION: "0.4.2-devag"
+      MARKETING_VERSION: "0.4.3-devag"
     Release:
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
