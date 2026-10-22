@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.4</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Fixed</h3>
+<ul><li>Finishing a dictation no longer hangs on Refining or leaves the text on Home when Apple Intelligence declines part of it. The declined part is pasted as captured, the rest is still refined, and a notice says what happened. On macOS 27, a declined part is first asked again as plain text, which Apple&#x27;s guardrails allow.</li><li>The final pass now has a time limit of 10 to 25 seconds, based on how much text is left. Text it hasn&#x27;t finished by then is pasted as captured.</li><li>Resuming a paused dictation refines only the parts that weren&#x27;t finished, instead of the whole dictation again.</li></ul>
+<h3>Changed</h3>
+<ul><li>Light mode has more contrast: darker secondary text, white menu fields with visible edges, and a raised selection on the Home, Dictation, Vocabulary, and History tabs.</li></ul>
+</body>
+</html>
