@@ -242,7 +242,7 @@ struct DictationView: View {
                 } label: {
                     Image(systemName: "info.circle")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .buttonStyle(.plain)
                 .help("How Refine works")
@@ -332,7 +332,7 @@ struct DictationView: View {
 
                         Image(systemName: "info.circle")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .help(templateHelpText)
                             // Hover-only hint; Help > Refine covers the same ground for VoiceOver.
                             .accessibilityHidden(true)
@@ -497,7 +497,7 @@ struct DictationView: View {
                 if appState.dictationCleanupTemplate == DictationFormatterService.Template.custom.rawValue {
                     Image(systemName: "info.circle")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .help("On the Custom template, your instructions have maximum weight. The model follows them as its primary directive. Write exactly how you want your text processed.")
                         .accessibilityHidden(true)
                 }
@@ -511,7 +511,7 @@ struct DictationView: View {
                             .foregroundStyle(Color.accentColor)
                         Text("In use")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                     }
                     .transition(.opacity)
                 }
@@ -628,7 +628,7 @@ struct DictationView: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                         .rotationEffect(.degrees(isOpen ? 90 : 0))
                 }
                 .padding(Spacing.md)
@@ -673,7 +673,7 @@ struct DictationView: View {
                 HStack(spacing: Spacing.xs) {
                     Text(reason)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                     if kind == .appleIntelligenceNotEnabled {
@@ -696,7 +696,7 @@ struct DictationView: View {
             if !cached {
                 Text("Downloads on first refine.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
         }
     }

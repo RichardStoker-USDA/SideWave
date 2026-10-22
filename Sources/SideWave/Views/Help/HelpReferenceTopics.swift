@@ -21,7 +21,7 @@ struct HelpSettingsOverviewContent: View {
                 }
                 Text("Both views share the same Home: Template, Refine model, Output language, Microphone, Send to, and Shortcut. Advanced view adds recording and recognition controls below your recent dictation, plus expert settings. Switching views never changes your models or how dictation runs.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack {
@@ -60,7 +60,7 @@ struct HelpSettingsOverviewContent: View {
 
                 Text("The Advanced pane appears when Advanced view is on. Turning on experimental features there adds an Experimental pane.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Spacing.xs)
             }
@@ -77,7 +77,7 @@ struct HelpSettingsOverviewContent: View {
                 }
                 Text("Buttons in Help that point to a setting open Settings and briefly highlight that control.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -98,14 +98,14 @@ struct HelpSettingsOverviewContent: View {
                         Text("In Advanced view")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 } else {
                     HelpDeepLinkButton(label: "Open \(name)", systemImage: "arrow.up.forward.square", targetPage: nil, targetSettingsTab: tab, spotlightKey: nil)
                 }
             }
             Text(desc)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -165,7 +165,7 @@ struct HelpTroubleshootingContent: View {
                 }
                 Text("The readiness message on Home names what's missing. SideWave needs Microphone access to record and Accessibility access for the shortcut and pasting. Use its button to open the right page in System Settings.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -181,7 +181,7 @@ struct HelpTroubleshootingContent: View {
                 }
                 Text("If a download stays at 0%, check that a firewall, proxy, or VPN isn't blocking huggingface.co, then retry. SideWave keeps the files it already has and repairs incomplete ones, and it checks every Gemma file before using the model.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -197,7 +197,7 @@ struct HelpTroubleshootingContent: View {
                 }
                 Text("Run Test Microphone in Settings > Microphone. If the level doesn't move, check the device, the permission, and the input channel. With an audio interface, pick the microphone's channel: Auto takes the loudest one, which can be a loopback of computer sound. Reconnect the device or choose another, and wait for Listening before you speak.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -213,7 +213,7 @@ struct HelpTroubleshootingContent: View {
                 }
                 Text("Some secure fields and remote-desktop apps block pasting. Copy the entry from History and paste it yourself, or turn on Also copy text to clipboard on the Dictation tab. Check that SideWave has Accessibility access in System Settings > Privacy & Security.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -237,7 +237,7 @@ struct HelpPrivacyContent: View {
                 }
                 Text("Speech recognition, Refine, meeting notes, and glossary suggestions run on your Mac. History and recovery files stay on it. Text you paste into another app goes to that app.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -253,7 +253,7 @@ struct HelpPrivacyContent: View {
                 }
                 Text("SideWave sends no analytics or crash reports. It goes online to download models, fetch glossary bundles you ask for, and check for updates if you allow it; those servers see an ordinary connection. Data Transparency lists every download and update check, including failed ones, until you clear it.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -293,7 +293,7 @@ struct HelpTechnologyAndCreditsContent: View {
                     .font(.headline)
                 Text("SideWave is built on open-source models and code. Settings > About > Acknowledgments lists each one with what SideWave uses it for, its license, and the full license and notice text.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -306,7 +306,7 @@ struct HelpTechnologyAndCreditsContent: View {
                 .foregroundStyle(.primary)
             Text(desc)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

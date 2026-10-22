@@ -108,7 +108,7 @@ struct DictationHomeView: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(refineEnabled || template.isSpecialty ? template.workspaceDescription : "Keep the recognized text without a model refinement pass.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Button("Formatting Rules") { showsInstructions = true }
@@ -145,7 +145,7 @@ struct DictationHomeView: View {
             }
             if appState.audioDeviceManager.selectedDeviceIsBluetooth {
                 Text("Bluetooth microphone use can reduce headphone playback quality.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
             }
             if refineEnabled || template.isSpecialty { refineReadiness }
         }
@@ -260,18 +260,18 @@ struct DictationHomeView: View {
                 Text("Downloading \(appState.dictationFormatter.activeBackend.displayName)")
                 Spacer(minLength: 0)
                 Text(progress, format: .percent.precision(.fractionLength(0))).monospacedDigit()
-            }.font(.caption).foregroundStyle(.secondary)
+            }.font(.caption).adaptiveSecondary()
         case .loading:
             HStack(spacing: 8) {
                 ProgressView().controlSize(.mini)
                 Text("Preparing the model on this Mac")
-            }.font(.caption).foregroundStyle(.secondary)
+            }.font(.caption).adaptiveSecondary()
         case .error, .unloaded, .disabled, .unavailable:
             HStack(alignment: .firstTextBaseline) {
                 Text("Refine needs preparation. Your captured words are kept.")
                 Spacer(minLength: 4)
                 Button("Model Settings") { openSettingsCategory(.settingsRefine) }.buttonStyle(.borderless)
-            }.font(.caption).foregroundStyle(.secondary)
+            }.font(.caption).adaptiveSecondary()
         case .ready, .generating: EmptyView()
         }
     }
@@ -325,6 +325,7 @@ struct DictationHomeSurface<Controls: View>: View {
     var onSettings: () -> Void = {}
     @ViewBuilder let controls: Controls
     @State private var expandsRecentOutput = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var speechNeedsPreparation: Bool { !phase.isBusy && !isEditingDocument && !speechModelState.isReady }
 
@@ -382,7 +383,7 @@ struct DictationHomeSurface<Controls: View>: View {
                                 ? (speechModelState.isSettingUp ? "Preparing speech recognition" : "Speech recognition needs attention")
                                 : isEditingDocument ? "Updating document" : phase.title)
                                 .font(.headline)
-                            Text(detail).font(.caption).foregroundStyle(.secondary)
+                            Text(detail).font(.caption).adaptiveSecondary()
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
@@ -416,7 +417,7 @@ struct DictationHomeSurface<Controls: View>: View {
                     if documentTemplate != nil {
                         HStack {
                             Label("Review before copying", systemImage: "doc.text")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).adaptiveSecondary()
                             Spacer(minLength: 8)
                             Button("Open Document", systemImage: "arrow.up.forward.square", action: onOpenDocument)
                                 .buttonStyle(.borderless).font(.callout)
@@ -425,7 +426,8 @@ struct DictationHomeSurface<Controls: View>: View {
                 }
                 .padding(20)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.quaternary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(
+                    colorScheme == .dark ? AnyShapeStyle(.quaternary) : AnyShapeStyle(LightSurface.cardBorder), lineWidth: 1))
                 recentOutput
                 if let advancedControls {
                     Divider()
@@ -445,7 +447,7 @@ struct DictationHomeSurface<Controls: View>: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Text(transcriptLabel).font(.callout.weight(.semibold))
-                Text(metadata).font(.caption).foregroundStyle(.secondary)
+                Text(metadata).font(.caption).adaptiveSecondary()
                 Spacer(minLength: 0)
                 if !transcript.isEmpty {
                     Button("Copy", systemImage: "doc.on.doc", action: onCopy)
@@ -454,7 +456,7 @@ struct DictationHomeSurface<Controls: View>: View {
                 Button("History", action: onHistory).buttonStyle(.borderless).font(.caption)
             }
             if transcript.isEmpty {
-                Text("Finished dictation is saved here and in History.").font(.callout).foregroundStyle(.secondary)
+                Text("Finished dictation is saved here and in History.").font(.callout).adaptiveSecondary()
             } else {
                 Text(transcript).font(.system(size: 14)).lineSpacing(4)
                     .lineLimit(expandsRecentOutput ? nil : 2)
@@ -488,7 +490,7 @@ struct WorkspaceField<Control: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Label(title, systemImage: icon).font(.caption).foregroundStyle(.secondary)
+            Label(title, systemImage: icon).font(.caption).adaptiveSecondary()
             control.frame(height: 30)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -500,6 +502,7 @@ struct WorkspaceField<Control: View>: View {
 struct WorkspaceMenu<Options: View>: View {
     let value: String
     @ViewBuilder let options: Options
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Menu { options } label: {
@@ -508,8 +511,9 @@ struct WorkspaceMenu<Options: View>: View {
         .menuStyle(.borderlessButton)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12).frame(height: 30)
-        .background(Color.primary.opacity(0.04), in: Capsule())
-        .overlay(Capsule().strokeBorder(.quaternary, lineWidth: 1))
+        .background(colorScheme == .dark ? Color.primary.opacity(0.04) : LightSurface.fieldFill, in: Capsule())
+        .overlay(Capsule().strokeBorder(colorScheme == .dark ? AnyShapeStyle(.quaternary) : AnyShapeStyle(LightSurface.fieldBorder),
+                                        lineWidth: 1))
         .accessibilityValue(value)
     }
 }
@@ -630,7 +634,7 @@ private struct DictationAdvancedControls: View {
                 PreferenceToggle("Keep microphone on standby", isOn: $appState.keepMicOnStandby)
                     .help("Keeps the input device awake between sessions. The macOS microphone indicator remains visible.")
                 Text(appState.isMicOnStandby ? "The microphone is on standby." : "The microphone is released between dictations.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
             }
             if appState.hotkeyManager.smartPTTEnabled {
                 PreferenceToggle("Refine held dictation", isOn: $appState.smartPTTAlwaysRefine)
@@ -659,7 +663,7 @@ private struct DictationAdvancedControls: View {
                             .accessibilityLabel("Volume reduction")
                             .accessibilityValue("\(Int(volumeReduction)) percent")
                         Text("\(Int(volumeReduction))%")
-                            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            .font(.caption.monospacedDigit()).adaptiveSecondary()
                             .frame(width: 34, alignment: .trailing)
                     }
                 }
@@ -681,7 +685,7 @@ private struct DictationAdvancedControls: View {
                 .disabled(appState.pendingSessionText != nil)
             }
             Text(ExperiencePreset.description(for: experience, refinementEnabled: appState.dictationCleanupEnabled && !skipRefine))
-                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.caption).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             PreferenceToggle("Refine while speaking", isOn: $liveRefine)
                 .disabled(skipRefine || !appState.dictationCleanupEnabled || !dualEngine)
             PreferenceToggle("Final refinement pass", isOn: $finalRefine)
@@ -713,7 +717,7 @@ private struct DictationAdvancedControls: View {
 
     private func diagnostic(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).adaptiveSecondary()
             Text(value).font(.callout.monospacedDigit())
         }.frame(maxWidth: .infinity, alignment: .leading)
     }

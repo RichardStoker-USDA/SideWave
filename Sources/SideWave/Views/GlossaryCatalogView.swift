@@ -40,7 +40,7 @@ struct GlossaryCatalogView: View {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("Glossary bundles").font(.title2.weight(.semibold))
                     Text("Download optional word collections and manage their updates.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                 }
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
@@ -51,7 +51,7 @@ struct GlossaryCatalogView: View {
             }.pickerStyle(.segmented).labelsHidden()
             TextField("Search bundles", text: $query).textFieldStyle(.roundedBorder)
             if let message = manager.message {
-                Text(message).font(.callout).foregroundStyle(.secondary)
+                Text(message).font(.callout).adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             ScrollView {
@@ -59,7 +59,7 @@ struct GlossaryCatalogView: View {
                     if showInstalled {
                         if installed.isEmpty { emptyState("No bundles installed", detail: "Browse the catalog to add optional word collections. Updates are manual unless you turn them on for a bundle.") }
                         if !installed.isEmpty && installed.allSatisfy({ !matches($0.name + " " + $0.description) }) {
-                            Text("No installed bundles match your search.").foregroundStyle(.secondary)
+                            Text("No installed bundles match your search.").adaptiveSecondary()
                         }
                         ForEach(installed.filter { matches($0.name + " " + $0.description) }) { pack in
                             installedRow(pack)
@@ -76,7 +76,7 @@ struct GlossaryCatalogView: View {
                             }
                         }
                         if !manager.entries.isEmpty && manager.entries.allSatisfy({ !matches(([$0.name, $0.description] + $0.tags).joined(separator: " ")) }) {
-                            Text("No bundles match your search.").foregroundStyle(.secondary)
+                            Text("No bundles match your search.").adaptiveSecondary()
                         }
                         ForEach(manager.entries.filter { matches(([$0.name, $0.description] + $0.tags).joined(separator: " ")) }) { entry in
                             catalogRow(entry)
@@ -88,7 +88,7 @@ struct GlossaryCatalogView: View {
             Divider()
             HStack(alignment: .center) {
                 Text("Downloads from GitHub. No words or usage data are uploaded.\nTransfers appear in Data Transparency.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                 Spacer()
                 if manager.isChecking { ProgressView().controlSize(.small) }
                 Button("Check for Updates") { refreshID += 1 }
@@ -117,7 +117,7 @@ struct GlossaryCatalogView: View {
     private func emptyState(_ title: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(title).font(.headline)
-            Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(detail).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
         }.padding(.vertical, Spacing.md)
     }
 
@@ -125,9 +125,9 @@ struct GlossaryCatalogView: View {
         HStack(alignment: .top, spacing: Spacing.md) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(entry.name).font(.headline)
-                Text(entry.description).font(.callout).foregroundStyle(.secondary)
+                Text(entry.description).font(.callout).adaptiveSecondary()
                 Text("\(entry.termCount) \(entry.termCount == 1 ? "word" : "words") · \(Int64(entry.bytes).byteCountText) · \(entry.version)")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
             }
             Spacer(minLength: 0)
             if let pack = store.subscribedPack(entry.id) {
@@ -144,7 +144,7 @@ struct GlossaryCatalogView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text(pack.name).font(.headline)
-                        Text("\(pack.terms.count) \(pack.terms.count == 1 ? "word" : "words") · Version \(source.version)").font(.caption).foregroundStyle(.secondary)
+                        Text("\(pack.terms.count) \(pack.terms.count == 1 ? "word" : "words") · Version \(source.version)").font(.caption).adaptiveSecondary()
                     }
                     Spacer()
                     if let entry {
@@ -169,10 +169,10 @@ struct GlossaryCatalogView: View {
                 })).toggleStyle(.switch).controlSize(.small)
                     .disabled(manager.busyIDs.contains(source.catalogID))
                 Text(source.automaticallyUpdates ? "Checks once a day while SideWave is open. Only this bundle changes." : "Manual updates. Make a personal copy to edit words without syncing.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                 if let checked = source.lastChecked {
                     Text("Last checked \(checked.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.caption).foregroundStyle(.tertiary)
+                        .font(.caption).adaptiveTertiary()
                 }
             }
         }
@@ -198,7 +198,7 @@ struct GlossaryBundleHistoryView: View {
             HStack {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("Update history").font(.title2.weight(.semibold))
-                    Text(pack.name).foregroundStyle(.secondary)
+                    Text(pack.name).adaptiveSecondary()
                 }
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
@@ -208,13 +208,13 @@ struct GlossaryBundleHistoryView: View {
                     ForEach(pack.subscription?.changes ?? []) { change in
                         VStack(alignment: .leading, spacing: Spacing.sm) {
                             Text("Version \(change.version)").font(.headline)
-                            Text(change.date.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                            Text(change.date.formatted(date: .abbreviated, time: .shortened)).font(.caption).adaptiveSecondary()
                             if let notes = change.notes, !notes.isEmpty { Text(notes).font(.callout) }
                             changes("Added", words: change.added)
                             changes("Edited", words: change.edited)
                             changes("Removed", words: change.removed)
                             if change.added.isEmpty && change.edited.isEmpty && change.removed.isEmpty {
-                                Text("Bundle information updated; words unchanged.").font(.callout).foregroundStyle(.secondary)
+                                Text("Bundle information updated; words unchanged.").font(.callout).adaptiveSecondary()
                             }
                         }
                         Divider()
@@ -222,7 +222,7 @@ struct GlossaryBundleHistoryView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             Text("The latest 100 updates are kept on this Mac. Personal copies never change during sync.")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).adaptiveSecondary()
         }.padding(Spacing.xl).frame(width: 560, height: 500).buttonBorderShape(.capsule)
     }
     @ViewBuilder private func changes(_ title: String, words: [String]) -> some View {

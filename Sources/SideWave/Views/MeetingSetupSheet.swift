@@ -21,7 +21,7 @@ struct MeetingSetupSheet: View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             Text("New Meeting").font(.title2.weight(.semibold))
             Text("Record the conversation, review the speakers, then create your notes.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             Divider()
@@ -45,7 +45,7 @@ struct MeetingSetupSheet: View {
                 Label("Up to 8 speakers, identified automatically", systemImage: "person.3")
                 Label("Audio saved on this Mac during recording", systemImage: "internaldrive")
             }
-            .font(.callout).foregroundStyle(.secondary)
+            .font(.callout).adaptiveSecondary()
 
             DisclosureGroup("Recording tips", isExpanded: $helpExpanded) {
                 ScrollView {
@@ -55,7 +55,7 @@ struct MeetingSetupSheet: View {
                         Text("A quiet room and speakers taking turns give clearer labels. Overlap, similar voices, and distant speakers can reduce accuracy. Review names before sharing.")
                         Text("If SideWave is interrupted, the saved recording is offered for recovery next time you open the app.")
                     }
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(height: 180)

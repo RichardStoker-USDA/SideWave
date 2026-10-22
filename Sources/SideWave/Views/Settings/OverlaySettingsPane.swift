@@ -67,7 +67,7 @@ struct OverlaySettingsPane: View {
                     .accessibilityLabel("Preview width")
                     .accessibilityValue("\(Int(customOverlayWidth)) points")
                     Text("\(Int(customOverlayWidth)) pt")
-                        .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.callout.monospacedDigit()).adaptiveSecondary()
                         .frame(width: 52, alignment: .trailing)
                 }
             }
@@ -126,7 +126,7 @@ struct OverlaySettingsPane: View {
                         .accessibilityLabel("Wave sensitivity")
                         .accessibilityValue("\(Int(audioSensitivity * 100)) percent")
                     Text("\(Int(audioSensitivity * 100))%")
-                        .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.callout.monospacedDigit()).adaptiveSecondary()
                         .frame(width: 52, alignment: .trailing)
                 }
             }

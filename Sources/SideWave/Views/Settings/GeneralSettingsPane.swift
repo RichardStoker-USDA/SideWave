@@ -27,7 +27,7 @@ struct GeneralSettingsPane: View {
                     Text("Window opacity").font(.callout)
                     Spacer()
                     Text("\(Int(windowOpacity * 100))%")
-                        .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.callout.monospacedDigit()).adaptiveSecondary()
                 }
                 Slider(value: $windowOpacity, in: 0.5...1.0, step: 0.02)
                     .accessibilityLabel("Window opacity")
@@ -95,7 +95,7 @@ struct GeneralSettingsPane: View {
                 Spacer(minLength: Spacing.sm)
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             .contentShape(Rectangle())
         }

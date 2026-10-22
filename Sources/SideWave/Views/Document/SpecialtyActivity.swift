@@ -57,14 +57,14 @@ struct SpecialtyProcessingFeedback: View {
                 Text(activity.title).font(.callout.weight(.semibold))
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
             if let startedAt {
                 TimelineView(.periodic(from: startedAt, by: 1)) { context in
                     Text("\(max(0, Int(context.date.timeIntervalSince(startedAt))))s")
-                        .font(.caption.monospacedDigit()).foregroundStyle(.tertiary)
+                        .font(.caption.monospacedDigit()).adaptiveTertiary()
                 }
                 .accessibilityHidden(true)
             }

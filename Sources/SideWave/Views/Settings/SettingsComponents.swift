@@ -11,7 +11,7 @@ struct SettingsDetailHeader: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(category.settingsTitle).font(.system(size: 25, weight: .semibold))
             Text(category.settingsSummary)
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             Divider().padding(.top, Spacing.sm)
         }
@@ -100,7 +100,7 @@ struct SettingsToggleRow: View {
                     if let info {
                         Button(action: info) { Image(systemName: "info.circle") }
                             .buttonStyle(.borderless)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .help("About \(title.lowercased())")
                             .accessibilityLabel("About \(title)")
                     }
@@ -128,7 +128,7 @@ struct SettingsDivider: View {
 extension View {
     /// Explanatory text under a setting.
     func settingsCaption() -> some View {
-        font(.subheadline).foregroundStyle(.secondary)
+        font(.subheadline).adaptiveSecondary()
     }
 
     /// Lets Help and Home deep-link to a control and briefly outline it.

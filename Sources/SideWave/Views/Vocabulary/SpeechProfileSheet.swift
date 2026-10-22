@@ -68,14 +68,14 @@ struct SpeechProfileSheet: View {
                     .font(.headline)
                 Text("A short description of how you talk and write. Refine reads it to keep your voice.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .lineLimit(2)
             }
             Spacer()
             Button { dismiss() } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
@@ -128,7 +128,7 @@ struct SpeechProfileSheet: View {
                     .font(.callout.weight(.medium))
                 Text("When on, your profile is added to every Refine prompt so it understands your voice.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -158,7 +158,7 @@ struct SpeechProfileSheet: View {
             if let metaLine {
                 Text(metaLine)
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
@@ -173,13 +173,13 @@ struct SpeechProfileSheet: View {
                 Spacer()
                 Text("\(draft.count)/\(Self.charCap)")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             ZStack(alignment: .topLeading) {
                 if draft.isEmpty {
                     Text("Build from your dictation history above, or describe in your own words how you talk and how you want your dictation to read.")
                         .font(.callout)
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                         .padding(.horizontal, 5)
                         .padding(.vertical, 8)
                         .allowsHitTesting(false)
@@ -200,7 +200,7 @@ struct SpeechProfileSheet: View {
             )
             Text("Your description, in your words. Edit it any time; Refine uses exactly what's here.")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -209,10 +209,10 @@ struct SpeechProfileSheet: View {
         HStack(alignment: .top, spacing: Spacing.xs) {
             Image(systemName: "lock.shield")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             Text("Built on this Mac from your own dictation, stored locally, and only ever added to the local Refine prompt. Nothing leaves your device.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

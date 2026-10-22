@@ -27,7 +27,7 @@ struct DownloadProgressCard: View {
                 Spacer()
                 Text("\(Int(progress.fractionCompleted * 100))%")
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
 
             ProgressView(value: max(0, min(1, progress.fractionCompleted)))
@@ -36,25 +36,25 @@ struct DownloadProgressCard: View {
             HStack(spacing: Spacing.sm) {
                 Text(bytesLine)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Spacer()
                 if let eta = etaLine {
                     Text(eta)
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                 }
             }
 
             if let phase = phaseLine {
                 Text(phase)
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Text("First time only. The model is cached after download.")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
 
             if let onCancel {
                 HStack {

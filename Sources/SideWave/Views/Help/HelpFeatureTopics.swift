@@ -55,14 +55,14 @@ struct HelpHotkeySetupContent: View {
                     .font(.headline)
                 Text("To change it, click Shortcut on Home or in Settings > General, then press the key or combination you want, such as Right Option or Shift + Tab.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: Spacing.md) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("ACTIVE TRIGGER")
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .tracking(0.5)
                         Text(appState.hotkeyManager.shortcut.displayString)
                             .font(.system(.body, design: .monospaced).weight(.bold))
@@ -100,12 +100,12 @@ struct HelpHotkeySetupContent: View {
 
                 Text("To use a combination, click Shortcut, hold the modifier, and press the key: Shift + Tab, Right Shift + Right Option, or Option + grave (`). Check that macOS or another app doesn't already use it.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Press Escape while recording a shortcut to keep the current one.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -120,7 +120,7 @@ struct HelpHotkeySetupContent: View {
                 .padding(.top, Spacing.xs)
             Text(text)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -150,7 +150,7 @@ struct HelpModelsContent: View {
 
                 Text("The main speech model. NVIDIA Parakeet TDT has 600 million parameters and runs on the Apple Neural Engine.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -160,7 +160,7 @@ struct HelpModelsContent: View {
 
                 Text("Settings > Speech Recognition shows the active model. In Advanced view you can switch between v3, v2, and Parakeet Ultra, a multilingual model with updated weights and a larger download. Each downloads separately.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
         }
 
@@ -177,7 +177,7 @@ struct HelpModelsContent: View {
 
                 Text("A smaller streaming model with 120 million parameters. In the Complete and Basic Dictation Modes it runs alongside the main model, reads the audio in 160-millisecond chunks, writes the gray draft, and detects when you stop speaking. The main model confirms or corrects every word before it turns solid. Held dictation pastes this model's text.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -195,7 +195,7 @@ struct HelpModelsContent: View {
 
                 Text("Used for glossaries. It checks your terms against the audio on the live preview about every 1.5 seconds and on each finished segment, which catches names, abbreviations, and jargon the main model misses.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -213,7 +213,7 @@ struct HelpModelsContent: View {
 
                 Text("Voice activity detection. It runs only while you dictate, on the CPU so it doesn't compete with the speech models, and finds the pauses that can end a segment.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -236,12 +236,12 @@ struct HelpModelsContent: View {
 
                 Text("Google DeepMind's Gemma 4, about 3 GB on disk. It refines ordinary dictation one segment at a time as you speak, and formats document templates after you finish. It runs on the GPU through MLX. E2B is the lightest Gemma option.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Gemma 4 E4B (about 5.2 GB) and 12B (about 6.8 GB) are also available. 12B handles complex edits better but uses more memory and is slower; use it with 24 GB of memory or more.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -259,7 +259,7 @@ struct HelpModelsContent: View {
 
                 Text("Apple's on-device model, on Macs that support Apple Intelligence. macOS manages and downloads it. Gemma handles longer documents.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -271,7 +271,7 @@ struct HelpModelsContent: View {
 
                 Text("Speech models download during setup, which lists each file and its size. The glossary model downloads with them. Meeting and Gemma models download from Hugging Face when you first need them. Apple Intelligence comes from macOS. Downloaded models stay on this Mac.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -285,7 +285,7 @@ struct HelpModelsContent: View {
                 .font(.callout.weight(.medium))
             Text(desc)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
         }
     }
 }
@@ -312,7 +312,7 @@ struct HelpModelsScanner: View {
                         .font(.headline)
                     Text("Advice based on this Mac's memory:")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -321,7 +321,7 @@ struct HelpModelsScanner: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("UNIFIED MEMORY")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .tracking(0.5)
                     
                     Text("\(roundedRAM) GB")
@@ -338,7 +338,7 @@ struct HelpModelsScanner: View {
                         .accessibilityHidden(true)
                     Text(roundedRAM <= 8 ? "Limited headroom" : (roundedRAM <= 18 ? "Good headroom" : "Plenty of headroom"))
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
             }
             .padding(Spacing.md)
@@ -352,7 +352,7 @@ struct HelpModelsScanner: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("Approximate memory use")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     memorySpecRow("macOS and other apps", "Shared memory", "Available memory changes as other apps work.")
@@ -368,22 +368,22 @@ struct HelpModelsScanner: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text("Advice for this Mac:")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 
                 if roundedRAM <= 8 {
                     Text("With 8 GB or less, Gemma 4 can push the Mac into swap, which shows up as lag. Pick **Apple Intelligence** as the Refine model, or set the Dictation Mode to **Basic** or **Minimalistic** to skip Refine. Dictation Mode is at the top of the Dictation tab.")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 } else if roundedRAM <= 18 {
                     Text("With \(roundedRAM) GB, try the **Complete** Dictation Mode with Gemma 4 E2B. If the Mac slows down, switch to Apple Intelligence or the **Basic** mode.")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Text("With \(roundedRAM) GB, the larger Gemma models are an option. E4B and 12B help with complex writing; E2B is the fastest.")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -401,7 +401,7 @@ struct HelpModelsScanner: View {
                 .frame(minWidth: 80, alignment: .leading)
             Text(desc)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
@@ -421,7 +421,7 @@ struct HelpVocabularyContent: View {
 
                 Text("The Vocabulary tab holds glossaries: named sets of words you turn on and off together. Each word has its spelling, and optionally how it sounds, common mishearings, a category, and context for Refine.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -450,7 +450,7 @@ struct HelpVocabularyContent: View {
 
                 Text("Click a word to edit it. Two switches set what it does; new words start with both on.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -511,7 +511,7 @@ struct HelpVocabularyContent: View {
 
                 Text("The CTC model checks your words against the audio on the live preview about every 1.5 seconds and again when each segment finishes. It replaces a word only when your term matches the audio better. A large or ambiguous glossary can still cause wrong replacements, so keep the words you use. With Refine on, up to 30 of the most relevant words with Send hint to Refine also go into the Refine prompt.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -523,12 +523,12 @@ struct HelpVocabularyContent: View {
 
                 Text("Some names and acronyms sound like everyday phrases: \"SCINet\" sounds like \"sign it.\" A replacement works when the misheard form is something you'd never mean, like \"Zach\" for \"Zak.\" It can't separate true homophones, because the audio is the same.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("For those, turn on only Send hint to Refine. Refine uses the sentence to pick the right form: \"We use SCINet for genome analysis\" keeps SCINet, and \"I'll sign it tomorrow\" keeps sign it. The CTC check still runs for every word, whatever its switches, so turn off a word that causes wrong replacements.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -557,7 +557,7 @@ struct HelpVocabularyContent: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("Open a glossary's \u{2026} menu and choose Link to Templates. For example, link a work glossary to Professional so it turns on when you switch to that template.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -567,7 +567,7 @@ struct HelpVocabularyContent: View {
                     .font(.headline)
                 Text("With these words in a glossary that's on, the CTC check swaps in your spelling when the audio matches:")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(spacing: Spacing.sm) {
@@ -578,7 +578,7 @@ struct HelpVocabularyContent: View {
 
                 Text("The audio check reduces wrong replacements but doesn't prevent them. Replace at dictation applies whenever the text matches, so don't list mishearings that are phrases you also say.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -589,23 +589,23 @@ struct HelpVocabularyContent: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("Heard")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .textCase(.uppercase)
                 Text(heard)
                     .font(.system(.callout, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .frame(width: 120, alignment: .leading)
 
             Image(systemName: "arrow.right")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Written")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .textCase(.uppercase)
                 Text(written)
                     .font(.system(.callout, design: .monospaced).weight(.bold))
@@ -625,7 +625,7 @@ struct HelpVocabularyContent: View {
                 .font(.callout.weight(.medium))
             Text(description)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

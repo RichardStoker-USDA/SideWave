@@ -152,7 +152,7 @@ struct HistoryView: View {
                             .font(.caption.weight(.semibold))
                             .rotationEffect(.degrees(expanded ? 90 : 0))
                             .frame(width: 14, height: 20)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         VStack(alignment: .leading, spacing: Spacing.xs) {
                             Text(sidebarTitle(for: entry))
                                 .font(.headline)
@@ -168,11 +168,11 @@ struct HistoryView: View {
                                 }
                             }
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             if !expanded {
                                 Text(entry.text)
                                     .font(.callout)
-                                    .foregroundStyle(.secondary)
+                                    .adaptiveSecondary()
                                     .lineLimit(2)
                                     .multilineTextAlignment(.leading)
                             }
@@ -327,7 +327,7 @@ struct HistoryView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.callout.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .frame(width: 22, height: 22)
                         .contentShape(Rectangle())
                 }
@@ -349,7 +349,7 @@ struct HistoryView: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.caption2.weight(.medium))
                     }
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -408,7 +408,7 @@ struct HistoryView: View {
             Divider()
             Text("Full control in Settings > Privacy")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
         }
         .padding(Spacing.md)
         .frame(width: 220)
@@ -443,14 +443,14 @@ struct HistoryView: View {
             }
         }
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .adaptiveSecondary()
     }
 
     /// The thin dot divider between subtitle segments.
     private var subtitleDivider: some View {
         Text("·")
             .font(.caption)
-            .foregroundStyle(.tertiary)
+            .adaptiveTertiary()
     }
 
     @ViewBuilder
@@ -477,14 +477,14 @@ struct HistoryView: View {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: "character.book.closed")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Text("Literal back-translation")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Spacer(minLength: 0)
                 Text(entry.outputLanguageValue.shortLabel)
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             .contentShape(Rectangle())
         }
@@ -509,11 +509,11 @@ struct HistoryView: View {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .rotationEffect(.degrees(showStagesForSelected ? 90 : 0))
                     Text(showStagesForSelected ? "Hide earlier stages" : "Show earlier stages")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .contentShape(Rectangle())
             }
@@ -551,14 +551,14 @@ struct HistoryView: View {
                     .technicalLabel()
                 Text(sublabel)
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Spacer()
                 Button {
                     copyToClipboard(text)
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                 }
                 .buttonStyle(.plain)
                 .help("Copy this text")
@@ -566,13 +566,13 @@ struct HistoryView: View {
             }
             Text(text)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
             Text("\(text.count) characters")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
         }
         .padding(Spacing.md)
         .background(
@@ -589,11 +589,11 @@ struct HistoryView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: activeSearchQuery.isEmpty ? "clock.arrow.circlepath" : "magnifyingglass")
                 .font(.system(size: 36, weight: .light))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             Text(emptyStateTitle).font(.title3.weight(.semibold))
             Text(emptyStateBody)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 360)
         }
@@ -727,7 +727,7 @@ private struct BackTranslationSheet: View {
                     .font(.headline)
                 Text("How your \(entry.outputLanguageValue.displayName) reads translated straight back to what you dictated.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
@@ -747,7 +747,7 @@ private struct BackTranslationSheet: View {
                     .controlSize(.small)
                 Text("Reading it back word-for-word…")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, Spacing.xl)
@@ -786,10 +786,10 @@ private struct BackTranslationSheet: View {
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("What was localized")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Text(result.reasoning)
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -802,10 +802,10 @@ private struct BackTranslationSheet: View {
         HStack(alignment: .top, spacing: Spacing.xs) {
             Image(systemName: icon)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             Text(text)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

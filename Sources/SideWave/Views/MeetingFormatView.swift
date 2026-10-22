@@ -146,7 +146,7 @@ struct MeetingFormatView: View {
                 Text(backend.displayName)
             } else {
                 Text("\(backend.displayName) (unavailable)")
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
         }
     }
@@ -194,7 +194,7 @@ struct MeetingFormatView: View {
                         .font(.title2.weight(.semibold))
                     if transcript.isPartial {
                         Text("Some speech may be missing. Check generated notes against the saved audio.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -322,18 +322,18 @@ struct MeetingFormatView: View {
                         // (don't auto-delete) but flag it and invite regenerate.
                         Text("Generated before speaker re-detection. Regenerate to refresh.")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                     } else if showingSavedResult {
                         Text("Saved result. Regenerate to refresh.")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     } else if appState.formatterService.reformatIsCached {
                         // Only the single-pass Gemma KV path is near-instant to
                         // reformat; AFM and map-reduce re-run the full pass, so
                         // the claim is shown only when it actually holds.
                         Text("Transcript cached for faster reformatting")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     }
                 }
                 Spacer()
@@ -425,9 +425,9 @@ struct MeetingFormatView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "doc.text")
                     .font(.system(size: Size.iconXL))
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Text(transcript.hasSpeech ? "Pick a format and click Generate" : "No speech was recognized. Check the microphone or process the saved audio again before generating notes.")
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .font(.callout)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 360)
@@ -450,7 +450,7 @@ struct MeetingFormatView: View {
                     .controlSize(.large)
                 Text("Loading model\u{2026}")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -464,7 +464,7 @@ struct MeetingFormatView: View {
                     // single-pass path shows "Generating".
                     Text(note ?? "Generating\u{2026}")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -481,10 +481,10 @@ struct MeetingFormatView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "exclamationmark.triangle")
                     .font(.system(size: Size.iconXL))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Text(message)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 300)
             }

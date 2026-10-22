@@ -8,7 +8,7 @@ extension SpecialtyPreviewView {
 
     var askBar: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text("Change this document").font(.caption).foregroundStyle(.secondary)
+            Text("Change this document").font(.caption).adaptiveSecondary()
             HStack(alignment: .center, spacing: 10) {
                 TextField(askPlaceholder, text: Bindable(appState).agenticEditInstruction, axis: .vertical)
                     .lineLimit(1...3).textFieldStyle(.plain).font(.body)
@@ -62,7 +62,7 @@ extension SpecialtyPreviewView {
                 Label("Start a document", systemImage: "mic.fill")
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                 Text("Press \(hotkeyDisplay) to start a new document. Finish dictation to format it. Your previous document is kept in Recents.")
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Divider().opacity(0.4)
@@ -70,7 +70,7 @@ extension SpecialtyPreviewView {
                 Label("Change the document", systemImage: "text.bubble")
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                 Text("Type an instruction here and press Return, or choose Speak change and say it. For example \"remove step 2\" or \"make this a bulleted list.\" Undo steps back through applied edits.")
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Divider().opacity(0.4)
@@ -78,7 +78,7 @@ extension SpecialtyPreviewView {
                 Label("Add more content", systemImage: "text.append")
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                 Text("Choose Add dictation to continue this document, or Edit text to type into it. Closing the window saves your work; the next shortcut starts a new document.")
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             .font(.system(.callout, design: .rounded))
@@ -125,7 +125,7 @@ extension SpecialtyPreviewView {
             }
             editingHelpButton
         }
-        .font(.caption).foregroundStyle(.secondary)
+        .font(.caption).adaptiveSecondary()
     }
 
     private var wordCount: Int {
@@ -167,7 +167,7 @@ extension SpecialtyPreviewView {
                 insightsSection
                 if !railHasContent && appState.pendingSessionText == nil {
                     Text("Applied edits and pending dictation appear here.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -189,7 +189,7 @@ extension SpecialtyPreviewView {
                      ? "Assistant is reshaping the page\u{2026}"
                      : (isVoiceAsking ? "Listening for your instruction\u{2026}" : "Listening\u{2026}"))
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Spacer()
             }
             .padding(Spacing.md)
@@ -206,7 +206,7 @@ extension SpecialtyPreviewView {
             HStack {
                 Image(systemName: "text.badge.checkmark")
                     .font(.headline)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .accessibilityHidden(true)
                 Text("Applied Edits")
                     .font(.system(.headline, design: .rounded))
@@ -252,7 +252,7 @@ extension SpecialtyPreviewView {
             HStack {
                 Image(systemName: "clock.badge.exclamationmark")
                     .font(.headline)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .accessibilityHidden(true)
                 Text("Pending Additions")
                     .font(.system(.headline, design: .rounded))
@@ -307,7 +307,7 @@ extension SpecialtyPreviewView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "brain.head.profile")
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .font(.headline)
                         .accessibilityHidden(true)
                     Text("Live AI Insights")
@@ -324,13 +324,13 @@ extension SpecialtyPreviewView {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         Label("QUESTIONS / DISCOVERIES", systemImage: "text.bubble")
                             .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
 
                         ForEach(status.questions, id: \.self) { question in
                             HStack(alignment: .top, spacing: Spacing.sm) {
                                 Image(systemName: "bubble.left.and.bubble.right.fill")
                                     .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
+                                    .adaptiveSecondary()
                                     .padding(.top, 2)
                                     .accessibilityHidden(true)
                                 Text(question)
@@ -355,7 +355,7 @@ extension SpecialtyPreviewView {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Label(label, systemImage: icon)
                     .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Text(text)
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.primary)

@@ -16,7 +16,7 @@ struct HelpOverlayContent: View {
                     .font(.headline)
                 Text("Confirmed words are solid; the live draft after them is gray and can still change:")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -49,7 +49,7 @@ struct HelpOverlayContent: View {
                     .font(.headline)
                 Text("As the recognizer hears more, it revises earlier words: punctuation, contractions, a misheard sound. SideWave lines up the new words with the text on screen so your place stays put. Reduce Motion uses a quieter transition.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -60,7 +60,7 @@ struct HelpOverlayContent: View {
                     .font(.headline)
                 Text("The preview floats above other windows at the bottom center of your main display, above the Dock, and grows upward as text arrives.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -79,7 +79,7 @@ struct HelpOverlayContent: View {
                 .font(.body.weight(.semibold))
             Text(desc)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -97,7 +97,7 @@ struct HelpAudioDevicesContent: View {
                     .font(.headline)
                 Text("SideWave lists the built-in, USB, and wireless inputs on your Mac and updates the list as devices come and go. Choose one on Home or in Settings > Microphone.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 
                 HelpDeepLinkButton(label: "Manage Audio Devices", systemImage: "mic", targetPage: nil, targetSettingsTab: .settingsAudio, spotlightKey: "audio")
@@ -115,7 +115,7 @@ struct HelpAudioDevicesContent: View {
                 }
                 Text("Keep microphone on standby, in Settings > Microphone, is off by default. Turned on, it keeps the input open between dictations so recording starts faster. It uses some power, and macOS shows its microphone indicator while the input is open.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -131,12 +131,12 @@ struct HelpAudioDevicesContent: View {
                 }
                 Text("Using a Bluetooth headset as the microphone can switch it to a call profile, which lowers both microphone and playback quality.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 
                 Text("For the best results, record with the Mac's built-in microphone or a USB mic and keep listening on your Bluetooth headphones. Setup, Home, and Settings > Microphone show a note when a Bluetooth microphone is selected.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -147,7 +147,7 @@ struct HelpAudioDevicesContent: View {
                     .font(.headline)
                 Text("The preview's wave follows your microphone level. If it looks too flat or too jumpy, change Wave sensitivity in Settings > Overlay. It doesn't affect recognition.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -200,7 +200,7 @@ struct HelpAudioRoutingExamples: View {
                     GridRow {
                         Text(row.0)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .gridColumnAlignment(.leading)
                         Text(row.1)
                             .font(.caption)
@@ -229,24 +229,24 @@ struct HelpHistoryContent: View {
                     .font(.headline)
                 Text("Each entry keeps the final text, the app it went to, and the earlier text stages. History stores text only, never audio.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     HStack {
                         Image(systemName: "envelope.fill")
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Text("Mail")
                             .font(.caption.weight(.semibold))
                         Text("•")
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                         Text("2 minutes ago")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Spacer()
                         Text("19 words")
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     }
 
                     historyTextBlock(
@@ -276,7 +276,7 @@ struct HelpHistoryContent: View {
                     .font(.headline)
                 Text("Expand an entry and choose Show earlier stages to see the recognized text and the live draft. The Refine model's name and badge appear only when Refine ran.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -287,7 +287,7 @@ struct HelpHistoryContent: View {
                     .font(.headline)
                 Text("Search matches titles, apps, model names, final text, and earlier stages. Copy is on each row; its menu also copies the recognized text or live draft, or deletes the entry.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -298,7 +298,7 @@ struct HelpHistoryContent: View {
                     .font(.headline)
                 Text("History is stored in SideWave's Application Support folder on this Mac. Set how long entries stay with Keep history in Settings > Privacy or at the bottom of History; older entries are deleted automatically.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

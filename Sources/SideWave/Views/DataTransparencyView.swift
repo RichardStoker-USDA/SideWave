@@ -34,7 +34,7 @@ struct DataTransparencyView: View {
                     }
                     if let error = log.persistenceError {
                         Label(error, systemImage: "exclamationmark.triangle")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                     }
                     promiseCard
                     summaryCard
@@ -51,7 +51,7 @@ struct DataTransparencyView: View {
         .sheet(item: $selectedEvent) { event in
             VStack(alignment: .leading, spacing: 16) {
                 Text(eventTitle(event)).font(.title2.weight(.semibold))
-                Text(event.timestamp.formatted(date: .complete, time: .standard)).font(.callout).foregroundStyle(.secondary)
+                Text(event.timestamp.formatted(date: .complete, time: .standard)).font(.callout).adaptiveSecondary()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(event.detail).font(.body).textSelection(.enabled)
@@ -61,7 +61,7 @@ struct DataTransparencyView: View {
                         Text(event.bytes > 0 ? "Recorded transfer: \(formatBytes(event.bytes))"
                              : event.direction == .outgoing ? "No request body was uploaded."
                              : "Transfer size was not reported for this event.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 HStack { Spacer(); Button("Done") { selectedEvent = nil }.keyboardShortcut(.defaultAction) }
@@ -83,14 +83,14 @@ struct DataTransparencyView: View {
                         .font(.callout.weight(.semibold))
                     Text("\(session.displayName) · \(session.repoID)")
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
                 Spacer()
                 Text("\(Int((session.overallFraction * 100).rounded()))%")
                     .font(.callout.monospacedDigit().weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             ProgressView(value: session.overallFraction)
                 .tint(Color.accentColor)
@@ -112,7 +112,7 @@ struct DataTransparencyView: View {
                     .font(.title3.weight(.semibold))
                 Text("Download sources and app-managed network activity, saved on this Mac.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             Spacer()
             Button {
@@ -185,7 +185,7 @@ struct DataTransparencyView: View {
                     .font(.callout.weight(.medium))
                 Text(body)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -222,14 +222,14 @@ struct DataTransparencyView: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             VStack(alignment: .leading, spacing: 1) {
                 Text(value)
                     .font(.title3.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.primary)
                 Text(label)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
         }
     }
@@ -246,7 +246,7 @@ struct DataTransparencyView: View {
                     .font(.headline)
                 if chartBuckets.allSatisfy({ $0.bytes == 0 }) {
                     Text("No download bytes were recorded in this period. Earlier activity is listed below.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
                 Chart(chartBuckets, id: \.day) { bucket in
@@ -363,7 +363,7 @@ struct DataTransparencyView: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: "tray")
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             VStack(alignment: .leading, spacing: 2) {
                 Text(log.events.isEmpty ? "No saved network activity" : "No matching activity")
                     .font(.callout.weight(.medium))
@@ -371,7 +371,7 @@ struct DataTransparencyView: View {
                      ? "New model downloads, glossary catalog requests, and update checks appear here. Clearing this history removes the saved events."
                      : "Try another search or choose All activity.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             Spacer()
         }
@@ -395,12 +395,12 @@ struct DataTransparencyView: View {
                         .font(.callout.weight(.medium))
                     Text(event.detail)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .lineLimit(1)
                 }
                 Text("\(event.host)\(event.path)")
                     .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
@@ -408,14 +408,14 @@ struct DataTransparencyView: View {
             VStack(alignment: .trailing, spacing: 1) {
                 Text(event.timestamp.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 if event.bytes > 0 {
                     Text(formatBytes(event.bytes))
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
             }
-            Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+            Image(systemName: "chevron.right").font(.caption2).adaptiveSecondary()
         }
         .padding(.horizontal, Spacing.sm)
         .padding(.vertical, Spacing.xs)

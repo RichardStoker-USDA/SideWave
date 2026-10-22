@@ -90,7 +90,7 @@ struct AIThinkingView: View {
                     .font(.callout.weight(.medium))
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             Spacer(minLength: Spacing.lg)
         }
@@ -124,7 +124,7 @@ struct AIErrorView: View {
                 .font(.callout.weight(.medium))
             Text(message)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 360)
                 .fixedSize(horizontal: false, vertical: true)
@@ -143,10 +143,10 @@ struct AIBackendNotReadyNote: View {
         HStack(alignment: .top, spacing: Spacing.xs) {
             Image(systemName: "exclamationmark.circle")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             Text("The Refine model isn't loaded yet. Turn it on in Settings › Refine and wait for Ready, then extract.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -213,14 +213,14 @@ struct DescribeVocabularySheet: View {
                      ? "Review the words SideWave found. Edit or uncheck any before saving."
                      : "Tell SideWave the kind of words you want it to learn. A local model builds the glossary.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .lineLimit(2)
             }
             Spacer()
             Button { dismiss() } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
@@ -269,7 +269,7 @@ struct DescribeVocabularySheet: View {
                     if description.isEmpty {
                         Text(Self.descriptionPlaceholder)
                             .font(.callout)
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                             .padding(.horizontal, 5)
                             .padding(.vertical, 8)
                             .allowsHitTesting(false)
@@ -286,7 +286,7 @@ struct DescribeVocabularySheet: View {
                 )
                 Text("Be specific. The more concrete you are about projects, tools, and jargon, the better the model picks the right words.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -318,7 +318,7 @@ struct DescribeVocabularySheet: View {
                     .font(.caption)
                     .foregroundStyle(.tint)
                     .disabled(selectedCategories.count == VocabularyAIExtractor.Category.allCases.count)
-                    Text("·").foregroundStyle(.tertiary)
+                    Text("·").adaptiveTertiary()
                     Button("Clear") {
                         selectedCategories.removeAll()
                     }
@@ -355,7 +355,7 @@ struct DescribeVocabularySheet: View {
                  ? "Nothing checked. SideWave will catch any uncommon word the dictation model might miss."
                  : "SideWave prioritizes these kinds, plus any other uncommon words.")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -373,15 +373,15 @@ struct DescribeVocabularySheet: View {
             HStack(spacing: Spacing.xs) {
                 Text("\(Int(Self.minWords))")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Slider(value: $wordCount, in: Self.minWords...Self.maxWords, step: 1)
                 Text("\(Int(Self.maxWords))")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             Text("Each word adds a short hint to the Refine prompt. Keep lean, more isn't always better.")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -400,7 +400,7 @@ struct DescribeVocabularySheet: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Found \(candidates.count) \(candidates.count == 1 ? "candidate" : "candidates"). \(candidates.filter(\.include).count) selected.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
 
             ScrollView {
                 VStack(spacing: Spacing.xs) {

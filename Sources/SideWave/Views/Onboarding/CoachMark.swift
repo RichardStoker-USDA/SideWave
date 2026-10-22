@@ -20,7 +20,7 @@ struct CoachMark: View {
                 Text("\(currentStepIndex + 1) of \(totalSteps)").monospacedDigit()
             }
             .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.secondary)
+            .adaptiveSecondary()
             .padding(.bottom, 24)
 
             ScrollView {
@@ -37,7 +37,7 @@ struct CoachMark: View {
                         VStack(spacing: 10) {
                             ForEach(Array(hints.enumerated()), id: \.offset) { _, hint in
                                 HStack(spacing: 12) {
-                                    Text(hint.label).foregroundStyle(.secondary)
+                                    Text(hint.label).adaptiveSecondary()
                                     Spacer()
                                     HStack(spacing: 3) {
                                         ForEach(Array(resolvedKeySegments(hint.keys).enumerated()), id: \.offset) { _, segment in

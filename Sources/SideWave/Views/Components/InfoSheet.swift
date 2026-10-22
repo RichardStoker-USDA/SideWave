@@ -43,7 +43,7 @@ struct InfoSheet: View {
                             Text(point.title).font(.callout.weight(.semibold))
                             Text(point.body)
                                 .font(.callout)
-                                .foregroundStyle(.secondary)
+                                .adaptiveSecondary()
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }

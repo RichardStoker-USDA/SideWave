@@ -62,7 +62,7 @@ struct MeetingResultsView: View {
                         .settingsCaption()
                     if transcript.isPartial {
                         Text("Recovered from the live journal. Some speech may be missing.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                     }
                 }
 
@@ -115,7 +115,7 @@ struct MeetingResultsView: View {
                         ProgressView().controlSize(.small)
                         Text(transcript.isPartial ? "Processing saved audio…" : "Re-detecting speakers…")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                     }
                     .padding(.horizontal, Spacing.md)
                     .padding(.vertical, Spacing.xxs)
@@ -333,7 +333,7 @@ private struct SpeakerPill: View {
                 } label: {
                     Image(systemName: "pencil")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .buttonStyle(.plain)
                 .help("Rename speaker")
@@ -374,7 +374,7 @@ private struct EditSpeakersSheet: View {
 
             Text("Names carry over when the re-run lands on the same speaker slots, so check attributions afterward. Formats generated before the re-run get marked so you can regenerate them.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer()

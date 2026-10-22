@@ -25,7 +25,7 @@ struct RecentDocumentsView: View {
                 Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
             }
             Text("Open a previous document to continue editing. Your current page is saved before switching.")
-                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             TextField("Search documents", text: $search).textFieldStyle(.roundedBorder)
             if documents.isEmpty {
                 ContentUnavailableView(search.isEmpty ? "No previous documents" : "No matching documents",
@@ -41,14 +41,14 @@ struct RecentDocumentsView: View {
                                 if appState.documentDrafts.persistenceError == nil { dismiss() }
                             } label: {
                                 HStack(alignment: .top, spacing: 12) {
-                                    Image(systemName: "doc.text").foregroundStyle(.secondary)
+                                    Image(systemName: "doc.text").adaptiveSecondary()
                                     VStack(alignment: .leading, spacing: 5) {
                                         Text(item.title).font(.body.weight(.medium)).lineLimit(2)
                                         Text("\(DictationFormatterService.Template(rawValue: item.template)?.workspaceTitle ?? "Document") · \(item.draft.updatedAt.formatted(date: .abbreviated, time: .shortened))")
-                                            .font(.caption).foregroundStyle(.secondary)
+                                            .font(.caption).adaptiveSecondary()
                                     }
                                     Spacer(minLength: 0)
-                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                                    Image(systemName: "chevron.right").font(.caption).adaptiveSecondary()
                                 }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 14).contentShape(Rectangle())
                             }.buttonStyle(.plain)
                             Divider()
@@ -57,7 +57,7 @@ struct RecentDocumentsView: View {
                 }
             }
             if let error = appState.documentDrafts.persistenceError {
-                Text(error).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(error).font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             }
         }.padding(24).frame(width: 540, height: 460).buttonBorderShape(.capsule)
     }
@@ -71,7 +71,7 @@ struct DocumentInstructionsView: View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Formatting rules").font(.title2.weight(.semibold))
             Text("Set the tone, structure, or wording you want. These rules apply to new dictation across templates. Use Change this document for a one-time edit.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             TextField("For example: use short bullets, keep all measurements, and preserve technical terms.",
                       text: $appState.dictationCleanupInstructions, axis: .vertical)
@@ -83,7 +83,7 @@ struct DocumentInstructionsView: View {
                 .accessibilityLabel("Formatting rules")
             HStack {
                 Text("\(appState.dictationCleanupInstructions.count) / 1,000 characters")
-                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                    .font(.caption).adaptiveSecondary().monospacedDigit()
                 Spacer()
                 Button("Done") { dismiss() }.buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)

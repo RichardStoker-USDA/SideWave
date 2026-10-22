@@ -31,7 +31,7 @@ struct ModelDownloadView: View {
                 HStack(spacing: Spacing.sm) {
                     Text(version.downloadSizeLabel)
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                     Button("Download") {
                         startDownload()
                     }
@@ -46,11 +46,11 @@ struct ModelDownloadView: View {
                     HStack {
                         Text("Downloading \(version.displayName)\u{2026}")
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Spacer()
                         Text("\(Int(progress * 100))%")
                             .font(.system(.caption2, design: .monospaced))
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -61,7 +61,7 @@ struct ModelDownloadView: View {
                         .controlSize(.mini)
                     Text("Setting up \(model)\u{2026}")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .lineLimit(1)
                 }
                 .accessibilityElement(children: .combine)
@@ -77,7 +77,7 @@ struct ModelDownloadView: View {
                         .controlSize(.mini)
                     Text("Optimizing for your hardware (first time only)\u{2026}")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .accessibilityElement(children: .combine)
 
@@ -87,7 +87,7 @@ struct ModelDownloadView: View {
                         .controlSize(.mini)
                     Text("Loading models into memory\u{2026}")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .accessibilityElement(children: .combine)
 
@@ -117,18 +117,18 @@ struct ModelDownloadView: View {
             if !transcriptionService.modelState.isReady {
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: Size.iconXXL - 8))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
 
                 Text("Download Speech Model")
                     .font(.headline)
 
                 Text(version.displayName)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
 
                 Text("\(version.downloadSizeLabel) speech model, plus support models")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
 
             switch transcriptionService.modelState {
@@ -138,7 +138,7 @@ struct ModelDownloadView: View {
                         .progressViewStyle(.linear)
                     Text("\(Int(progress * 100))%")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .monospacedDigit()
                 }
                 .frame(maxWidth: 300)
@@ -147,7 +147,7 @@ struct ModelDownloadView: View {
                 if let session = ModelDownloadActivity.shared.session, session.totalBytes > 0 {
                     Text("\(session.downloadedBytes.byteCountText) of \(session.totalBytes.byteCountText)")
                         .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
 
             case .downloadingAuxiliary(let model):
@@ -156,7 +156,7 @@ struct ModelDownloadView: View {
                         .controlSize(.small)
                     Text("Downloading \(model)\u{2026}")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .accessibilityElement(children: .combine)
 
@@ -171,7 +171,7 @@ struct ModelDownloadView: View {
                         .controlSize(.small)
                     Text("Preparing models for first use\u{2026}")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .accessibilityElement(children: .combine)
 
@@ -181,7 +181,7 @@ struct ModelDownloadView: View {
                         .controlSize(.small)
                     Text("Loading model\u{2026}")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .accessibilityElement(children: .combine)
 
@@ -191,7 +191,7 @@ struct ModelDownloadView: View {
                         .foregroundStyle(.red)
                     Text(message)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .lineLimit(3)
 
                     Button("Retry") { startDownload() }
@@ -210,7 +210,7 @@ struct ModelDownloadView: View {
                             ForEach(transcriptionService.auxiliaryModelErrors, id: \.self) { err in
                                 Text(err)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .adaptiveSecondary()
                                     .lineLimit(2)
                             }
                             Button("Retry") {

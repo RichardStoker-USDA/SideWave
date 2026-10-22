@@ -38,7 +38,7 @@ struct PromptPreviewSheet: View {
                     .font(.headline)
                 Text("A sample Refine request using your current settings.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
 
             SettingsDivider()

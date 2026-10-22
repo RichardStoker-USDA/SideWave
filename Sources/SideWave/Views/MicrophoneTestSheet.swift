@@ -89,7 +89,7 @@ struct MicrophoneTestSheet: View {
                     .font(.title3.weight(.semibold))
                 Text("Speak for 3 seconds. This checks the input and channel used for dictation. Nothing is saved or transcribed.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -128,7 +128,7 @@ struct MicrophoneTestSheet: View {
                 meterBar
                 Text(meterCaption)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -139,7 +139,7 @@ struct MicrophoneTestSheet: View {
                         .foregroundStyle(Color.warningAmber)
                     Text(err)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -148,10 +148,10 @@ struct MicrophoneTestSheet: View {
             if let blocked = captureBlockedReason {
                 HStack(alignment: .top, spacing: Spacing.xs) {
                     Image(systemName: "mic.slash")
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                     Text(blocked)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -200,7 +200,7 @@ struct MicrophoneTestSheet: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text(label)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 90, alignment: .leading)
             Text(value)
                 .font(.callout)

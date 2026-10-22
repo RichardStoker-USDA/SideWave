@@ -246,7 +246,7 @@ struct WelcomeView: View {
                         if showPreheader, let preFont = preheaderFont {
                             Text("Setup")
                                 .font(preFont)
-                                .foregroundStyle(.tertiary)
+                                .adaptiveTertiary()
                                 .tracking(1.0)
                                 .textCase(.uppercase)
                         }
@@ -255,7 +255,7 @@ struct WelcomeView: View {
                     if showTagline, let tagFont = taglineFont {
                         Text("On-device, privacy-first dictation for macOS.")
                             .font(tagFont)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                     }
                 }
 
@@ -276,7 +276,7 @@ struct WelcomeView: View {
         HStack {
             Text(statusText)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .contentTransition(.opacity)
                 .id(statusText)
             Spacer()
@@ -390,7 +390,7 @@ struct WelcomeView: View {
 
                 Text(resolvedName)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
 
@@ -402,7 +402,7 @@ struct WelcomeView: View {
                             .accessibilityHidden(true)
                         Text("Using a Bluetooth microphone can change playback quality. If sound becomes muffled, choose a built-in or wired microphone.")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.top, Spacing.xxs)
@@ -429,7 +429,7 @@ struct MicrophonePermissionSetupCard: View {
                 Spacer()
                 if isRequesting {
                     ProgressView().controlSize(.small)
-                    Text("Waiting for macOS").font(.caption).foregroundStyle(.secondary)
+                    Text("Waiting for macOS").font(.caption).adaptiveSecondary()
                 } else {
                     Button(isUndetermined ? "Enable Microphone" : "Open Settings", action: requestAccess)
                         .actionButton()
@@ -440,7 +440,7 @@ struct MicrophonePermissionSetupCard: View {
                  : isUndetermined
                     ? "Allow SideWave to turn your speech into text. macOS will ask for access next. This step does not start recording."
                     : "Microphone access is off. Enable SideWave in System Settings > Privacy & Security > Microphone, then return here.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Spacing.md)
@@ -580,7 +580,7 @@ private struct ActiveAccessibilityCard: View {
                         .font(.body.weight(.semibold))
                     Text("SideWave needs accessibility to detect your hotkey and paste text into other apps. macOS may ask for your administrator password when you flip the toggle.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .accessibilityElement(children: .combine)
@@ -615,7 +615,7 @@ struct ActiveModelsCard: View {
                 Text(isDownloadingOrProcessing ? "Preparing on-device models" : "On-device models")
                     .font(.body.weight(.semibold))
                 Text(downloadPlanDescription)
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 if canPrepareModels {
                     Button("Prepare Models") {
@@ -770,7 +770,7 @@ struct ActiveModelsCard: View {
                     .foregroundStyle(.green)
                 Text("Speech recognition ready")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
         case .error(let msg):
             VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -806,7 +806,7 @@ struct ActiveModelsCard: View {
                     .foregroundStyle(.green)
                 Text("\(selectedRefineBackend.displayName) is ready")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
         case .error(let msg):
             VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -822,7 +822,7 @@ struct ActiveModelsCard: View {
             }
         case .unavailable(let message):
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.caption).adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Refine Settings") {
                     appState.requestedSettingsTab = .settingsRefine
@@ -845,7 +845,7 @@ struct ActiveModelsCard: View {
                         .accessibilityHidden(true)
                     Text(msg)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -870,13 +870,13 @@ struct DownloadProgressBlock: View {
             HStack {
                 Text(title)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .contentTransition(.opacity)
                     .id(title)
                 Spacer()
                 Text("\(Int(boundedProgress * 100))%")
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .contentTransition(.numericText(value: boundedProgress * 100))
             }
             ProgressView(value: boundedProgress)
@@ -896,7 +896,7 @@ private struct IndeterminateProgressBlock: View {
                 .controlSize(.small)
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .contentTransition(.opacity)
                 .id(title)
             Spacer(minLength: 0)

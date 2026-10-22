@@ -37,19 +37,19 @@ struct ModelRecoveryView: View {
                         transferHeader(session)
                         transferProgress(session)
                         Text("From huggingface.co. Your dictation stays on this Mac.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                         if !activity.otherDownloads.isEmpty { otherTransfers }
                         if !session.files.isEmpty { fileDetails(session) }
                         if session.error != nil {
                             Text("Completed files are kept. Retrying preparation checks what is already on this Mac before fetching anything missing.")
-                                .font(.callout).foregroundStyle(.secondary)
+                                .font(.callout).adaptiveSecondary()
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     } else {
                         Label("No downloads right now", systemImage: "arrow.down.circle")
                             .font(.title3.weight(.medium))
                         Text("Models are saved on this Mac after preparation. Data Transparency keeps a history of internet requests.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -76,17 +76,17 @@ struct ModelRecoveryView: View {
     private func transferHeader(_ session: ModelDownloadActivity.Session) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: session.error != nil ? "exclamationmark.circle" : session.completedAt != nil ? "checkmark.circle" : "arrow.down.circle")
-                .font(.system(size: 29, weight: .light)).foregroundStyle(.secondary).accessibilityHidden(true)
+                .font(.system(size: 29, weight: .light)).adaptiveSecondary().accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 5) {
                 Text(session.displayName).font(.system(size: 20, weight: .medium, design: .rounded))
-                Text(stageTitle(session)).font(.callout).foregroundStyle(.secondary)
+                Text(stageTitle(session)).font(.callout).adaptiveSecondary()
                 if let error = session.error {
                     Text(error).font(.callout).fixedSize(horizontal: false, vertical: true)
                 } else if session.completedAt != nil {
                     Text("Files are saved. Loading and first-use preparation may continue in the main window.")
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.caption).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
                 } else if let detail = session.detail {
-                    Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text(detail).font(.caption).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer(minLength: 0)
@@ -123,14 +123,14 @@ struct ModelRecoveryView: View {
                             Text("Waiting for progress")
                         }
                     }
-                    .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    .font(.caption.monospacedDigit()).adaptiveSecondary()
                 } else if session.completedAt != nil {
-                    Text("100%").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text("100%").font(.caption.monospacedDigit()).adaptiveSecondary()
                 }
             }
             if session.baselineBytes > 0 {
                 Text("\(formatBytes(session.baselineBytes)) already on this Mac")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
             }
         }
         .accessibilityElement(children: .combine)
@@ -138,14 +138,14 @@ struct ModelRecoveryView: View {
 
     private var otherTransfers: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Other models").font(.caption).foregroundStyle(.secondary)
+            Text("Other models").font(.caption).adaptiveSecondary()
             ForEach(activity.otherDownloads) { other in
                 Button { activity.showSession(other.id) } label: {
                     HStack(spacing: 8) {
                         Text(other.displayName).lineLimit(1)
                         Spacer(minLength: 0)
-                        Text(other.error == nil ? stageTitle(other) : "Needs attention").foregroundStyle(.secondary).lineLimit(1)
-                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                        Text(other.error == nil ? stageTitle(other) : "Needs attention").adaptiveSecondary().lineLimit(1)
+                        Image(systemName: "chevron.right").font(.caption2).adaptiveTertiary()
                     }
                     .font(.callout)
                 }
@@ -157,16 +157,16 @@ struct ModelRecoveryView: View {
     private func fileDetails(_ session: ModelDownloadActivity.Session) -> some View {
         DisclosureGroup(isExpanded: $showsFiles) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(session.repoID).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(session.repoID).font(.caption.monospaced()).adaptiveSecondary().textSelection(.enabled)
                 ScrollView {
                     LazyVStack(spacing: 9) {
                         ForEach(session.files) { file in
                             HStack(spacing: 8) {
                                 Image(systemName: file.isFinished ? "checkmark" : "arrow.down")
-                                    .foregroundStyle(.secondary).frame(width: 14)
+                                    .adaptiveSecondary().frame(width: 14)
                                 Text(file.id).lineLimit(1).truncationMode(.middle)
                                 Spacer(minLength: 6)
-                                Text(formatBytes(file.downloadedBytes)).monospacedDigit().foregroundStyle(.secondary)
+                                Text(formatBytes(file.downloadedBytes)).monospacedDigit().adaptiveSecondary()
                             }
                             .font(.caption)
                             .accessibilityElement(children: .combine)
@@ -178,7 +178,7 @@ struct ModelRecoveryView: View {
             .padding(.top, 10)
         } label: {
             Text("Files · \(session.files.filter(\.isFinished).count) saved\(session.completedAt == nil ? " so far" : "")")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
         }
         .disclosureGroupStyle(.row)
     }
@@ -199,7 +199,7 @@ struct ModelRecoveryView: View {
             if shouldCloseAutomatically {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let remaining = max(0, 10 - Int(context.date.timeIntervalSince(countdownStart ?? context.date)))
-                    Text("Closing in \(remaining)s").font(.caption).foregroundStyle(.secondary)
+                    Text("Closing in \(remaining)s").font(.caption).adaptiveSecondary()
                         .onChange(of: context.date) { _, _ in
                             if remaining == 0, shouldCloseAutomatically {
                                 activity.clear()

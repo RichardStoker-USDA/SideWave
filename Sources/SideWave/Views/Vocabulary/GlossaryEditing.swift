@@ -29,7 +29,7 @@ struct AboutBlurbEditor: View {
                 if draft.isEmpty {
                     Text(Self.placeholder)
                         .font(.callout)
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                         .padding(.horizontal, Spacing.sm + 5)
                         .padding(.top, Spacing.sm + 8)
                         .allowsHitTesting(false)
@@ -55,7 +55,7 @@ struct AboutBlurbEditor: View {
                 Spacer()
                 Text("\(draft.count)/\(Self.charCap)")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
         }
         .onAppear { hydrateIfNeeded() }
@@ -107,17 +107,17 @@ struct WordRow: View {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(term.canonical).font(.callout.weight(.semibold)).foregroundStyle(.primary)
                     if isLocallyDisabled {
-                        Text("Off on this Mac").font(.caption).foregroundStyle(.secondary)
+                        Text("Off on this Mac").font(.caption).adaptiveSecondary()
                     }
                     if let pronunciation = term.pronunciation, !pronunciation.isEmpty {
-                        Text("Sounds like \(pronunciation)").font(.caption).foregroundStyle(.secondary)
+                        Text("Sounds like \(pronunciation)").font(.caption).adaptiveSecondary()
                     } else if !term.aliases.isEmpty {
-                        Text("Replaces \(term.aliases.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
+                        Text("Replaces \(term.aliases.joined(separator: ", "))").font(.caption).adaptiveSecondary()
                     } else if let definition = term.definition, !definition.isEmpty {
-                        Text(definition).font(.caption).foregroundStyle(.secondary)
+                        Text(definition).font(.caption).adaptiveSecondary()
                     }
                     if let category = term.category, !category.isEmpty {
-                        Text(category).font(.caption2).foregroundStyle(.secondary)
+                        Text(category).font(.caption2).adaptiveSecondary()
                     }
                 }
                 .lineLimit(2)
@@ -159,7 +159,7 @@ struct NewCollectionSheet: View {
                 .font(.headline)
             SettingsDivider()
             Text(isRenaming ? "Choose a name you can find quickly." : "Keep related words together. You can turn a whole glossary on or off without deleting its words.")
-                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text("Name").font(.callout.weight(.medium))
                 TextField("For example: Research terms", text: $name)

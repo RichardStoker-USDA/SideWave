@@ -76,7 +76,7 @@ struct SpeechSettingsPane: View {
             Image(systemName: icon).foregroundStyle(.tint).frame(width: 22)
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Text(title).font(.callout.weight(.medium))
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail).font(.caption).adaptiveSecondary()
             }
             Spacer()
             SpeechModelStatusLabel(state: appState.transcriptionService.modelState)
@@ -93,17 +93,17 @@ struct SpeechModelStatusLabel: View {
         case .ready:
             Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
         case .downloading(let progress):
-            Label("Downloading \(Int(progress * 100))%", systemImage: "arrow.down.circle").foregroundStyle(.secondary)
+            Label("Downloading \(Int(progress * 100))%", systemImage: "arrow.down.circle").adaptiveSecondary()
         case .downloadingAuxiliary(let model):
-            Label("Downloading \(model)\u{2026}", systemImage: "arrow.down.circle").foregroundStyle(.secondary)
+            Label("Downloading \(model)\u{2026}", systemImage: "arrow.down.circle").adaptiveSecondary()
         case .verifying:
-            Label("Checking files\u{2026}", systemImage: "checkmark.shield").foregroundStyle(.secondary)
+            Label("Checking files\u{2026}", systemImage: "checkmark.shield").adaptiveSecondary()
         case .compiling:
-            Label("Preparing\u{2026}", systemImage: "hourglass").foregroundStyle(.secondary)
+            Label("Preparing\u{2026}", systemImage: "hourglass").adaptiveSecondary()
         case .loading:
-            Label("Loading\u{2026}", systemImage: "hourglass").foregroundStyle(.secondary)
+            Label("Loading\u{2026}", systemImage: "hourglass").adaptiveSecondary()
         case .notDownloaded:
-            Label("Not downloaded", systemImage: "arrow.down.to.line").foregroundStyle(.secondary)
+            Label("Not downloaded", systemImage: "arrow.down.to.line").adaptiveSecondary()
         case .error(let message):
             Label("Error: \(message)", systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.red).lineLimit(2).truncationMode(.tail)

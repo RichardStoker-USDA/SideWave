@@ -168,7 +168,8 @@ struct ContentView: View {
             ToolbarItem(placement: .principal) {
                 meetingToolbarPicker
             }
-            .sharedBackgroundVisibility(shouldShowWelcome ? .hidden : .automatic)
+            // The section picker draws its own glass track.
+            .sharedBackgroundVisibility(.hidden)
         }
         .toolbarBackground(.bar, for: .windowToolbar)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -327,14 +328,8 @@ struct ContentView: View {
 }
 
 extension ContentView {
-    /// Forces toolbar segmented controls to recreate when appearance changes
-    private var colorSchemeID: String {
-        UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
-    }
-
-
-    /// Toolbar picker extracted to avoid SwiftUI type-checker timeout
-    /// with conditional content inside Picker.
+    /// The main window's sections, drawn as a glass track with a raised selection so the current
+    /// section reads clearly on a white toolbar.
     @ViewBuilder
     var meetingToolbarPicker: some View {
         if shouldShowWelcome {
@@ -342,47 +337,19 @@ extension ContentView {
                 .font(.headline)
                 .fixedSize(horizontal: true, vertical: false)
                 .accessibilityAddTraits(.isHeader)
-        } else if meetingTabEnabled {
-            Picker("", selection: $selectedTab) {
-                Text("Home").tag(Tab.dashboard)
-                Text("Dictation").tag(Tab.dictation)
-                Text("Vocabulary").tag(Tab.dictionary)
-                Text("History").tag(Tab.history)
-                Text("Meeting").tag(Tab.meeting)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
-            .id("tabs5-\(colorSchemeID)")
         } else {
-            Picker("", selection: $selectedTab) {
-                Text("Home").tag(Tab.dashboard)
-                Text("Dictation").tag(Tab.dictation)
-                Text("Vocabulary").tag(Tab.dictionary)
-                Text("History").tag(Tab.history)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
-            .id("tabs4-\(colorSchemeID)")
+            GlassSegmentedPicker(selection: $selectedTab, segments: sectionSegments,
+                                 selectionStyle: .raised, accessibilityLabel: "Sections")
+                .fixedSize()
         }
     }
-}
 
-// MARK: - Previews
-
-#if DEBUG
-#Preview("Dashboard - Light") {
-    ContentView()
-        .environment(AppState())
-        .frame(width: 620, height: 600)
-        .preferredColorScheme(.light)
+    private var sectionSegments: [GlassSegmentedPicker<Tab>.Segment] {
+        var segments: [GlassSegmentedPicker<Tab>.Segment] = [
+            .init("Home", tag: .dashboard), .init("Dictation", tag: .dictation),
+            .init("Vocabulary", tag: .dictionary), .init("History", tag: .history),
+        ]
+        if meetingTabEnabled { segments.append(.init("Meeting", tag: .meeting)) }
+        return segments
+    }
 }
-
-#Preview("Dashboard - Dark") {
-    ContentView()
-        .environment(AppState())
-        .frame(width: 620, height: 600)
-        .preferredColorScheme(.dark)
-}
-#endif

@@ -65,7 +65,7 @@ struct AcknowledgmentsSheet: View {
             Divider()
             HStack {
                 Text("Each license is copied from the project at the version SideWave uses.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
             }
@@ -102,7 +102,7 @@ struct AcknowledgmentsSheet: View {
                             ForEach(entries) { entry in
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(entry.name).font(.callout).lineLimit(1)
-                                    Text(entry.license).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    Text(entry.license).font(.caption).adaptiveSecondary().lineLimit(1)
                                 }
                                 .padding(.vertical, 2)
                                 .tag(entry.id)
@@ -114,7 +114,7 @@ struct AcknowledgmentsSheet: View {
             .listStyle(.sidebar)
             .overlay {
                 if filtered(notices).isEmpty {
-                    Text("No matches").font(.callout).foregroundStyle(.secondary)
+                    Text("No matches").font(.callout).adaptiveSecondary()
                 }
             }
         }
@@ -139,28 +139,28 @@ struct AcknowledgmentsSheet: View {
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text(entry.name).font(.title2.weight(.semibold))
                         Text(entry.version.map { "\(entry.by) \u{00B7} Version \($0)" } ?? entry.by)
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                     }
                     Text(entry.purpose).font(.body).fixedSize(horizontal: false, vertical: true)
                     Grid(alignment: .leading, horizontalSpacing: Spacing.lg, verticalSpacing: Spacing.xs) {
                         GridRow {
-                            Text("License").foregroundStyle(.secondary)
+                            Text("License").adaptiveSecondary()
                             Text(entry.license).textSelection(.enabled)
                         }
                         GridRow {
-                            Text(entry.documents.isEmpty ? "Model" : "Source").foregroundStyle(.secondary)
+                            Text(entry.documents.isEmpty ? "Model" : "Source").adaptiveSecondary()
                             linkButton(entry.url)
                         }
                         if let licenseURL = entry.licenseURL, licenseURL != entry.url, entry.documents.isEmpty {
                             GridRow {
-                                Text("License text").foregroundStyle(.secondary)
+                                Text("License text").adaptiveSecondary()
                                 linkButton(licenseURL)
                             }
                         }
                     }
                     .font(.callout)
                     if let note = entry.note {
-                        Text(note).font(.callout).foregroundStyle(.secondary)
+                        Text(note).font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(entry.documents.filter { $0.title == entry.name }, id: \.self) { document in
@@ -171,7 +171,7 @@ struct AcknowledgmentsSheet: View {
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
                             Text("Included in \(entry.name)").font(.title3.weight(.semibold))
                             Text("Code from these projects is compiled into \(entry.name), under their own licenses.")
-                                .font(.callout).foregroundStyle(.secondary)
+                                .font(.callout).adaptiveSecondary()
                         }
                         .padding(.top, Spacing.sm)
                         ForEach(included, id: \.self) { document in
@@ -184,7 +184,7 @@ struct AcknowledgmentsSheet: View {
             }
             .id(entry.id)
         } else {
-            Text("Select an item").font(.callout).foregroundStyle(.secondary)
+            Text("Select an item").font(.callout).adaptiveSecondary()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -212,7 +212,7 @@ private struct LicenseText: View {
             HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
                 Text(isOwn ? kind : document.title).font(.headline)
                 if !isOwn {
-                    Text("\(document.license) \u{00B7} \(fileName)").font(.caption).foregroundStyle(.secondary)
+                    Text("\(document.license) \u{00B7} \(fileName)").font(.caption).adaptiveSecondary()
                 }
                 Spacer()
                 Button {
@@ -227,7 +227,7 @@ private struct LicenseText: View {
             }
             Text(text)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

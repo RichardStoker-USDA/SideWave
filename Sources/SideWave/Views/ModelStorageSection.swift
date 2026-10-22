@@ -28,7 +28,7 @@ struct ModelStorageSection: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .buttonStyle(.plain)
                 .help("Refresh cached models list")
@@ -51,12 +51,12 @@ struct ModelStorageSection: View {
                                 .font(.callout)
                             Text(entry.bytes.byteCountText)
                                 .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .adaptiveSecondary()
                             Text(entry.repoID)
                                 .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                                .adaptiveTertiary()
                             Text(completeness[entry.repoID].map { $0 ? "Files verified" : "Incomplete cache. Prepare to resume or repair." } ?? "Checking files…")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).adaptiveSecondary()
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .accessibilityElement(children: .combine)
@@ -88,7 +88,7 @@ struct ModelStorageSection: View {
 
                 Text("Total: \(entries.reduce(Int64(0)) { $0 + $1.bytes }.byteCountText)")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Text(cacheMutationBlocked
                      ? "Wait for dictation and Refine to finish before deleting a model."
                      : "These cached files may also be used by other applications.")

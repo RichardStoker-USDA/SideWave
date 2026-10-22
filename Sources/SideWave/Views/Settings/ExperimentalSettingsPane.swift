@@ -84,19 +84,19 @@ private struct DeveloperDiagnosticsCard: View {
                 .actionButton().controlSize(.small)
             }
             if let exportedName {
-                Text("Saved \(exportedName)").font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text("Saved \(exportedName)").font(.caption.monospaced()).adaptiveSecondary()
             }
             if events.isEmpty {
                 Text("No events yet. Start a dictation to record some.").settingsCaption()
             } else {
                 ForEach(events.suffix(8).reversed()) { event in
                     HStack(alignment: .top, spacing: Spacing.xxs) {
-                        Text("[\(event.formattedTime)]").foregroundStyle(.secondary)
+                        Text("[\(event.formattedTime)]").adaptiveSecondary()
                         Text(event.category.rawValue).bold()
                         Text(event.message)
                         Spacer()
                         if let duration = event.durationMs {
-                            Text(String(format: "%.1f ms", duration)).foregroundStyle(.secondary)
+                            Text(String(format: "%.1f ms", duration)).adaptiveSecondary()
                         }
                     }
                     .font(.system(size: 10, design: .monospaced))

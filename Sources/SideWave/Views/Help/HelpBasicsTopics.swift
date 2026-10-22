@@ -53,7 +53,7 @@ struct HelpGettingStartedContent: View {
         HelpCard {
             Text("If setup needs attention").font(.headline)
             Text("A readiness message names the missing permission or model. You can always open Settings from Help, including before setup is complete.")
-                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             ViewThatFits(in: .horizontal) {
                 HStack {
                     Button("Accessibility Settings") { AppDelegate.openAccessibilitySettings() }
@@ -136,7 +136,7 @@ struct HelpAudioWaveShowcaseContent: View {
                     .font(.headline)
                 Text(bodyText)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 TimelineView(.animation(minimumInterval: reduceMotion ? nil : 1.0 / 30.0, paused: reduceMotion)) { context in
@@ -237,17 +237,17 @@ struct HelpHowDictationWorksContent: View {
 
                 Text("SideWave doesn't wait until you stop talking to transcribe. Audio is split into segments of at most 14.8 seconds, because the Parakeet encoder handles at most 15 seconds per pass. A pause can end a segment early once it has at least 3 seconds of audio.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("When live Refine runs, the refine cadence decides whether pauses end segments. Standard waits for the 14.8-second ceiling, Faster ends a segment after about 3 seconds of silence, and Aggressive after about 2. Document templates use a 5-second pause. On Macs with 16 GB of memory or more, SideWave starts with Faster plus an 8-second fixed interval, so long stretches of speech get refined before the ceiling. Without live Refine, segments end at pauses of about 3 seconds. Change the cadence in Settings > Refine > Expert, shown in Advanced view.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Each segment is transcribed on its own; the speech model doesn't carry context from the previous segment. Within a segment it sees all the audio so far, so its text improves as you keep speaking. Refine can use the preceding text as context.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -259,7 +259,7 @@ struct HelpHowDictationWorksContent: View {
 
                 Text("Finished segments are written to a recovery journal on this Mac, and the segment in progress is saved about every 1.5 seconds. After a crash, SideWave recovers that text into History at the next launch and then deletes the journal. A disk error can still leave gaps.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -271,7 +271,7 @@ struct HelpHowDictationWorksContent: View {
 
                 Text("While you speak, SideWave transcribes the current segment again every 0.4 to 0.8 seconds. With more audio, the model can revise earlier words: \"their\" after 2 seconds might become \"there\" after 5. The text for a finished segment is the most accurate.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -283,7 +283,7 @@ struct HelpHowDictationWorksContent: View {
 
                 Text("Each finished segment goes through these steps before Refine:")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -302,7 +302,7 @@ struct HelpHowDictationWorksContent: View {
 
                 Text("Advanced view shows processing time divided by audio length. At 0.5x, 10 seconds of audio took 5 seconds to transcribe. It counts recognition only, not loading, refining, or pasting.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -318,11 +318,11 @@ struct HelpHowDictationWorksContent: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text(number)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 20, alignment: .trailing)
             Text(text)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -331,14 +331,14 @@ struct HelpHowDictationWorksContent: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text(number)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 20, alignment: .trailing)
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
                 Text(title)
                     .font(.callout.weight(.medium))
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -376,7 +376,7 @@ struct PipelineStageRow: View {
                 }
                 Text(stage.description)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -404,7 +404,7 @@ struct HelpPipelineDiagram: View {
                 .font(.headline)
             Text("Every stage runs on this Mac. Your Dictation Mode, glossaries, and Refine settings decide which ones run:")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 0) {
@@ -423,7 +423,7 @@ struct HelpPipelineDiagram: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("A worked example")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 exampleLine("You say", "so um we should use sign it for scientific research at a r s", color: .secondary)
                 exampleLine("Gray draft shows", "so um we should use sign at for scientific research at a rs", color: .secondary)
                 exampleLine("TDT confirms", "we should use sign it for scientific research at ARS", color: .primary)
@@ -441,7 +441,7 @@ struct HelpPipelineDiagram: View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
                 .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .textCase(.uppercase)
             Text(text)
                 .font(.system(.caption, design: .monospaced).weight(bold ? .bold : .regular))

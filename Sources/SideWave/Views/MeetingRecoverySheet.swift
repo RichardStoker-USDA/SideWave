@@ -50,7 +50,7 @@ struct MeetingRecoverySheet: View {
                         .font(.title3.weight(.semibold))
                     Text("SideWave found a meeting recording that didn't finish.")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
             }
 
@@ -71,12 +71,12 @@ struct MeetingRecoverySheet: View {
                 ? "Continue picks up recording where it left off. Transcribe processes what was captured into a speaker-labeled transcript."
                 : "Meetings is currently off. Turn on Show Meetings in Settings > Meetings to transcribe this recording, or keep it for later. Keep for Later asks again next time you open SideWave.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("This recording stays on this Mac until you finish processing or discard it. History cleanup does not delete unfinished audio. Keep for Later asks again when you next open SideWave.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
@@ -122,7 +122,7 @@ struct MeetingRecoverySheet: View {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
             Text(label)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 80, alignment: .leading)
             Text(value)
                 .font(.callout.weight(.medium))

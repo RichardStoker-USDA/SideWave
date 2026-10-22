@@ -383,6 +383,31 @@ final class DictationHomeRenderingTests: XCTestCase {
         }
     }
 
+    func testSectionTabsAndFieldsReadInBothAppearances() async throws {
+        for scheme in [ColorScheme.light, .dark] {
+            for tab in [ContentView.Tab.dashboard, .history] {
+                let view = VStack(alignment: .leading, spacing: 18) {
+                    GlassSegmentedPicker(selection: .constant(tab), segments: [
+                        .init("Home", tag: .dashboard), .init("Dictation", tag: .dictation),
+                        .init("Vocabulary", tag: .dictionary), .init("History", tag: .history),
+                    ], selectionStyle: .raised, accessibilityLabel: "Sections").fixedSize()
+                    GlassSegmentedPicker(selection: .constant(false), segments: [
+                        .init("Simple", tag: false), .init("Advanced", tag: true)
+                    ], accessibilityLabel: "View mode").fixedSize()
+                    WorkspaceField("Template", icon: "text.alignleft") {
+                        WorkspaceMenu(value: "Standard") { Text("Standard") }
+                    }
+                    Text("Clean up grammar and filler words while keeping your voice.").font(.caption).foregroundStyle(.secondary)
+                    Text("Keeps history 7 days").font(.caption).foregroundStyle(.tertiary)
+                    KeyCapRow(displayString: "Right + Option")
+                }
+                .padding(24)
+                try await render(view, scheme: scheme, name: "tabs_\(tab.rawValue)_\(scheme == .dark ? "dark" : "light")",
+                                 width: 520, height: 300)
+            }
+        }
+    }
+
     func testUnfinishedRefinementRecoveryFitsHome() async throws {
         let state = AppState()
         state.transcriptionService.modelState = .ready

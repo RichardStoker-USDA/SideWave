@@ -44,7 +44,7 @@ struct BulkImportSheet: View {
                     .font(.headline)
                 Text("Paste a CSV table to add many words at once. Each row becomes one word in the current glossary.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -105,7 +105,7 @@ struct BulkImportSheet: View {
             case .empty:
                 Text("Paste a header row plus one row per word. Header is optional, rows without one are parsed the same way.")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .fixedSize(horizontal: false, vertical: true)
             case .parsed(let count, _):
                 HStack(spacing: Spacing.xs) {
@@ -114,7 +114,7 @@ struct BulkImportSheet: View {
                         .foregroundStyle(.green)
                     Text("\(count) \(count == 1 ? "word" : "words") ready to import")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
             case .error(let msg):
                 HStack(spacing: Spacing.xs) {
@@ -123,7 +123,7 @@ struct BulkImportSheet: View {
                         .foregroundStyle(Color.warningAmber)
                     Text(msg)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -157,7 +157,7 @@ struct BulkImportSheet: View {
                 .frame(width: 130, alignment: .leading)
             Text(body)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }

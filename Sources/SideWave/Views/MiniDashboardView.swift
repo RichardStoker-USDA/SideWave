@@ -130,7 +130,7 @@ struct MiniDashboardSurface: View {
 
             VStack(alignment: .trailing, spacing: Spacing.xxxs) {
                 Text(statusTitle).font(.caption.weight(.medium)).monospacedDigit()
-                Text(outputSummary).font(.caption2).foregroundStyle(.secondary)
+                Text(outputSummary).font(.caption2).adaptiveSecondary()
             }
             .lineLimit(1).frame(maxWidth: 175, alignment: .trailing)
             .help(statusDetail ?? outputSummary)
@@ -138,7 +138,7 @@ struct MiniDashboardSurface: View {
 
             Button(action: onExpand) {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    .font(.caption.weight(.medium)).adaptiveSecondary()
                     .frame(width: 22, height: 22)
             }
             .buttonStyle(.plain).help("Open Home").accessibilityLabel("Open Home")

@@ -24,9 +24,9 @@ struct AboutSettingsPane: View {
                 VStack(alignment: .leading, spacing: Spacing.xxxs) {
                     Text("SideWave").font(.title2.weight(.semibold))
                     Text("Version \(SideWaveApp.appVersion) (\(SideWaveApp.appBuild))")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                         .textSelection(.enabled)
-                    Text("On-device dictation for macOS").font(.callout).foregroundStyle(.secondary)
+                    Text("On-device dictation for macOS").font(.callout).adaptiveSecondary()
                 }
                 Spacer()
             }
@@ -39,7 +39,7 @@ struct AboutSettingsPane: View {
             SettingsDivider()
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text("macOS \(ProcessInfo.processInfo.operatingSystemVersionString) \u{00B7} \(Self.chipName())")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                     .textSelection(.enabled)
                 HStack(spacing: Spacing.lg) {
                     Button("License") { sheet = .license }.buttonStyle(.link)
@@ -47,7 +47,7 @@ struct AboutSettingsPane: View {
                 }
                 .font(.caption)
                 Text("Copyright 2026 Richard Stoker. Apache License 2.0.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
             }
         }
         .alert("Open This Link?", isPresented: Binding(get: { pendingURL != nil }, set: { if !$0 { pendingURL = nil } }),
@@ -121,9 +121,9 @@ private struct AboutLinkRow: View {
                 Text(label).font(.callout)
                 Spacer()
                 Text(url.replacingOccurrences(of: "https://", with: ""))
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).adaptiveSecondary()
                     .lineLimit(1).truncationMode(.middle)
-                Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(.tertiary)
+                Image(systemName: "arrow.up.right").font(.caption).adaptiveTertiary()
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
@@ -144,7 +144,7 @@ private struct LicenseSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             Text("Apache License 2.0").font(.headline)
-            Text("Copyright 2026 Richard Stoker").font(.subheadline).foregroundStyle(.secondary)
+            Text("Copyright 2026 Richard Stoker").font(.subheadline).adaptiveSecondary()
             Divider()
             ScrollView {
                 Text("""
@@ -154,7 +154,7 @@ private struct LicenseSheet: View {
 
                 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
                 """)
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .textSelection(.enabled)
             }
             HStack {

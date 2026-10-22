@@ -62,7 +62,7 @@ struct MicrophoneSettingsPane: View {
             if devices.selectedDeviceIsBluetooth {
                 SettingsDivider()
                 HStack(alignment: .top, spacing: Spacing.sm) {
-                    Image(systemName: "airpods").foregroundStyle(.secondary).accessibilityHidden(true)
+                    Image(systemName: "airpods").adaptiveSecondary().accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("Bluetooth microphone").font(.callout.weight(.medium))
                         Text("Using a Bluetooth headset as a microphone lowers audio quality for both the microphone and anything playing through it. A wired or built-in microphone avoids this.")
@@ -110,7 +110,7 @@ struct MicrophoneSettingsPane: View {
                     HStack(spacing: Spacing.xxs) {
                         Text("Keep microphone on standby").font(.callout)
                         Button { infoTopic = .microphoneStandby } label: { Image(systemName: "info.circle") }
-                            .buttonStyle(.borderless).foregroundStyle(.secondary)
+                            .buttonStyle(.borderless).adaptiveSecondary()
                             .accessibilityLabel("About microphone standby")
                     }
                     Text("Starts recording faster by keeping the microphone ready between dictations. macOS shows the microphone indicator while it's on.")
@@ -119,7 +119,7 @@ struct MicrophoneSettingsPane: View {
                 }
                 Spacer(minLength: Spacing.sm)
                 if appState.isMicOnStandby {
-                    Text("Active").font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    Text("Active").font(.caption.weight(.medium)).adaptiveSecondary()
                         .padding(.top, 2)
                         .transition(.opacity)
                 }
@@ -147,7 +147,7 @@ struct MicrophoneSettingsPane: View {
                             .accessibilityLabel("Volume reduction")
                             .accessibilityValue("\(Int(dictationVolumeReduction)) percent")
                         Text("\(Int(dictationVolumeReduction))%")
-                            .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                            .font(.callout.monospacedDigit()).adaptiveSecondary()
                             .frame(width: 40, alignment: .trailing)
                     }
                 }
@@ -315,14 +315,14 @@ private struct InputPriorityEditor: View {
     private func priorityRow(index: Int, uid: String) -> some View {
         let device = devices.availableDevices.first { $0.uid == uid }
         return HStack(spacing: Spacing.sm) {
-            Text("\(index + 1).").font(.callout.monospacedDigit()).foregroundStyle(.tertiary).frame(width: 20, alignment: .trailing)
+            Text("\(index + 1).").font(.callout.monospacedDigit()).adaptiveTertiary().frame(width: 20, alignment: .trailing)
             VStack(alignment: .leading, spacing: 1) {
                 Text(device?.pickerLabel(includeDefault: false) ?? devices.knownInputName(forUID: uid) ?? "Disconnected microphone")
                     .font(.callout)
                     .foregroundStyle(device == nil ? .secondary : .primary)
                     .lineLimit(2)
                 if device == nil {
-                    Text("Not connected").font(.caption).foregroundStyle(.tertiary)
+                    Text("Not connected").font(.caption).adaptiveTertiary()
                 }
             }
             Spacer()

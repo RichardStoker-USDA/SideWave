@@ -135,7 +135,7 @@ struct SpecialtyPreviewView: View {
             HStack(spacing: 10) {
                 Label(displaysLiveTranscript ? "Live dictation" : "Document preview",
                       systemImage: displaysLiveTranscript ? "waveform" : "doc.text")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                 Spacer(minLength: 8)
                 if hasDocumentCapture, !docEmpty {
                     Button(displaysLiveTranscript ? "Show document" : "Show live dictation") { showsLiveTranscript.toggle() }
@@ -151,7 +151,7 @@ struct SpecialtyPreviewView: View {
             .padding(.horizontal, 20).padding(.bottom, 12)
             if let notice = appState.documentEditNotice {
                 HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle").foregroundStyle(.secondary)
+                    Image(systemName: "info.circle").adaptiveSecondary()
                     Text(notice).font(.callout).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                     Button { appState.documentEditNotice = nil } label: { Image(systemName: "xmark") }
@@ -162,7 +162,7 @@ struct SpecialtyPreviewView: View {
             modelReadiness
             if let error = appState.documentDrafts.persistenceError {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                     .padding(.horizontal, 20).padding(.bottom, 10)
             }
             documentSurface.padding(.horizontal, 20)
@@ -227,7 +227,7 @@ struct SpecialtyPreviewView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(sessionTitle).font(.callout.weight(.medium))
-                        Text(sessionDetail).font(.caption).foregroundStyle(.secondary)
+                        Text(sessionDetail).font(.caption).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 8)
@@ -308,7 +308,7 @@ struct SpecialtyPreviewView: View {
                 Spacer(minLength: 0)
                 Text(progress, format: .percent.precision(.fractionLength(0))).monospacedDigit()
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).adaptiveSecondary()
             .padding(.horizontal, Spacing.lg).padding(.bottom, Spacing.md)
         case .loading:
             HStack(spacing: Spacing.sm) {
@@ -316,7 +316,7 @@ struct SpecialtyPreviewView: View {
                 Text("Preparing the model. Document editing will be available when it is ready.")
                 Spacer(minLength: 0)
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).adaptiveSecondary()
             .padding(.horizontal, Spacing.lg).padding(.bottom, Spacing.md)
         case .disabled, .unloaded, .error, .unavailable:
             HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
@@ -329,7 +329,7 @@ struct SpecialtyPreviewView: View {
                 }
                 .buttonStyle(.borderless).fixedSize()
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.caption).adaptiveSecondary()
             .padding(.horizontal, Spacing.lg).padding(.bottom, Spacing.md)
         case .ready, .generating: EmptyView()
         }
@@ -344,7 +344,7 @@ struct SpecialtyPreviewView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Preparing to listen").font(.title3.weight(.medium))
                         Text("Your words will appear here, with the same live refinement as the dictation preview.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(24)
                 } else {
                     DictationOverlayContent(appState: appState, embeddedTranscript: true).padding(20)
@@ -352,8 +352,8 @@ struct SpecialtyPreviewView: View {
             } else if docEmpty && !showsTextEditor {
                 if activity.isWorking {
                     VStack(spacing: Spacing.sm) {
-                        Image(systemName: "text.alignleft").font(.largeTitle).foregroundStyle(.tertiary)
-                        Text("Your document will appear here").font(.callout).foregroundStyle(.secondary)
+                        Image(systemName: "text.alignleft").font(.largeTitle).adaptiveTertiary()
+                        Text("Your document will appear here").font(.callout).adaptiveSecondary()
                     }
                 } else { emptyStateOnboarding }
             } else if showsTextEditor {
@@ -388,10 +388,10 @@ struct SpecialtyPreviewView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("New document").font(.system(size: 22, weight: .medium))
             Text(currentTemplate.workspaceDescription)
-                .font(.body).foregroundStyle(.secondary)
+                .font(.body).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             Text("Dictate below or use your shortcut. When you finish, review the result here, edit the text, or ask for a change.")
-                .font(.callout).foregroundStyle(.secondary).lineSpacing(3)
+                .font(.callout).adaptiveSecondary().lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Type a Document", systemImage: "keyboard") {
                 showsTextEditor = true

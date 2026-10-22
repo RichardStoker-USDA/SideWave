@@ -22,12 +22,12 @@ struct SoundSettingsPane: View {
                 SettingsDivider()
                 SettingsRow(label: "Volume") {
                     HStack(spacing: Spacing.sm) {
-                        Image(systemName: "speaker.fill").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "speaker.fill").font(.caption).adaptiveSecondary()
                         Slider(value: $volume, in: 0...1, step: 0.05)
                             .frame(width: 200)
                             .accessibilityLabel("Sound effects volume")
                             .accessibilityValue("\(Int(volume * 100)) percent")
-                        Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "speaker.wave.3.fill").font(.caption).adaptiveSecondary()
                     }
                     .accessibilityElement(children: .contain)
                 }

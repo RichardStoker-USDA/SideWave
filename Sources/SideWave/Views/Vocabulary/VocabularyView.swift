@@ -142,7 +142,7 @@ struct VocabularyView: View {
                         Label(pack.name, systemImage: pack.subscription != nil ? "arrow.down.circle" : "book.closed")
                             .lineLimit(2)
                         Text("\(pack.terms.count) \(pack.terms.count == 1 ? "word" : "words") \u{00B7} \(pack.isEnabled ? "On" : "Off")")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                             .padding(.leading, 26)
                     }
                     .opacity(isDimmedInSearch(pack, query: activeVocabSearchQuery) ? 0.4 : 1)
@@ -156,7 +156,7 @@ struct VocabularyView: View {
         .overlay {
             if store.packs.isEmpty {
                 Text("No glossaries yet")
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).adaptiveSecondary()
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -261,7 +261,7 @@ struct VocabularyView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.body)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .frame(width: 26, height: 26)
                         .contentShape(Rectangle())
                 }
@@ -302,7 +302,7 @@ struct VocabularyView: View {
                 if vocabTokenEstimate > 0 {
                     Text("~\(vocabTokenEstimate) tokens")
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                         .help("Approximate prompt cost of all currently enabled glossaries.")
                 }
             }
@@ -491,12 +491,12 @@ struct VocabularyView: View {
         HStack(spacing: Spacing.xs) {
             Text(pack.subscription != nil ? "Subscribed bundle" : (pack.isReadOnly ? "Read-only glossary" : "Custom glossary"))
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             if !pack.linkedTemplates.isEmpty {
-                Text("·").foregroundStyle(.tertiary)
+                Text("·").adaptiveTertiary()
                 Text(linkedTemplatesLabel(pack))
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
@@ -582,7 +582,7 @@ struct VocabularyView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
                 .font(.callout).frame(width: 28, height: 28)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
@@ -607,12 +607,12 @@ struct VocabularyView: View {
                      ? "Duplicate this read-only glossary to customize it."
                      : pack.description)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 if let source = pack.subscription {
                     HStack {
                         Text("Version \(source.version) · \(source.automaticallyUpdates ? "Automatic updates" : "Manual updates")")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).adaptiveSecondary()
                         Spacer()
                         Button("Manage Bundle") { showCatalog = true }
                     }
@@ -621,7 +621,7 @@ struct VocabularyView: View {
                 AboutBlurbEditor(pack: pack)
                 Text("Optional. Sent to the Refine model so it understands the context behind these words.")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -637,7 +637,7 @@ struct VocabularyView: View {
                     .font(.headline)
                 Text("\(pack.terms.count)")
                     .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Spacer()
                 if !pack.isReadOnly {
                     Button {
@@ -673,7 +673,7 @@ struct VocabularyView: View {
         } else if words.isEmpty {
             Text("No words match \"\(vocabSearchText)\"")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .adaptiveTertiary()
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xl)
         } else {
@@ -711,7 +711,7 @@ struct VocabularyView: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Text("Add your first word").font(.headline)
             Text("Use a preferred spelling, then add how it sounds or how it is sometimes misheard. Words can be grouped by category.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button("Add Word") { wordSheet = .add(packID: pack.id) }.prominentActionButton()
@@ -739,10 +739,10 @@ struct VocabularyView: View {
     private var detailEmptyState: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             Image(systemName: "character.book.closed")
-                .font(.system(size: 36, weight: .light)).foregroundStyle(.secondary)
+                .font(.system(size: 36, weight: .light)).adaptiveSecondary()
             Text("Your vocabulary").font(.title2.weight(.semibold))
             Text("Create a glossary for names, acronyms, and specialist terms. Add the spelling you want and the phrases SideWave should replace.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Spacing.sm) {
                 Button("New Glossary") { glossarySheet = .new }.prominentActionButton()
@@ -752,7 +752,7 @@ struct VocabularyView: View {
             Button("Import a Glossary File") { importGlossaryFromFile() }.buttonStyle(.link)
             Button("Create Words from a Description") { glossarySheet = .describe }.buttonStyle(.link)
             Text("No glossaries are included automatically. You choose the words that apply.")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).adaptiveSecondary()
         }
         .frame(maxWidth: 440, alignment: .leading)
         .padding(Spacing.xl)

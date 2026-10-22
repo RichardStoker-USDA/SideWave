@@ -97,7 +97,7 @@ struct AdvancedSettingsPane: View {
                         .buttonStyle(.link)
                         .font(.subheadline)
                 }
-                Text("\(currentMs) ms").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(currentMs) ms").font(.callout.monospacedDigit()).adaptiveSecondary()
             }
             Slider(value: Binding(get: { appState.hotkeyManager.smartPTTThreshold * 1000 },
                                   set: { appState.hotkeyManager.smartPTTThreshold = $0 / 1000 }),
@@ -110,7 +110,7 @@ struct AdvancedSettingsPane: View {
             }
             .labelsHidden()
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .adaptiveSecondary()
             Text("How long you hold the shortcut, after recording is ready, before the release finishes the dictation instead of toggling. The default is \(defaultMs) ms. Raise it if quick taps register as holds.")
                 .settingsCaption()
                 .fixedSize(horizontal: false, vertical: true)

@@ -76,10 +76,10 @@ struct NetworkActivitySummaryRow: View {
 
     private func stat(_ label: String, value: String, icon: String) -> some View {
         HStack(spacing: Spacing.xs) {
-            Image(systemName: icon).foregroundStyle(.secondary).accessibilityHidden(true)
+            Image(systemName: icon).adaptiveSecondary().accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
                 Text(value).font(.callout.weight(.semibold).monospacedDigit())
-                Text(label).font(.caption).foregroundStyle(.secondary)
+                Text(label).font(.caption).adaptiveSecondary()
             }
         }
         .accessibilityElement(children: .combine)

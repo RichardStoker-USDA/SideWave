@@ -93,7 +93,7 @@ struct WordEditSheet: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(.tertiary)
+                        .adaptiveTertiary()
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
@@ -119,7 +119,7 @@ struct WordEditSheet: View {
                         LabeledContent("Send hint to Refine", value: term.scope.contains(.refineHint) ? "On" : "Off")
                             .accessibilityElement(children: .ignore).accessibilityLabel("Send hint to Refine: \(term.scope.contains(.refineHint) ? "On" : "Off")")
                         if term.scope.contains(.refineHint), term.priority == 1 {
-                            Text("Always included in Refine context.").font(.caption).foregroundStyle(.secondary)
+                            Text("Always included in Refine context.").font(.caption).adaptiveSecondary()
                         }
                         if !term.aliases.isEmpty {
                             Text("Mistranscriptions: " + term.aliases.joined(separator: ", ")).textSelection(.enabled)
@@ -131,7 +131,7 @@ struct WordEditSheet: View {
                             Text(note).textSelection(.enabled)
                         }
                         Text("Publisher words are read-only. Copy this word to a personal glossary to customize it. Enabled personal words take priority.")
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Menu("Copy to Personal Glossary") {
                             ForEach(store.packs.filter { !$0.isReadOnly }) { destination in
                                 Button(destination.name) {
@@ -162,9 +162,9 @@ struct WordEditSheet: View {
                                     } catch { bundleMessage = GlossaryBundleManager.userMessage(error) }
                                 })).toggleStyle(.switch).controlSize(.small)
                             Text("Turning this off affects only this Mac and stays off after bundle updates.")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).adaptiveSecondary()
                         }
-                        if let bundleMessage { Text(bundleMessage).font(.callout).foregroundStyle(.secondary) }
+                        if let bundleMessage { Text(bundleMessage).font(.callout).adaptiveSecondary() }
                     } else {
                         wordField
                         pronunciationField
@@ -212,11 +212,11 @@ struct WordEditSheet: View {
                 .font(.callout)
             if duplicateWord {
                 Text("This word is already in this glossary. Edit its existing entry to add pronunciations or mistranscriptions.")
-                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.caption).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             }
             Text("The correct spelling, exactly how it should appear in your text.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -226,7 +226,7 @@ struct WordEditSheet: View {
             Text("Pronunciation").font(.callout.weight(.medium))
             TextField("For example: you ess dee ay", text: $pronunciation).textFieldStyle(.roundedBorder)
             Text("Write how it sounds using ordinary words. With replacement enabled, that phrase becomes the spelling above.")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -247,7 +247,7 @@ struct WordEditSheet: View {
                 .font(.callout)
             Text("Other ways dictation might transcribe this word. Each one gets replaced with the spelling above. Comma-separated. Leave blank if dictation already hears it correctly.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -260,7 +260,7 @@ struct WordEditSheet: View {
                 Spacer()
                 Text("\(definition.count)/120")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             TextField("Optional. Tell Refine what this means.", text: $definition, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
@@ -273,7 +273,7 @@ struct WordEditSheet: View {
                 }
             Text("A short hint for this one word: what it means or how to use it. The Refine model sees it only when this word appears in your dictation. Different from About this glossary, which always applies to the whole collection.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -286,7 +286,7 @@ struct WordEditSheet: View {
                 Spacer()
                 Text("\(usageNote.count)/120")
                     .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
             }
             TextField("Optional. Disambiguate when the word has more than one meaning.", text: $usageNote, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
@@ -299,7 +299,7 @@ struct WordEditSheet: View {
                 }
             Text("For words that mean different things in different contexts. Refine sees it alongside the word to pick the right sense.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -314,7 +314,7 @@ struct WordEditSheet: View {
                 } label: {
                     Image(systemName: "info.circle")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("About this setting")
@@ -337,7 +337,7 @@ struct WordEditSheet: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.callout)
-                Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(detail).font(.caption).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             Toggle(title, isOn: isOn).labelsHidden().toggleStyle(.switch).controlSize(.small)
@@ -353,7 +353,7 @@ struct WordEditSheet: View {
                     .font(.callout.weight(.semibold))
                 Text("Runs every time you dictate, even when Refine is off. Mistranscriptions get swapped for the correct spelling, and the speech recognizer also boosts the word at the acoustic level so it's likelier to be heard correctly in the first place.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             VStack(alignment: .leading, spacing: Spacing.xxs) {
@@ -361,12 +361,12 @@ struct WordEditSheet: View {
                     .font(.callout.weight(.semibold))
                 Text("Adds this word and its description to the prompt the local language model sees during each Refine pass. Helps the model understand your terminology in context. Only runs when Refine is enabled.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
             Text("Always include in Refine pins a word in the prompt even when it was not heard. Use it for a small set of important terms. Most words only need Replace and Send hint enabled.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .italic()
         }
         .padding(Spacing.md)

@@ -137,7 +137,7 @@ struct RefineSettingsPane: View {
                         .settingsCaption()
                     Spacer()
                     Text("\(Int(progress * 100))%")
-                        .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        .font(.caption.monospacedDigit()).adaptiveSecondary()
                         .contentTransition(.numericText(value: Double(Int(progress * 100))))
                     if progress < 0.95 {
                         Button("Cancel") {
@@ -190,7 +190,7 @@ struct RefineSettingsPane: View {
 
         case .unavailable(let message):
             HStack(alignment: .top, spacing: Spacing.sm) {
-                Image(systemName: "info.circle").foregroundStyle(.secondary).accessibilityHidden(true)
+                Image(systemName: "info.circle").adaptiveSecondary().accessibilityHidden(true)
                 Text(message).font(.callout).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: Spacing.sm)
                 Button("Open System Settings") { Self.openAppleIntelligenceSettings() }
@@ -247,22 +247,22 @@ struct RefineStatusLabel: View {
     var body: some View {
         switch state {
         case .disabled:
-            Label("Not loaded", systemImage: "arrow.down.to.line").foregroundStyle(.secondary)
+            Label("Not loaded", systemImage: "arrow.down.to.line").adaptiveSecondary()
         case .downloading(let progress):
-            Label("Downloading \(Int(progress * 100))%", systemImage: "arrow.down.circle").foregroundStyle(.secondary)
+            Label("Downloading \(Int(progress * 100))%", systemImage: "arrow.down.circle").adaptiveSecondary()
         case .loading:
-            Label("Loading\u{2026}", systemImage: "hourglass").foregroundStyle(.secondary)
+            Label("Loading\u{2026}", systemImage: "hourglass").adaptiveSecondary()
         case .ready:
             Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
         case .unloaded:
-            Label("Downloaded, not in memory", systemImage: "internaldrive").foregroundStyle(.secondary)
+            Label("Downloaded, not in memory", systemImage: "internaldrive").adaptiveSecondary()
         case .generating:
-            Label("Refining\u{2026}", systemImage: "wand.and.rays").foregroundStyle(.secondary)
+            Label("Refining\u{2026}", systemImage: "wand.and.rays").adaptiveSecondary()
         case .error(let message):
             Label("Error: \(message)", systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.red).lineLimit(2).truncationMode(.tail)
         case .unavailable:
-            Label("Unavailable", systemImage: "xmark.circle").foregroundStyle(.secondary)
+            Label("Unavailable", systemImage: "xmark.circle").adaptiveSecondary()
         }
     }
 }

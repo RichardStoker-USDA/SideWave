@@ -164,7 +164,7 @@ struct MeetingDashboardView: View {
                                 Text(appState.meetingService.isStartingRecording
                                      ? "Wait for Recording before speaking."
                                      : "Capture the conversation, then review speakers and create notes.")
-                                    .font(.callout).foregroundStyle(.secondary)
+                                    .font(.callout).adaptiveSecondary()
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer(minLength: Spacing.lg)
@@ -181,11 +181,11 @@ struct MeetingDashboardView: View {
                         Label(meetingMicrophoneName, systemImage: "mic")
                             .font(.callout).fixedSize(horizontal: false, vertical: true)
                         Text("Up to 8 speakers. Audio stays on this Mac and is saved as you record.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                         if appState.isDictationBusy {
                             Text("Finish dictation before starting a meeting.")
-                                .font(.callout).foregroundStyle(.secondary)
+                                .font(.callout).adaptiveSecondary()
                         }
                     }
                     .padding(20)
@@ -203,7 +203,7 @@ struct MeetingDashboardView: View {
                                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                                     Text(recording.startedAt, style: .date).font(.callout)
                                     Text("\(formatDuration(recording.recordedDuration)) saved on this Mac")
-                                        .font(.caption).foregroundStyle(.secondary)
+                                        .font(.caption).adaptiveSecondary()
                                 }
                                 Spacer()
                                 Button("Recover") { appState.pendingMeetingRecovery = [recording] }
@@ -234,7 +234,7 @@ struct MeetingDashboardView: View {
                     if retentionDays > 0 {
                         Text("Completed transcripts auto-delete after \(retentionDays) days. Change in Settings > Privacy.")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     }
                 }
             }
@@ -269,14 +269,14 @@ struct MeetingDashboardView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Preparing meeting models\u{2026}")
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                     Text(meetingModelsSizeCopy)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                     if let detail = appState.meetingService.modelPrepDetail {
                         Text(detail)
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(.tertiary)
+                            .adaptiveTertiary()
                     }
                 }
                 Spacer()
@@ -302,14 +302,14 @@ struct MeetingDashboardView: View {
                         // beats a static blurb; falls back to the honest total.
                         Text(appState.meetingService.modelPrepDetail ?? meetingModelsSizeCopy)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)
                     if !indeterminate {
                         Text("\(Int(progress * 100))%")
                             .font(.callout.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                     }
                 }
                 if indeterminate {
@@ -337,7 +337,7 @@ struct MeetingDashboardView: View {
                             .font(.callout.weight(.semibold))
                         Text(message)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 0)
@@ -396,7 +396,7 @@ struct MeetingDashboardView: View {
                             .foregroundStyle(Color.recordingRed)
                         Spacer()
                         Text(formatDuration(duration))
-                            .font(.title3.monospacedDigit()).foregroundStyle(.secondary)
+                            .font(.title3.monospacedDigit()).adaptiveSecondary()
                     }
                     AudioWaveVisualizer(audioLevel: appState.meetingService.audioLevel,
                         colorMode: "rainbow", sensitivity: 1.0, liquidGlass: false)
@@ -408,7 +408,7 @@ struct MeetingDashboardView: View {
                         Spacer()
                         Text(recordingDiskUsage).monospacedDigit()
                     }
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).adaptiveSecondary()
                     Divider()
                     HStack(spacing: Spacing.sm) {
                         Button("Stop & Keep") {
@@ -438,13 +438,13 @@ struct MeetingDashboardView: View {
                 if appState.meetingService.liveTranscriptAvailable {
                     if appState.meetingService.liveSegments.isEmpty {
                         Text("Listening. A draft transcript appears here as speech is recognized.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                     } else {
                         liveTranscriptCard
                     }
                 } else {
                     Text("Your transcript will be prepared from the saved audio when you stop.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                 }
             }
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
@@ -488,7 +488,7 @@ struct MeetingDashboardView: View {
                         .frame(width: 76, alignment: .leading)
                     Text(segment.text)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -507,21 +507,21 @@ struct MeetingDashboardView: View {
                 meetingHeader
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     Text(stage.description).font(.title3.weight(.semibold))
-                    Text(stageDescription(stage)).font(.callout).foregroundStyle(.secondary)
+                    Text(stageDescription(stage)).font(.callout).adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                     if let progress = appState.meetingService.processingProgress {
                         ProgressView(value: progress).progressViewStyle(.linear)
                         Text("\(Int(progress * 100))%")
-                            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            .font(.caption.monospacedDigit()).adaptiveSecondary()
                     } else {
                         ProgressView().controlSize(.small)
                     }
                     if let detail = appState.meetingService.modelPrepDetail {
-                        Text(detail).font(.callout).foregroundStyle(.secondary)
+                        Text(detail).font(.callout).adaptiveSecondary()
                     }
                     Divider()
                     Text("The recording stays on this Mac until the transcript is saved. You can keep it and finish later.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.callout).adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
                     Button("Stop Processing & Keep Audio") { appState.meetingService.keepForLater() }
                         .actionButton()
@@ -550,14 +550,14 @@ struct MeetingDashboardView: View {
                         .font(.title3.weight(.semibold))
                     if hasSpeech, let transcript = appState.meetingService.transcript {
                         Text(transcript.segmentSpeakerSummary)
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                     }
                     if let warning = appState.meetingService.postRecordingWarning {
-                        Text(warning).font(.callout).foregroundStyle(.secondary)
+                        Text(warning).font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     } else if !hasSpeech {
                         Text("No words were recognized. Check the microphone before recording again. Saved audio can be processed again from Recovery Options.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Divider()
@@ -615,7 +615,7 @@ struct MeetingDashboardView: View {
                     Label(hasRecoverableAudio ? "Transcription didn't finish" : "Couldn't start the meeting",
                           systemImage: "exclamationmark.circle")
                         .font(.title3.weight(.semibold))
-                    Text(message).font(.callout).foregroundStyle(.secondary)
+                    Text(message).font(.callout).adaptiveSecondary()
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let transcript = appState.meetingService.transcript {
@@ -625,7 +625,7 @@ struct MeetingDashboardView: View {
 
                     if hasRecoverableAudio {
                         Text("Saved audio is kept on this Mac. You can try again now or finish later.")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                         Divider()
                         HStack(spacing: Spacing.sm) {
@@ -700,7 +700,7 @@ struct MeetingDashboardView: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: meeting.hasSpeech ? "person.3" : "waveform")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: Spacing.xxxs) {
@@ -708,7 +708,7 @@ struct MeetingDashboardView: View {
                     .font(.callout.weight(.medium))
                 Text(meeting.summaryLine)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
 
             Spacer()
@@ -721,7 +721,7 @@ struct MeetingDashboardView: View {
                     .font(.callout).frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .adaptiveSecondary()
             .help(meeting.hasSpeech ? "View transcript" : "Meeting details")
             .accessibilityLabel(meeting.hasSpeech ? "View transcript" : "Meeting details")
 
@@ -731,7 +731,7 @@ struct MeetingDashboardView: View {
             } label: {
                 Image(systemName: "text.badge.checkmark")
                     .font(.callout).frame(width: 28, height: 28)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .buttonStyle(.plain)
             .disabled(!meeting.hasSpeech)
@@ -744,7 +744,7 @@ struct MeetingDashboardView: View {
             } label: {
                 Image(systemName: "trash")
                     .font(.callout).frame(width: 28, height: 28)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .buttonStyle(.plain)
             .help("Delete meeting")

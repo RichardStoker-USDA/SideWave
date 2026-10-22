@@ -27,7 +27,7 @@ struct HelpItem: View {
                 .font(.body.weight(.medium))
             Text(content)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -46,7 +46,7 @@ struct HelpHint: View {
             Image(systemName: "info.circle")
         }
         .font(.callout)
-        .foregroundStyle(.secondary)
+        .adaptiveSecondary()
     }
 }
 
@@ -111,7 +111,7 @@ struct HelpHotkeyFlow: View {
     private var connector: some View {
         Image(systemName: "chevron.right")
             .font(.system(size: 11, weight: .bold))
-            .foregroundStyle(.tertiary)
+            .adaptiveTertiary()
             .padding(.top, 15)
             .accessibilityHidden(true)
     }
@@ -144,7 +144,7 @@ struct HelpHotkeyFlow: View {
                 .font(.caption.weight(.semibold))
             Text(detail)
                 .font(.system(size: 9))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 78)
@@ -164,7 +164,7 @@ struct HelpOverlayStatesCard: View {
                 .font(.headline)
             Text("The streaming model writes a fast gray draft while you talk. Parakeet then confirms or corrects each segment, and Refine can revise it again. Solid text can still contain mistakes, so read it before you send it.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
 
             stageRow(tag: "Draft (fast)", white: "", gray: "we should use sign it for scientific research")
@@ -183,7 +183,7 @@ struct HelpOverlayStatesCard: View {
         HStack(alignment: .center, spacing: Spacing.md) {
             Text(tag)
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 74, alignment: .leading)
             HStack(spacing: 6) {
                 Image(systemName: "mic.fill")
@@ -208,7 +208,7 @@ struct HelpOverlayStatesCard: View {
     private func legend(color: Color, label: String) -> some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 18, height: 6)
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(label).font(.caption).adaptiveSecondary()
         }
     }
 }
@@ -233,7 +233,7 @@ struct HelpSettingLocationRow: View {
                 Spacer()
                 Text(valueMock)
                     .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(Color.primary.opacity(0.05))
@@ -247,10 +247,10 @@ struct HelpSettingLocationRow: View {
             HStack(spacing: 4) {
                 Image(systemName: "mappin.and.ellipse")
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                 Text(location)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
             }
             .padding(.leading, 2)
         }
@@ -274,7 +274,7 @@ struct HelpAdvancedNote: View {
                     .padding(.top, 1)
                 Text(text)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

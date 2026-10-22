@@ -15,7 +15,7 @@ struct HelpMeetingTranscriptionContent: View {
                     .font(.headline)
                 Text("SideWave works out who spoke when and labels the transcript by speaker, up to eight speakers. Similar voices, crosstalk, distance, and room noise can mix up labels, so check them before you share.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(spacing: Spacing.xs) {
@@ -32,7 +32,7 @@ struct HelpMeetingTranscriptionContent: View {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("The resulting transcript")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
 
                     VStack(alignment: .leading, spacing: 4) {
                         transcriptRow(speaker: "Speaker 1", time: "0:00", text: "Let's go through the wheat trial data first.", color: .blue)
@@ -54,7 +54,7 @@ struct HelpMeetingTranscriptionContent: View {
 
                 Text("Audio is saved to disk as you record, and speaker identification runs during the recording. On Macs with 16 GB of memory or more, a live transcript can build too. When you stop, SideWave runs the final speaker and speech passes over all the saved audio and shows progress until the transcript is ready.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -80,12 +80,12 @@ struct HelpMeetingTranscriptionContent: View {
 
                 Text("At the next launch, SideWave offers the interrupted meeting: Continue Recording adds to it, Transcribe processes the saved audio, Keep for Later leaves it for another time, and Discard Recording deletes it. Audio that hadn't reached disk is lost, and a partial transcript is labeled as partial.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Quitting during a recording asks first; Stop & Keep saves the meeting for later. Closing the window doesn't stop the recording, and the menu bar menu shows the time and Stop and Transcribe.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -111,7 +111,7 @@ struct HelpMeetingTranscriptionContent: View {
 
                                 Text("Click a speaker's name in the transcript to rename it, and meeting notes use the new names. If the split looks wrong, Identify Speakers runs again on the saved audio. Names carry over when a speaker keeps the same slot, so check them afterward.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -137,12 +137,12 @@ struct HelpMeetingTranscriptionContent: View {
 
                 Text("Speaker identification, transcription, and meeting notes run on your Mac. Copy the transcript or save it as a Markdown (.md) file.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Audio is deleted once a complete transcript is saved and closed. Interrupted meetings, partial transcripts, and failed saves keep their audio until you process or discard it, whatever your History setting. Delete Audio & Close or Discard Recording removes it.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -152,14 +152,14 @@ struct HelpMeetingTranscriptionContent: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text(number)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 20, alignment: .trailing)
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title)
                     .font(.callout.weight(.medium))
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -171,7 +171,7 @@ struct HelpMeetingTranscriptionContent: View {
                 .font(.callout.weight(.medium))
             Text(detail)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -210,7 +210,7 @@ struct HelpMeetingTranscriptionContent: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text("[\(time)]")
                 .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .frame(width: 50, alignment: .leading)
 
             Text(speaker)
@@ -241,7 +241,7 @@ struct HelpVADContent: View {
                 
                 Text("A voice activity detector marks speech and pauses as you talk. With Refine on, the refine cadence decides whether a pause ends a segment: Standard waits for the 14.8-second limit, Faster ends a segment after about 3 seconds of silence, and Aggressive after about 2. Macs with 16 GB of memory or more start on Faster. Without Refine, a pause of about 3 seconds ends a segment.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
                 
                 // Static technical boundary timeline
@@ -265,7 +265,7 @@ struct HelpVADContent: View {
                         Spacer()
                         Text("Faster: a 3-second pause ends the segment.")
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .adaptiveSecondary()
                         Spacer()
                     }
                     .padding(.top, 4)
@@ -280,7 +280,7 @@ struct HelpVADContent: View {
 
                 Text("A finished segment goes to Parakeet and then Refine, so ending segments at pauses gets shorter thoughts refined sooner, at the cost of more processing. Document templates end segments at 5-second pauses. Change the cadence in Settings > Refine > Expert, in Advanced view.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

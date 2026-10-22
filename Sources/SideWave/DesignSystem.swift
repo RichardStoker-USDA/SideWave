@@ -175,11 +175,14 @@ struct ChoiceMenu<Selection: Hashable, Options: View>: View {
         .toggleStyle(.automatic)
         .font(.callout)
         .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Color.primary.opacity(0.045), in: Capsule())
-        .overlay(Capsule().strokeBorder(.quaternary, lineWidth: 1))
+        .background(colorScheme == .dark ? Color.primary.opacity(0.045) : LightSurface.fieldFill, in: Capsule())
+        .overlay(Capsule().strokeBorder(colorScheme == .dark ? AnyShapeStyle(.quaternary) : AnyShapeStyle(LightSurface.fieldBorder),
+                                        lineWidth: 1))
         .accessibilityLabel(title)
         .accessibilityValue(value)
     }
+
+    @Environment(\.colorScheme) private var colorScheme
 }
 
 // MARK: - Modifiers
@@ -200,7 +203,7 @@ extension View {
         font(.system(.caption2, weight: .semibold))
             .tracking(0.8)
             .textCase(.uppercase)
-            .foregroundStyle(Color.secondary)
+            .adaptiveSecondary()
     }
 
     /// Content fades softly under the toolbar.
@@ -220,13 +223,20 @@ extension View {
 
     /// Secondary text with enough contrast on light glass surfaces.
     func adaptiveSecondary() -> some View {
-        modifier(AdaptiveSubtleTextModifier(lightOpacity: 0.74, darkOpacity: 0.62))
+        modifier(AdaptiveSubtleTextModifier(lightOpacity: 0.78, darkOpacity: 0.62))
     }
 
     /// One step quieter than adaptiveSecondary.
     func adaptiveTertiary() -> some View {
-        modifier(AdaptiveSubtleTextModifier(lightOpacity: 0.58, darkOpacity: 0.45))
+        modifier(AdaptiveSubtleTextModifier(lightOpacity: 0.64, darkOpacity: 0.45))
     }
+}
+
+/// Light-mode surfaces: white fields on a gray card, with borders that stay visible on white.
+enum LightSurface {
+    static let fieldFill = Color.white.opacity(0.92)
+    static let fieldBorder = Color.black.opacity(0.13)
+    static let cardBorder = Color.black.opacity(0.11)
 }
 
 private struct SettingsCardModifier: ViewModifier {
@@ -236,8 +246,9 @@ private struct SettingsCardModifier: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
         content
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.primary.opacity(colorScheme == .dark ? 0.045 : 0.025), in: shape)
-            .overlay(shape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.75))
+            .background(Color.primary.opacity(colorScheme == .dark ? 0.045 : 0.03), in: shape)
+            .overlay(shape.strokeBorder(colorScheme == .dark ? Color.primary.opacity(0.08) : LightSurface.cardBorder,
+                                        lineWidth: 0.75))
     }
 }
 
@@ -269,9 +280,9 @@ struct KeyCapView: View {
 
     private var dark: Bool { colorScheme == .dark }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: CornerRadius.badge, style: .continuous) }
-    private var textColor: Color { dark ? Color.white.opacity(0.85) : Color.primary.opacity(0.75) }
-    private var fillColor: Color { dark ? Color.white.opacity(0.10) : Color.black.opacity(0.05) }
-    private var borderColor: Color { dark ? Color.white.opacity(0.18) : Color.black.opacity(0.12) }
+    private var textColor: Color { dark ? Color.white.opacity(0.85) : Color.black.opacity(0.82) }
+    private var fillColor: Color { dark ? Color.white.opacity(0.10) : Color.white }
+    private var borderColor: Color { dark ? Color.white.opacity(0.18) : Color.black.opacity(0.17) }
     private var shadowColor: Color { dark ? Color.black.opacity(0.4) : Color.black.opacity(0.12) }
 
     var body: some View {
@@ -404,8 +415,8 @@ enum WindowBlurHelper {
 
 // MARK: - Segmented control
 
-/// Segmented control on a glass track for pickers inside content. The
-/// selected segment slides between positions; Reduce Motion skips the slide.
+/// Segmented control on a glass track, for the main window's sections and for pickers inside
+/// content. The selected segment slides between positions; Reduce Motion skips the slide.
 struct GlassSegmentedPicker<Tag: Hashable>: View {
     struct Segment: Identifiable {
         let tag: Tag
@@ -420,6 +431,11 @@ struct GlassSegmentedPicker<Tag: Hashable>: View {
         }
     }
 
+    /// `accent` fills the selected segment with the accent color, for a choice inside content.
+    /// `raised` lifts it as a neutral pill, for navigation, so it doesn't compete with the
+    /// view's primary action.
+    enum SelectionStyle { case accent, raised }
+
     @Binding var selection: Tag
     let segments: [Segment]
     /// Fill the container with equal segments instead of hugging labels.
@@ -427,21 +443,65 @@ struct GlassSegmentedPicker<Tag: Hashable>: View {
     /// Reserve the longest label's width for every segment so a tight
     /// container can't shrink one label smaller than the others.
     var equalWidths = false
+    var selectionStyle = SelectionStyle.accent
     var accessibilityLabel: String?
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     @Namespace private var selectionNamespace
     @State private var hoveredTag: Tag?
+    @FocusState private var focusedTag: Tag?
+
+    private var dark: Bool { colorScheme == .dark }
+
+    /// Left and Right move the selection, like a native segmented control, when a segment has
+    /// keyboard focus.
+    private func moveSelection(_ direction: MoveCommandDirection) {
+        guard direction == .left || direction == .right else { return }
+        let enabled = segments.filter(\.isEnabled)
+        guard let index = enabled.firstIndex(where: { $0.tag == selection }) else { return }
+        let forward = (direction == .right) != (layoutDirection == .rightToLeft)
+        let next = index + (forward ? 1 : -1)
+        guard enabled.indices.contains(next) else { return }
+        withAnimation(reduceMotion ? nil : Animate.standard) { selection = enabled[next].tag }
+        // Focus follows the selection, so Space acts on the segment just chosen.
+        if focusedTag != nil { focusedTag = enabled[next].tag }
+    }
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(segments) { segmentButton($0) }
         }
         .padding(Spacing.xxs)
+        // On white, a clear glass track has no visible edge. A light gray tint and a hairline
+        // give the track a shape; dark mode keeps the plain glass.
+        .background(Color.black.opacity(dark ? 0 : (selectionStyle == .raised ? 0.07 : 0.03)), in: Capsule())
         .glassEffect(.regular, in: Capsule())
+        .overlay(Capsule().strokeBorder(dark ? Color.clear : Color.black.opacity(0.10), lineWidth: 0.75))
+        .onMoveCommand(perform: moveSelection)
         .accessibilityElement(children: .contain)
         .modifier(OptionalAccessibilityLabel(label: accessibilityLabel))
+    }
+
+    private func labelColor(selected: Bool) -> Color {
+        switch (selectionStyle, selected) {
+        case (.accent, true): Color.white
+        case (.raised, true): dark ? Color.white : Color.black.opacity(0.9)
+        case (_, false): dark ? Color.primaryText(for: colorScheme) : Color.black.opacity(selectionStyle == .raised ? 0.72 : 0.85)
+        }
+    }
+
+    @ViewBuilder
+    private var selectionFill: some View {
+        switch selectionStyle {
+        case .accent:
+            Capsule().fill(Color.accentColor)
+        case .raised:
+            Capsule().fill(dark ? Color.white.opacity(0.18) : Color.white)
+                .overlay(Capsule().strokeBorder(dark ? Color.white.opacity(0.12) : Color.black.opacity(0.08), lineWidth: 0.5))
+                .shadow(color: .black.opacity(dark ? 0.3 : 0.14), radius: 2, y: 1)
+        }
     }
 
     @ViewBuilder
@@ -459,7 +519,7 @@ struct GlassSegmentedPicker<Tag: Hashable>: View {
                 Text(segment.label)
                     .font(.callout)
                     .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? Color.white : Color.primaryText(for: colorScheme))
+                    .foregroundStyle(labelColor(selected: isSelected))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -468,10 +528,10 @@ struct GlassSegmentedPicker<Tag: Hashable>: View {
             .frame(maxWidth: expands ? .infinity : nil)
             .background {
                 if isSelected {
-                    Capsule().fill(Color.accentColor)
+                    selectionFill
                         .matchedGeometryEffect(id: "selection", in: selectionNamespace)
                 } else if hoveredTag == segment.tag {
-                    Capsule().fill(Color.primary.opacity(0.06))
+                    Capsule().fill(Color.primary.opacity(dark ? 0.06 : 0.07))
                 }
             }
             .contentShape(Capsule())
@@ -479,6 +539,7 @@ struct GlassSegmentedPicker<Tag: Hashable>: View {
             .opacity(segment.isEnabled ? 1 : 0.4)
         }
         .buttonStyle(.plain)
+        .focused($focusedTag, equals: segment.tag)
         .disabled(!segment.isEnabled)
         .onHover { hovering in
             if hovering { hoveredTag = segment.tag } else if hoveredTag == segment.tag { hoveredTag = nil }

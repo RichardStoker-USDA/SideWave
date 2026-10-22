@@ -68,7 +68,7 @@ struct HelpView: View {
                 VStack(alignment: .leading, spacing: Spacing.xxl) {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         Text(section.title).font(.system(size: 25, weight: .semibold))
-                        Text(section.subtitle).font(.callout).foregroundStyle(.secondary)
+                        Text(section.subtitle).font(.callout).adaptiveSecondary()
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .accessibilityElement(children: .combine)
