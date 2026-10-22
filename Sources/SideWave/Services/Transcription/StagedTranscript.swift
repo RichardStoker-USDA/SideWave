@@ -665,6 +665,28 @@ final class StagedTranscript {
     struct FinalPassRun: Equatable, Sendable {
         var text: String
         var pending: Bool
+
+        /// Drops empty runs and joins neighbors of the same kind, keeping paragraph breaks. A run's
+        /// leading whitespace is its break from the run before it, so it is kept.
+        static func merged(_ runs: [FinalPassRun]) -> [FinalPassRun] {
+            var result: [FinalPassRun] = []
+            for var run in runs where !run.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                // Only a line break in front of a run changes how it joins; a plain space doesn't.
+                let lead = run.text.prefix(while: \.isWhitespace)
+                if !lead.contains(where: \.isNewline) { run.text = String(run.text.dropFirst(lead.count)) }
+                if let last = result.last, last.pending == run.pending {
+                    let lead = String(last.text.prefix(while: \.isWhitespace))
+                    result[result.count - 1].text = lead + RefinementWindow.join(last.text, run.text)
+                } else {
+                    result.append(run)
+                }
+            }
+            return result
+        }
+
+        static func joinedText(_ runs: [FinalPassRun]) -> String {
+            runs.map(\.text).reduce("", RefinementWindow.join)
+        }
     }
 
     /// The session in order as refined and pending runs. A span whose real-time refine failed or

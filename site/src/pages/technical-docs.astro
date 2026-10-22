@@ -38,7 +38,8 @@ import DocLayout from '../layouts/DocLayout.astro';
 
   <h3>Refine during and after the session</h3>
   <p>Each finalized segment goes to Refine. The request can still edit the last two sentences of the previous segment (up to 64 words), so a sentence that continues across a boundary gets repaired, and it includes up to 400 earlier words as read-only context. Template instructions, glossary hints, the speech profile, and the output language are part of the prompt.</p>
-  <p>When you stop, SideWave waits for in-flight work, then refines whatever is left in requests of up to 160 words. A segment that failed earlier gets another try. If the final pass can't finish, SideWave doesn't paste; the text stays on Home and in History to resume or copy.</p>
+  <p>When you stop, SideWave refines whatever live Refine hasn't finished, in requests of up to 160 words, each able to revise the two sentences before it. A segment that failed earlier gets another try. The final pass has a budget of 10 to 25 seconds, scaled to the unfinished words. A part the model declines is kept as captured and left out of later requests; when the budget runs out, the rest is kept as captured. Either way SideWave pastes and shows a notice. When translating, it keeps the text on Home and in History instead, so untranslated words aren't pasted.</p>
+  <p>Apple Intelligence on macOS 27 applies its default guardrails to structured output even with permissive content transformations, which apply only to plain text. When it declines a Standard, Concise, or Professional refine, SideWave asks again for plain text before keeping the part as captured.</p>
   <p>Document templates (Email, Instructions, AI Prompt, Custom) clean each segment as ordinary prose while you talk and apply the document format once after you stop, which avoids formatting a half-finished thought.</p>
 
   <h3>Models for Refine</h3>

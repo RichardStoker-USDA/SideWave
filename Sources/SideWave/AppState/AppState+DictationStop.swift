@@ -161,6 +161,9 @@ extension AppState {
         // incremental stop strategy treats them as part of the refined body so
         // they are never re-refined. Empty for a normal (non-continued) session.
         let continuedPrefix: String
+        let parkedPass = accumulatedSessionPass
+        accumulatedSessionPass = nil
+        let outputLanguage = Self.currentOutputLanguage
         if let accumulated = accumulatedSessionText, !accumulated.isEmpty {
             assembledRaw = (accumulated + " " + rawFinalText).trimmingCharacters(in: .whitespacesAndNewlines)
             continuedPrefix = accumulated.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -252,6 +255,7 @@ extension AppState {
 
         let cleanedText: String
         var finalRefinementCompleted = true
+        var finalPass: FinalPassOutcome?
         let isSpecialtyTargeted = template.isSpecialty || isSpecialtyActive
         if isSpecialtyTargeted {
             cleanedText = await formatCapturedDocument(assembledRaw, refine: performRefinement)
@@ -326,24 +330,33 @@ extension AppState {
                     cleanedText = assembledRaw
                 }
             } else if performRefinement {
-                let stagedRuns = transcriptionService.lastSessionFinalPassRuns
-                let needsEntireText = accumulatedSessionNeedsRefinement || stagedRuns.isEmpty
-                let runs = needsEntireText ? [StagedTranscript.FinalPassRun(text: assembledRaw, pending: true)] : stagedRuns
-                let prefix = needsEntireText ? "" : continuedPrefix
-                let result = await finishPendingRuns(runs, after: prefix) { [weak self] text in
+                // A resumed session refines only the parts its paused runs left unfinished.
+                let input = Self.finalPassInput(
+                    stagedRuns: transcriptionService.lastSessionFinalPassRuns,
+                    continuedText: continuedPrefix,
+                    parked: parkedPass,
+                    outputLanguage: outputLanguage,
+                    resumedNeedsRefinement: accumulatedSessionNeedsRefinement,
+                    newText: rawFinalText,
+                    assembledText: assembledRaw)
+                let pendingWords = input.runs.filter(\.pending)
+                    .reduce(0) { $0 + $1.text.split(whereSeparator: \.isWhitespace).count }
+                let outcome = await finishPendingRuns(input.runs, after: input.prefix,
+                    budget: Self.finalPassBudget(pendingWords: pendingWords)) { [weak self] text in
                     Task { @MainActor [weak self] in
                         guard let self, self.isCleaningUp else { return }
                         self.cleanupStreamingText = text
                     }
                 }
-                cleanedText = result.text
-                let language = DictationFormatterService.OutputLanguage.from(
-                    code: UserDefaults.standard.string(forKey: "dictationOutputLanguage"))
+                finalPass = outcome
+                cleanedText = outcome.text
+                let language = outputLanguage
                 let translationStillPending = !language.isMatch
                     && transcriptionService.translateRefineKeptSourceLanguage
-                    && TranscriptionService.translateLikelyFailed(output: result.text,
-                        input: runs.map(\.text).reduce(prefix, RefinementWindow.join), target: language)
-                finalRefinementCompleted = result.completed && !translationStillPending
+                    && TranscriptionService.translateLikelyFailed(output: outcome.text,
+                        input: input.runs.map(\.text).reduce(input.prefix, RefinementWindow.join), target: language)
+                // A part kept as captured is untranslated, so a translation is held instead.
+                finalRefinementCompleted = (language.isMatch || outcome.completed) && !translationStillPending
             } else {
                 // No force-refine, refine disabled/skipped, or session too
                 // short. The staged transcript already holds the real-time-
@@ -352,15 +365,19 @@ extension AppState {
             }
         }
 
-        // Cancelled while refining: skip the paste. Escape or the Stop button keeps the raw
-        // dictation as a pending session; Control-Escape discards it.
+        let finalPassParked = finalPass.map { ParkedFinalPass(runs: $0.runs, outputLanguage: outputLanguage) }
+
+        // Cancelled while refining: skip the paste. Escape or the Stop button keeps the dictation
+        // as a pending session; Control-Escape discards it.
         if cancelRequestedDuringStop {
-            bailFromCleanupCancel(rawText: assembledRaw)
+            bailFromCleanupCancel(rawText: assembledRaw, parked: finalPassParked)
             return
         }
 
         guard finalRefinementCompleted else {
-            preserveUnfinishedRefinement(assembledRaw)
+            // A held translation keeps its translated parts. A pass that finished but still reads
+            // as the source language starts over on Resume.
+            preserveUnfinishedRefinement(assembledRaw, parked: finalPass?.completed == false ? finalPassParked : nil)
             return
         }
         accumulatedSessionNeedsRefinement = false
@@ -375,7 +392,7 @@ extension AppState {
         // Re-check cancel flag after the flash so cancel during this window
         // also bails out cleanly.
         if cancelRequestedDuringStop {
-            bailFromCleanupCancel(rawText: assembledRaw)
+            bailFromCleanupCancel(rawText: assembledRaw, parked: finalPassParked)
             return
         }
         isCleaningUp = false
@@ -385,6 +402,9 @@ extension AppState {
         preserveRawOnCleanupCancel = false
 
         appStateTraceLog.notice("stop refine done totalMs=\((CFAbsoluteTimeGetCurrent() - stopPathBegan) * 1000, format: .fixed(precision: 0), privacy: .public)")
+        if let finalPass, let notice = Self.finalPassNotice(finalPass) {
+            showToast(notice, icon: "text.badge.checkmark", duration: 4)
+        }
 
         // Correct standalone pronoun capitalization before delivery.
         let finalText = StagedTranscript.fixStandalonePronounI(cleanedText)

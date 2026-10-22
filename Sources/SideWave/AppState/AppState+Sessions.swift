@@ -20,17 +20,18 @@ extension AppState {
         handleStartRecording()
         if isProcessingStart {
             accumulatedSessionText = pendingSessionText
+            accumulatedSessionPass = pendingSessionPass
         }
     }
-
-
 
     /// Discard the pending session text.
     func discardPendingSession() {
         transcriptionService.acknowledgeSavedSession()
         pendingSessionText = nil
+        pendingSessionPass = nil
         pendingSessionTimestamp = nil
         accumulatedSessionText = nil
+        accumulatedSessionPass = nil
     }
 
     // MARK: - Re-paste

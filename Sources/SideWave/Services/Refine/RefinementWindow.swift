@@ -8,9 +8,20 @@ struct RefinementWindow: Sendable {
     let prefix: String
     let editable: String
 
-    init(refinedBody: String, unrefinedTail: String) {
-        let split = Self.splitBoundary(refinedBody)
-        prefix = split.prefix
+    /// `lockedCount` characters at the start of `refinedBody` stay out of the editable part. The stop
+    /// pass locks text the model declined, so the next request doesn't send it again.
+    init(refinedBody: String, unrefinedTail: String, lockedCount: Int = 0) {
+        let open = String(refinedBody.dropFirst(lockedCount))
+        let split = Self.splitBoundary(open)
+        if lockedCount > 0 {
+            // Keep the original gap after the locked text, such as a paragraph break. When nothing
+            // after the lock reopens, the gap is the one before the tail.
+            let reopens = !split.tail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let gap = String((reopens ? open : unrefinedTail).prefix(while: \.isWhitespace))
+            prefix = String(refinedBody.prefix(lockedCount)) + gap + split.prefix.drop(while: \.isWhitespace)
+        } else {
+            prefix = split.prefix
+        }
         editable = Self.join(split.tail, unrefinedTail)
     }
 

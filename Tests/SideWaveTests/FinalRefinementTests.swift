@@ -104,6 +104,226 @@ final class FinalRefinementTests: XCTestCase {
         XCTAssertEqual(settled.text, "The samples are frozen.\n\nThe labels are done.")
     }
 
+    func testDeclinedPartIsSentAsCapturedAndNotSentAgain() async {
+        let state = AppState()
+        var declinedRequests = 0
+        state.finalPassRefine = { chunk, _ in
+            if chunk.contains("lockout") {
+                declinedRequests += 1
+                return .original(chunk, failure: .declined)
+            }
+            return .refined(chunk.replacingOccurrences(of: "um ", with: ""))
+        }
+        let runs: [StagedTranscript.FinalPassRun] = [
+            .init(text: "um the samples are frozen. Check the account lockout logs.", pending: true),
+            .init(text: "The report is ready.", pending: false),
+            .init(text: "um send it Friday.", pending: true),
+        ]
+        let outcome = await state.finishPendingRuns(runs, after: "", budget: .seconds(10), onStream: { _ in })
+        XCTAssertEqual(declinedRequests, 1, "A declined part stays out of later requests")
+        XCTAssertTrue(outcome.declined)
+        XCTAssertFalse(outcome.completed)
+        XCTAssertEqual(outcome.text, "um the samples are frozen. Check the account lockout logs. The report is ready. send it Friday.",
+                       "The declined part is kept as captured and the rest is still refined")
+        XCTAssertEqual(outcome.runs, [
+            .init(text: "um the samples are frozen. Check the account lockout logs.", pending: true),
+            .init(text: "The report is ready. send it Friday.", pending: false),
+        ], "A captured part stays unfinished, so Resume or a held translation tries it again")
+        XCTAssertTrue(AppState.sameWords(StagedTranscript.FinalPassRun.joinedText(outcome.runs), outcome.text))
+        XCTAssertEqual(AppState.finalPassNotice(outcome),
+                       "Apple Intelligence declined part of this dictation. That part was sent as captured.")
+    }
+
+    func testFinalPassSendsUnfinishedTextWhenItsBudgetRunsOut() async {
+        let state = AppState()
+        state.finalPassRefine = { chunk, _ in
+            try? await Task.sleep(for: .seconds(5))
+            return .refined(chunk)
+        }
+        let runs: [StagedTranscript.FinalPassRun] = [
+            .init(text: "um first part", pending: true),
+            .init(text: "Middle part.", pending: false),
+            .init(text: "um last part", pending: true),
+        ]
+        let started = ContinuousClock.now
+        let outcome = await state.finishPendingRuns(runs, after: "Earlier.", budget: .milliseconds(200), onStream: { _ in })
+        XCTAssertLessThan(ContinuousClock.now - started, .seconds(2))
+        XCTAssertTrue(outcome.timedOut)
+        XCTAssertEqual(outcome.text, "Earlier. um first part Middle part. um last part")
+        XCTAssertEqual(outcome.runs.filter(\.pending).map(\.text), ["um first part", "um last part"])
+        XCTAssertNotNil(AppState.finalPassNotice(outcome))
+    }
+
+    func testStoppedPassKeepsFinishedPartsSoResumeRefinesOnlyTheRest() async {
+        let state = AppState()
+        var requests = 0
+        state.finalPassRefine = { [weak state] chunk, _ in
+            requests += 1
+            if requests == 1 { return .refined("The samples are frozen.") }
+            state?.cancelRequestedDuringStop = true
+            return .original(chunk, failure: .cancelled)
+        }
+        let runs: [StagedTranscript.FinalPassRun] = [
+            .init(text: "um the samples are frozen", pending: true),
+            .init(text: "The report is ready.", pending: false),
+            .init(text: "um send it Friday", pending: true),
+        ]
+        let outcome = await state.finishPendingRuns(runs, after: "", budget: .seconds(10), onStream: { _ in })
+        XCTAssertTrue(outcome.cancelled)
+        XCTAssertNil(AppState.finalPassNotice(outcome))
+        state.preserveRawOnCleanupCancel = true
+        state.bailFromCleanupCancel(rawText: "raw text",
+                                    parked: AppState.ParkedFinalPass(runs: outcome.runs, outputLanguage: .matchInput))
+        let paused = try? XCTUnwrap(state.pendingSessionText)
+        XCTAssertEqual(paused, "The samples are frozen. The report is ready. um send it Friday")
+        XCTAssertEqual(state.pendingSessionPass?.runs.filter(\.pending).map(\.text), ["um send it Friday"])
+
+        let resumed = AppState.finalPassInput(
+            stagedRuns: [.init(text: "New words.", pending: false)],
+            continuedText: paused ?? "",
+            parked: state.pendingSessionPass,
+            outputLanguage: .matchInput,
+            resumedNeedsRefinement: true,
+            newText: "New words.",
+            assembledText: (paused ?? "") + " New words.")
+        XCTAssertEqual(resumed.runs, [
+            .init(text: "The samples are frozen. The report is ready.", pending: false),
+            .init(text: "um send it Friday New words.", pending: true),
+        ], "Resume refines only what the stopped pass left unfinished, plus the first new sentence")
+        let junction = AppState.finalPassInput(
+            stagedRuns: [.init(text: "Lunch on Friday. The labels are done.", pending: false)],
+            continuedText: "Send it before.",
+            parked: .init(runs: [.init(text: "Send it before.", pending: false)], outputLanguage: .matchInput),
+            outputLanguage: .matchInput, resumedNeedsRefinement: true,
+            newText: "Lunch on Friday. The labels are done.", assembledText: "")
+        XCTAssertEqual(junction.runs, [
+            .init(text: "Send it before.", pending: false),
+            .init(text: "Lunch on Friday.", pending: true),
+            .init(text: "The labels are done.", pending: false),
+        ], "A sentence split by the pause gets a request that sees both sides")
+        XCTAssertEqual(resumed.prefix, "")
+    }
+
+    func testFinalPassInputFallsBackWhenPausedRunsDoNotMatch() {
+        let stale = AppState.finalPassInput(
+            stagedRuns: [.init(text: "New words.", pending: false)],
+            continuedText: "Edited paused text.",
+            parked: .init(runs: [.init(text: "Different text.", pending: false)], outputLanguage: .matchInput),
+            outputLanguage: .matchInput,
+            resumedNeedsRefinement: true,
+            newText: "New words.",
+            assembledText: "Edited paused text. New words.")
+        XCTAssertEqual(stale.runs, [.init(text: "Edited paused text. New words.", pending: true)])
+        let otherLanguage = AppState.finalPassInput(
+            stagedRuns: [],
+            continuedText: "The report is ready.",
+            parked: .init(runs: [.init(text: "The report is ready.", pending: false)], outputLanguage: .matchInput),
+            outputLanguage: .spanish,
+            resumedNeedsRefinement: true,
+            newText: "",
+            assembledText: "The report is ready.")
+        XCTAssertEqual(otherLanguage.runs, [.init(text: "The report is ready.", pending: true)],
+                       "Text finished for one output language is unfinished for another")
+        let normal = AppState.finalPassInput(
+            stagedRuns: [.init(text: "um tail", pending: true)],
+            continuedText: "",
+            parked: nil,
+            outputLanguage: .matchInput,
+            resumedNeedsRefinement: false,
+            newText: "um tail",
+            assembledText: "um tail")
+        XCTAssertEqual(normal.runs, [.init(text: "um tail", pending: true)])
+    }
+
+    func testParagraphBreakSurvivesNextToADeclinedPart() async {
+        let state = AppState()
+        state.finalPassRefine = { chunk, _ in
+            chunk.contains("lockout") ? .original(chunk, failure: .declined)
+                : .refined(chunk.replacingOccurrences(of: "um ", with: ""))
+        }
+        let runs: [StagedTranscript.FinalPassRun] = [
+            .init(text: "Check the lockout logs.", pending: true),
+            .init(text: "\n\num send it Friday.", pending: true),
+        ]
+        let outcome = await state.finishPendingRuns(runs, after: "", budget: .seconds(10), onStream: { _ in })
+        XCTAssertEqual(outcome.text, "Check the lockout logs.\n\nsend it Friday.")
+        XCTAssertEqual(StagedTranscript.FinalPassRun.joinedText(outcome.runs), outcome.text)
+        let window = RefinementWindow(refinedBody: "Keep this.", unrefinedTail: "\n\nNext paragraph.", lockedCount: 10)
+        XCTAssertEqual(RefinementWindow.join(window.prefix, window.editable), "Keep this.\n\nNext paragraph.")
+    }
+
+    func testHeldTranslationKeepsTranslatedPartsForResume() {
+        let state = AppState()
+        let parked = AppState.ParkedFinalPass(runs: [
+            .init(text: "Las muestras están congeladas.", pending: false),
+            .init(text: "send the report Friday", pending: true),
+        ], outputLanguage: .spanish)
+        state.preserveUnfinishedRefinement("raw text", parked: parked)
+        XCTAssertEqual(state.pendingSessionText, "Las muestras están congeladas. send the report Friday")
+        let resumed = AppState.finalPassInput(stagedRuns: [], continuedText: state.pendingSessionText ?? "",
+            parked: state.pendingSessionPass, outputLanguage: .spanish, resumedNeedsRefinement: true,
+            newText: "", assembledText: state.pendingSessionText ?? "")
+        XCTAssertEqual(resumed.runs, parked.runs, "Resume translates only the part still in English")
+    }
+
+    func testPauseKeepsFinishedPartsEvenWithoutNewSpeech() {
+        let earlier = AppState.ParkedFinalPass(runs: [
+            .init(text: "The samples are frozen.", pending: false),
+            .init(text: "um send it Friday", pending: true),
+        ], outputLanguage: .matchInput)
+        let quiet = AppState.pausedPass(earlier: earlier, accumulatedText: earlier.text, stagedRuns: [],
+                                        newText: "", outputLanguage: .matchInput)
+        XCTAssertEqual(quiet, earlier)
+        let more = AppState.pausedPass(earlier: earlier, accumulatedText: earlier.text,
+                                       stagedRuns: [.init(text: "The labels are done.", pending: false)],
+                                       newText: "The labels are done.", outputLanguage: .matchInput)
+        XCTAssertEqual(more?.runs.map(\.pending), [false, true, false])
+        let unknown = AppState.pausedPass(earlier: nil, accumulatedText: "Earlier words.",
+                                          stagedRuns: [.init(text: "New words.", pending: false)],
+                                          newText: "New words.", outputLanguage: .matchInput)
+        XCTAssertEqual(unknown?.runs, [.init(text: "Earlier words.", pending: true), .init(text: "New words.", pending: false)])
+        XCTAssertNil(AppState.pausedPass(earlier: nil, accumulatedText: "Earlier words.", stagedRuns: [],
+                                         newText: "", outputLanguage: .matchInput))
+    }
+
+    func testFinalPassBudgetScalesWithPendingWords() {
+        XCTAssertEqual(AppState.finalPassBudget(pendingWords: 0), .seconds(10))
+        XCTAssertEqual(AppState.finalPassBudget(pendingWords: 160), .milliseconds(15_600))
+        XCTAssertEqual(AppState.finalPassBudget(pendingWords: 5_000), .seconds(25))
+    }
+
+    func testLockedTextStaysOutOfTheEditableWindow() {
+        let body = "Check the lockout logs. The report is ready."
+        let locked = "Check the lockout logs.".count
+        let window = RefinementWindow(refinedBody: body, unrefinedTail: "Send it.", lockedCount: locked)
+        XCTAssertEqual(window.editable, "The report is ready. Send it.")
+        XCTAssertEqual(RefinementWindow.join(window.prefix, window.editable), body + " Send it.")
+        let paragraph = RefinementWindow(refinedBody: "Check the lockout logs.\n\nThe report is ready.",
+                                         unrefinedTail: "", lockedCount: locked)
+        XCTAssertEqual(RefinementWindow.join(paragraph.prefix, "The report is ready."),
+                       "Check the lockout logs.\n\nThe report is ready.")
+        let all = RefinementWindow(refinedBody: body, unrefinedTail: "Send it.", lockedCount: body.count)
+        XCTAssertEqual(all.prefix, body)
+        XCTAssertEqual(all.editable, "Send it.")
+    }
+
+    func testPlainTextRetryTreatsAWrittenRefusalAsDeclined() {
+        XCTAssertTrue(DictationFormatterService.looksLikeModelRefusal("I’m sorry, but I can’t help with that.", input: "check the lockout logs"))
+        XCTAssertFalse(DictationFormatterService.looksLikeModelRefusal("I'm sorry I missed the meeting.", input: "i'm sorry i missed the meeting"))
+        XCTAssertFalse(DictationFormatterService.looksLikeModelRefusal("Check the lockout logs.", input: "check the lockout logs"))
+        let input = "check the account lockout logs and summarize today's failed attempts"
+        let refusal = DictationFormatterService.looksLikeModelRefusal
+        XCTAssertTrue(refusal("I cannot provide assistance with that request.", input))
+        XCTAssertTrue(refusal("I cannot summarize today's failed attempts.", input), "A refusal can repeat the request")
+        XCTAssertTrue(refusal("This request involves sensitive security topics.", input),
+                      "An answer made almost entirely of other words is not a cleanup")
+        XCTAssertFalse(refusal("Please review the account lockout logs and summarize today's failed sign-in attempts.", input))
+        XCTAssertFalse(refusal("They have gone.", "um they they has went"), "Grammar fixes change most short words")
+        XCTAssertFalse(refusal("RNA, DNA, and PCR.", "r n a d n a and p c r"))
+        XCTAssertFalse(refusal("Sorry, but I cannot attend the meeting.", "sorry but i can't attend the meeting"))
+        XCTAssertFalse(refusal("I'm sorry I missed the call.", "i am sorry i missed the call"))
+    }
+
     func testLeadingSentenceSplitIsBounded() {
         XCTAssertTrue(RefinementWindow.splitLeadingSentence("Sarah on Friday. The labels are done.")
             == ("Sarah on Friday.", "The labels are done."))

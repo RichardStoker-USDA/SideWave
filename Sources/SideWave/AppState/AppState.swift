@@ -177,8 +177,15 @@ final class AppState {
     var pendingSessionText: String? = nil
     var accumulatedSessionNeedsRefinement = false
     var pendingSessionTimestamp: Date? = nil
+    /// The paused text split into finished and unfinished parts, so Resume refines only the
+    /// unfinished parts. Used only while its text and output language still match.
+    var pendingSessionPass: ParkedFinalPass? = nil
     /// Text accumulated from a previous session being continued.
     var accumulatedSessionText: String? = nil
+    var accumulatedSessionPass: ParkedFinalPass? = nil
+    /// The stop pass's model call. Tests replace it to simulate declines and slow output.
+    @ObservationIgnored
+    var finalPassRefine: (@MainActor (_ chunk: String, _ context: String) async -> DictationFormatterService.RefinementResult)?
 
     // Guards against duplicate start/stop flow and duplicate startServices calls
     var captureStart = CaptureStartState()
@@ -734,9 +741,9 @@ final class AppState {
 
     // MARK: - Toast
 
-    func showToast(_ message: String, icon: String? = nil) {
+    func showToast(_ message: String, icon: String? = nil, duration: TimeInterval = 1.5) {
         guard !AppPaths.isTestHost else { return }
-        ToastController.shared.show(message: message, icon: icon)
+        ToastController.shared.show(message: message, icon: icon, duration: duration)
     }
 
 }

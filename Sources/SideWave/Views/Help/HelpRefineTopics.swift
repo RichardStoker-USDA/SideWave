@@ -28,12 +28,12 @@ struct HelpRefineContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("What it does")
                     .font(.title3.weight(.semibold))
-                Text("Refine runs on your Mac as each segment finishes. It removes hesitations and fixes punctuation and grammar in the style of your template. When you finish, it refines whatever is left before pasting. If that final pass can't finish, the text stays on Home and in History instead of being pasted.")
+                Text("Refine runs on your Mac as each segment finishes. It removes hesitations and fixes punctuation and grammar in the style of your template. When you finish, it refines whatever is left before pasting. If Apple Intelligence declines a part, or the final pass runs out of time, that part is pasted as captured and a notice says so.")
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Choose the Template, Refine model, and Output language on Home. Formatting Rules is on Home and in the document window. Settings > Refine prepares models and holds the expert options.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 HelpDeepLinkButton(label: "Open Refine Settings", systemImage: "text.badge.checkmark", targetPage: nil, targetSettingsTab: .settingsRefine, spotlightKey: "refine")
@@ -47,7 +47,7 @@ struct HelpRefineContent: View {
                     .font(.headline)
                 Text("These controls stay in sync wherever they appear.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("Complete runs the streaming draft, Parakeet, and Refine. Basic keeps both speech models and skips Refine. Minimalistic runs only Parakeet, so the preview updates in short batches and its first words appear later.")
@@ -55,7 +55,7 @@ struct HelpRefineContent: View {
                 Text("In Basic and Minimalistic, gray text still settles to solid when Parakeet confirms a segment; that is recognition, not Refine. Glossaries and word filters still apply.")
                     .font(.callout).fixedSize(horizontal: false, vertical: true)
                 Text("Basic and Minimalistic turn Refine off and unload its model. Picking a template afterward turns Refine back on; in Minimalistic it runs when you finish. Simple and Advanced view don't change any of this.")
-                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
 
                 HelpSettingLocationRow(icon: "slider.horizontal.3", title: "Dictation Mode", valueMock: "Complete", location: "Dictation tab, or Home in Advanced view > Recognition & refinement")
                 HelpSettingLocationRow(icon: "text.badge.checkmark", title: "Refine model", valueMock: "Gemma 4", location: "Home > Refine model, Dictation tab > Refine, or Settings > Refine")
@@ -75,10 +75,10 @@ struct HelpRefineContent: View {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("What you said")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                     Text("\"So, um, I was thinking we should probably, you know, run the assembly on SCINet, because the lab server keeps, uh, running out of memory.\"")
                         .font(.system(.callout, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                        .adaptiveSecondary()
                         .padding(Spacing.sm)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.primary.opacity(0.04))
@@ -100,19 +100,19 @@ struct HelpRefineContent: View {
             Text("Gemma 4 E4B. About 5.2 GB. Better with longer text; use it with 16 GB of memory or more.")
                 .fixedSize(horizontal: false, vertical: true)
             Text("Gemma 4 12B. About 6.8 GB. The largest and slowest Gemma; use it with 24 GB of memory or more.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).adaptiveSecondary()
             Text("Apple Intelligence. On Macs that support it. macOS downloads and manages the model.")
                 .fixedSize(horizontal: false, vertical: true)
             Text("Switch with Refine model on Home, on the Dictation tab, or in Settings > Refine.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
         }
 
         HelpCard {
             Text("Templates")
                 .font(.title3.weight(.semibold))
             Text("Standard, Professional, and Concise refine your words as you speak and paste into your app. Pick one with Template on Home or on the Dictation tab.")
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text("Standard. Fixes grammar, punctuation, and transcription errors. Keeps your voice.")
                 Text("Professional. Rewrites into professional prose. Fixes grammar, phrasing, and word choice.")
@@ -121,7 +121,7 @@ struct HelpRefineContent: View {
             .font(.callout)
             Text("Email, Instructions, AI Prompt, and Custom are document templates. They format the whole dictation after you finish and show it in the document window, where you can edit and copy it. Start dictating, or choose Open Document. Email keeps your tone, so a quick note stays short and a formal one stays formal; ask for a change such as \"make it more formal\" to adjust it. Custom follows your Formatting Rules with no built-in style.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
         }
 
         HelpCard {
@@ -130,9 +130,9 @@ struct HelpRefineContent: View {
             Text("Change the document type with the Template menu at the top. Each template keeps its current draft, and Recents keeps earlier documents with your edits. Read shows the formatted text; Edit text lets you change it directly.")
                 .fixedSize(horizontal: false, vertical: true)
             Text("Your hotkey starts a new document and moves the previous one to Recents. Add dictation continues the open document, and New starts a blank one. To change the document, type under Change this document and choose Apply, or use Speak change. Stop Edit puts the document back and keeps your instruction.")
-                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
             Text("When automatic appending is off, Activity holds new dictation until you choose Append. Undo reverses the last model edit. If a change can't be applied, the window says why and keeps your instruction.")
-                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.callout).adaptiveSecondary().fixedSize(horizontal: false, vertical: true)
         }
 
         HelpCard {
@@ -142,11 +142,11 @@ struct HelpRefineContent: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("The languages are English, Spanish, French, German, Italian, Portuguese, Japanese, Korean, and Chinese (Simplified). With Apple Intelligence, the list shows only what your macOS version supports. The larger Gemma models translate complex text better.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
             Text("In History, a translated dictation has Literal back-translation, which translates it back word for word with notes on phrases that changed. It is another model's reading, not proof the translation was exact. It runs on your Mac when you ask, and the result is saved with the entry.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -164,7 +164,7 @@ struct HelpRefineContent: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("Minimum words can be 5, 10, 20, or 50 (default 10). The cutoff covers the final pass and Rewrite and finish, but Refine still runs on each segment while you speak. It's on the Dictation tab under Refine > Advanced.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -180,12 +180,12 @@ struct HelpRefineContent: View {
                 Text("Full Session: rewrites the whole dictation, which takes longer for long input. Rewrite and finish does the same for one dictation.")
             }
             .font(.callout)
-            .foregroundStyle(.secondary)
+            .adaptiveSecondary()
         }
 
         HelpCard {
             Text("If final refinement cannot finish").font(.title3.weight(.semibold))
-            Text("SideWave keeps the text on Home and in History instead of pasting it half refined. Resume to try again, or copy the text. With Final refinement pass off, SideWave pastes right away, including words that weren't refined.")
+            Text("The final pass has 10 to 25 seconds, depending on how much text is left. A part the model declines, or that is still unfinished when time runs out, is pasted as captured, and a notice says so. When translating, SideWave keeps the text on Home and in History instead, so untranslated words aren't pasted. Stopping the final pass with Escape keeps the text on Home; Resume refines only the parts that weren't finished.")
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -210,7 +210,7 @@ struct HelpRefineContent: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("Link a glossary to templates from its \u{2026} menu on the Vocabulary tab, and it turns on only with those templates.")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
 
@@ -282,7 +282,7 @@ struct HelpTextNormalizationContent: View {
 
                 Text("The speech model writes numbers as words. Text normalization rewrites spoken numbers, dates, times, money, and measurements in written form, on every finished segment.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -329,10 +329,10 @@ struct HelpTextNormalizationContent: View {
             HStack(spacing: Spacing.sm) {
                 Text("\"\(spoken)\"")
                     .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .adaptiveSecondary()
                 Image(systemName: "arrow.right")
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .adaptiveTertiary()
                     .accessibilityHidden(true)
                 Text(written)
                     .font(.system(.caption, design: .monospaced).weight(.medium))
@@ -346,7 +346,7 @@ struct HelpTextNormalizationContent: View {
                 .font(.callout.weight(.medium))
             Text(detail)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .adaptiveSecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

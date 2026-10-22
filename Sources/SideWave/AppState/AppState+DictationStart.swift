@@ -110,6 +110,7 @@ extension AppState {
             refinementCountAtSessionStart = dictationFormatter.completedRefinementCount
         }
         accumulatedSessionText = pendingSessionText
+        accumulatedSessionPass = pendingSessionPass
         if pendingSessionText == nil { accumulatedSessionNeedsRefinement = false }
         lastDictationFailure = nil
         documentEditNotice = nil

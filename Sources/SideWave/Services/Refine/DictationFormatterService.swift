@@ -455,11 +455,15 @@ final class DictationFormatterService {
     }
 
     struct RefinementResult: Sendable {
+        enum Failure: Sendable { case declined, cancelled, other }
         let text: String
         let completed: Bool
+        var failure: Failure? = nil
 
         static func refined(_ text: String) -> Self { Self(text: text, completed: true) }
-        static func original(_ text: String) -> Self { Self(text: text, completed: false) }
+        static func original(_ text: String, failure: Failure = .other) -> Self {
+            Self(text: text, completed: false, failure: failure)
+        }
     }
 
     /// Compatibility entry point for callers that explicitly accept raw fallback.
@@ -759,7 +763,7 @@ final class DictationFormatterService {
             // Cancellation is user-initiated; no toast needed.
             dropTurnSessionsOnUncleanExit()
             restoreReadyIfLoaded()
-            return .original(rawText)
+            return .original(rawText, failure: .cancelled)
 
         case .formatterError(let err):
             if !silentMode {
@@ -776,7 +780,7 @@ final class DictationFormatterService {
             }
             dropTurnSessionsOnUncleanExit()
             restoreReadyIfLoaded()
-            return .original(rawText)
+            return .original(rawText, failure: err == .refused ? .declined : .other)
 
         case .otherError(let description):
             SWLog.note("[DictationFormatter] Generation failed: \(description)")

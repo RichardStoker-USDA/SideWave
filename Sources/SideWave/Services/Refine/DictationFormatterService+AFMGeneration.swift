@@ -396,6 +396,14 @@ extension DictationFormatterService {
                     onStream: onStream
                 )
             }
+            if Self.retriesDeclineAsPlainText(settings.template) {
+                switch error {
+                case .guardrailViolation, .refusal:
+                    return try await runAFMPlainRetry(session: session, prompt: prompt, rawText: rawText,
+                                                      options: options, onStream: onStream)
+                default: break
+                }
+            }
             // Map framework errors to FormatterError so AppState can surface
             // specific silent-fallback toasts.
             switch error {
@@ -423,6 +431,10 @@ extension DictationFormatterService {
                 case .contextSizeExceeded:
                     throw FormatterError.contextOverflow
                 case .guardrailViolation, .refusal:
+                    if Self.retriesDeclineAsPlainText(settings.template) {
+                        return try await runAFMPlainRetry(session: session, prompt: prompt, rawText: rawText,
+                                                          options: options, onStream: onStream)
+                    }
                     throw FormatterError.refused
                 case .unsupportedLanguageOrLocale:
                     throw FormatterError.backendNotReady
@@ -437,6 +449,55 @@ extension DictationFormatterService {
         let final = output.trimmingCharacters(in: .whitespacesAndNewlines)
         onStream(final)
         return final
+    }
+
+    /// The second generation model's guardrails also apply to guided output, while permissive
+    /// guardrails let plain text through, so a declined prose refine is asked again as plain text.
+    /// Structured templates keep their schemas and fall back to the captured text.
+    nonisolated static func retriesDeclineAsPlainText(_ template: Template) -> Bool {
+        effectiveAFMGeneration == .gen2 && [.standard, .concise, .professional].contains(template)
+    }
+
+    nonisolated private static func runAFMPlainRetry(
+        session: LanguageModelSession,
+        prompt: String,
+        rawText: String,
+        options: GenerationOptions,
+        onStream: @Sendable @escaping (String) -> Void
+    ) async throws -> String {
+        let output = try await runAFMPlainGeneration(session: session, prompt: prompt, options: options, onStream: { _ in })
+        guard !looksLikeModelRefusal(output, input: rawText) else { throw FormatterError.refused }
+        onStream(output)
+        return output
+    }
+
+    /// A plain-text answer can decline in words instead of with an error. It counts as a decline
+    /// when it adds a first-person refusal or apology the speaker didn't say, or when almost none
+    /// of its words are the speaker's. Punctuation and contractions are normalized first, so a
+    /// dictated "sorry but I can't make it" stays a dictation.
+    nonisolated static func looksLikeModelRefusal(_ output: String, input: String) -> Bool {
+        func normalized(_ text: String) -> String {
+            var text = " " + text.lowercased().replacingOccurrences(of: "’", with: "'") + " "
+            text = String(text.map { $0.isLetter || $0.isNumber || $0 == "'" ? $0 : " " })
+            for (short, long) in [("can't", "cannot"), ("can not", "cannot"), ("won't", "will not"),
+                                  ("i'm", "i am"), ("don't", "do not"), ("'d", " would")] {
+                text = text.replacingOccurrences(of: short, with: long)
+            }
+            return " " + text.split(separator: " ").joined(separator: " ") + " "
+        }
+        let answer = normalized(output)
+        let spoken = normalized(input)
+        let markers = ["i cannot", "i am unable", "i am not able", "i will not be able", "i must decline",
+                       "i do not feel comfortable", "i apologize", "i am sorry", "sorry but", "as an ai",
+                       "unable to assist", "unable to help", "cannot assist", "cannot help with",
+                       "cannot provide", "cannot fulfill"]
+        if markers.contains(where: { answer.contains(" \($0) ") && !spoken.contains(" \($0) ") }) { return true }
+        // Backstop for a refusal without those words. A cleanup keeps far more of the speaker's
+        // words than this, even with grammar fixes and acronyms.
+        let answerWords = answer.split(separator: " ").filter { $0.count >= 3 }
+        guard answerWords.count >= 4 else { return false }
+        let said = Set(spoken.split(separator: " "))
+        return Double(answerWords.filter(said.contains).count) / Double(answerWords.count) < 0.2
     }
 
     /// Apple Intelligence generation without a schema: streams text, cleans preambles, quotes, and
