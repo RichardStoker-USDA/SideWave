@@ -187,4 +187,58 @@ final class OutputLanguageTests: XCTestCase {
         XCTAssertFalse(entry.wasTranslated)
         XCTAssertEqual(entry.outputLanguageValue, .matchInput)
     }
+
+    // MARK: - Translation failures
+
+    /// The refine worker uses this to decide whether a segment came back untranslated and must be
+    /// retried or held. Echoed English must not count as a finished Chinese translation.
+    func testTranslateLikelyFailedDetectsSourceLanguage() {
+        typealias TS = TranscriptionService
+        let zh = OutputLanguage.simplifiedChinese
+        // Echo of the source input == failure.
+        XCTAssertTrue(TS.translateLikelyFailed(
+            output: "we came in twelve percent under",
+            input: "we came in twelve percent under", target: zh))
+        // Cleaned-but-still-English (no Han) == failure.
+        XCTAssertTrue(TS.translateLikelyFailed(
+            output: "We came in about 12% under budget.",
+            input: "we came in twelve percent under", target: zh))
+        // Empty == failure.
+        XCTAssertTrue(TS.translateLikelyFailed(output: "   ", input: "anything", target: zh))
+        // Real Chinese == success (not failed).
+        XCTAssertFalse(TS.translateLikelyFailed(
+            output: "我们比预算低了百分之十二。",
+            input: "we came in twelve percent under", target: zh))
+        // Chinese with a preserved Latin name + number stays above threshold.
+        XCTAssertFalse(TS.translateLikelyFailed(
+            output: "Sarah 会在周五前核对这些数字,大约低了 12%。",
+            input: "Sarah will double check the figures by Friday", target: zh))
+        // Latin-script targets fall back to the equality check only: a real
+        // Spanish translation is NOT flagged, but an echo is.
+        XCTAssertFalse(TS.translateLikelyFailed(
+            output: "Vinimos alrededor de un doce por ciento por debajo.",
+            input: "we came in twelve percent under", target: .spanish))
+        XCTAssertTrue(TS.translateLikelyFailed(
+            output: "we came in twelve percent under",
+            input: "we came in twelve percent under", target: .spanish))
+    }
+
+    /// A held source-language span between translated spans stays pending, so the stop pass
+    /// translates it again instead of pasting English.
+    @MainActor
+    func testHeldSpanRoutesIntoStopTail() {
+        let staged = StagedTranscript()
+        let id1 = staged.ingestTdtCommitted("today I want to review the quarterly budget")
+        staged.refineSpan(spanID: id1, refinedText: "今天我想回顾一下季度预算。")
+        let id2 = staged.ingestTdtCommitted("we came in twelve percent under what we projected")
+        staged.markHeldSourceLanguage(spanID: id2) // translate failed; English held
+        let id3 = staged.ingestTdtCommitted("Sarah will double check the figures")
+        staged.refineSpan(spanID: id3, refinedText: "Sarah 会核对这些数字。")
+
+        let runs = staged.finalPassRuns(includeRawEouTail: false)
+        // The held segment stops mid-sentence, so it takes the next sentence along for the retry.
+        XCTAssertEqual(runs.map(\.pending), [false, true])
+        XCTAssertTrue(runs[0].text.contains("今天"), "the translated prefix stays refined")
+        XCTAssertTrue(runs[1].text.contains("twelve percent"), "held English segment goes to the stop pass")
+    }
 }
