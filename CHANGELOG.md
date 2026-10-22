@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.4 (2026-10-21)
+
+### Fixed
+
+- Finishing a dictation no longer hangs on Refining or leaves the text on Home when Apple
+  Intelligence declines part of it. The declined part is pasted as captured, the rest is still
+  refined, and a notice says what happened. On macOS 27, a declined part is first asked again as
+  plain text, which Apple's guardrails allow.
+- The final pass now has a time limit of 10 to 25 seconds, based on how much text is left. Text it
+  hasn't finished by then is pasted as captured.
+- Resuming a paused dictation refines only the parts that weren't finished, instead of the whole
+  dictation again.
+
+### Changed
+
+- Light mode has more contrast: darker secondary text, white menu fields with visible edges, and a
+  raised selection on the Home, Dictation, Vocabulary, and History tabs.
+
 ## 0.4.3 (2026-10-20)
 
 ### Fixed
