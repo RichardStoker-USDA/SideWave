@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.5</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Fixed</h3>
+<ul><li>Finishing a dictation no longer hangs when the clipboard belongs to Screen Sharing or another device that stopped answering. Every paste now has a deadline. A paste that runs out leaves the text in History and can&#x27;t paste later into whatever is in front.</li><li>Text goes into the field you dictated into, at your cursor, even after you move to another app or window. Mac apps with standard text fields take it without coming to the front. Otherwise the window comes forward for the paste and you&#x27;re returned to the app you were in.</li><li>Terminal gets typed text instead of a clipboard paste. A dictation with several lines arrives as one paste in Claude Code, Codex, and other programs that support bracketed paste, and dictated text can&#x27;t end that paste early.</li><li>A minimized window you chose under Send to gets the text and goes back to the Dock. A window on another Space or in full screen still counts.</li><li>When the app or window you chose under Send to is closed or has quit, SideWave says so when you start and sends that dictation to the app you&#x27;re in. An app you chose (not one of its windows) is found again after it reopens.</li><li>The Send to list leaves out apps with no open window and marks minimized windows.</li><li>Stopping no longer waits indefinitely on the speech models. Each of the last recognition steps has a time limit.</li></ul>
+<h3>Changed</h3>
+<ul><li>SideWave doesn&#x27;t read your clipboard. A clipboard paste (Electron apps such as Slack, and long text in a browser) replaces what you had copied. In Advanced view, Settings &gt; Privacy &gt; Clipboard can put it back after each paste: the copy stays on this Mac, encrypted in memory, for at most 10 seconds.</li></ul>
+</body>
+</html>

@@ -6,6 +6,17 @@
     <description>SideWave updates</description>
     <language>en</language>
     <item>
+      <title>Version 0.4.5</title>
+      <sparkle:releaseNotesLink>https://sidewave.dev/release-notes/0.4.5.html</sparkle:releaseNotesLink>
+      <sparkle:version>36</sparkle:version>
+      <sparkle:shortVersionString>0.4.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+      <link>https://github.com/RichardStoker-USDA/SideWave/releases/tag/v0.4.5</link>
+      <pubDate>Tue, 27 Oct 2026 06:51:19 +0000</pubDate>
+      <enclosure url="https://github.com/RichardStoker-USDA/SideWave/releases/download/v0.4.5/SideWave.dmg" sparkle:edSignature="hcblqKurAUB4pMnIcDANeoIU/+CMehuJeLf/+ZReqCVZVwtVloQbaYGiON+Fzw5fnAqwI5uh/TqqCMYqI1fFBg==" length="32548304" type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 0.4.4</title>
       <sparkle:releaseNotesLink>https://sidewave.dev/release-notes/0.4.4.html</sparkle:releaseNotesLink>
       <sparkle:version>35</sparkle:version>
