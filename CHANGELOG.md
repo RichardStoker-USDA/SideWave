@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.4.5 (2026-10-26)
+
+### Fixed
+
+- Finishing a dictation no longer hangs when the clipboard belongs to Screen Sharing or another
+  device that stopped answering. Every paste now has a deadline. A paste that runs out leaves the
+  text in History and can't paste later into whatever is in front.
+- Text goes into the field you dictated into, at your cursor, even after you move to another app
+  or window. Mac apps with standard text fields take it without coming to the front. Otherwise the
+  window comes forward for the paste and you're returned to the app you were in.
+- Terminal gets typed text instead of a clipboard paste. A dictation with several lines arrives as
+  one paste in Claude Code, Codex, and other programs that support bracketed paste, and dictated
+  text can't end that paste early.
+- A minimized window you chose under Send to gets the text and goes back to the Dock. A window on
+  another Space or in full screen still counts.
+- When the app or window you chose under Send to is closed or has quit, SideWave says so when you
+  start and sends that dictation to the app you're in. An app you chose (not one of its windows)
+  is found again after it reopens.
+- The Send to list leaves out apps with no open window and marks minimized windows.
+- Stopping no longer waits indefinitely on the speech models. Each of the last recognition steps
+  has a time limit.
+
+### Changed
+
+- SideWave doesn't read your clipboard. A clipboard paste (Electron apps such as Slack, and long
+  text in a browser) replaces what you had copied. In Advanced view, Settings > Privacy >
+  Clipboard can put it back after each paste: the copy stays on this Mac, encrypted in memory, for
+  at most 10 seconds.
+
 ## 0.4.4 (2026-10-21)
 
 ### Fixed
