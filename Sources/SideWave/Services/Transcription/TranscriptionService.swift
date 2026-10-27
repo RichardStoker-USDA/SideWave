@@ -401,6 +401,12 @@ final class TranscriptionService {
     // at sentence boundaries instead of only at the fixed 14.8s ceiling.
     var vadManager: VadManager?
     var vadStreamState: VadStreamState?
+    /// The VAD drain in flight. Drains run one at a time, so the stop's drain can't interleave with
+    /// the polling loop's on the same buffered audio.
+    var vadDrainTask: Task<Void, Never>?
+    /// Changes whenever VAD stops for the session. A drain that resumes after a change drops its
+    /// result instead of writing into a later state or session.
+    var vadDrainEpoch = 0
     /// Set the first time Silero VAD detects speech this session. Until then, with VAD running, any
     /// transcribed segment is the recognizer reacting to noise (for example "Mm-hmm." from a fan),
     /// so commits and TDT preview updates are suppressed. Fails open when VAD isn't available.

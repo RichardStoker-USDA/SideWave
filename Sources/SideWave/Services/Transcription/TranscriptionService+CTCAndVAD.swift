@@ -158,9 +158,53 @@ extension TranscriptionService {
         vadSetupTask = task
     }
 
-    /// Feed new audio samples to VadManager and detect speech end events.
-    /// Called from the polling loop before the segment finalization check.
+    /// Longest wait for one VAD drain. A drain covers the audio since the last one, normally under
+    /// a second of it, and Silero runs on the CPU in a few milliseconds per chunk.
+    static let vadDrainLimit: Double = 3
+
+    /// Feeds new audio to VAD with a hard limit, from the polling loop and at stop. A drain that
+    /// passes the limit is abandoned and VAD is turned off for the rest of the session, so the
+    /// recording and the stop keep going; segments then end at the fixed length, as they do when VAD
+    /// isn't available.
+    func drainVadWithinLimit(seconds: Double = vadDrainLimit) async {
+        guard vadManager != nil || vadDrainTask != nil else { return }
+        let epoch = vadDrainEpoch
+        let finished: Void? = await Self.raceWithHardTimeout(seconds: seconds) { [weak self] in
+            await self?.processVadChunks()
+        }
+        // A session that ended during the wait already reset VAD; the next session's is not ours.
+        if finished == nil, epoch == vadDrainEpoch {
+            SWLog.note("[TranscriptionService] VAD didn't answer within \(seconds) s; turned off for this session")
+            disableVadForSession()
+        }
+    }
+
+    /// Stops VAD for the rest of the session. A drain still waiting on the old VadManager sees the
+    /// epoch change and drops its result.
+    func disableVadForSession() {
+        vadDrainEpoch += 1
+        vadDrainTask = nil
+        vadManager = nil
+        vadStreamState = nil
+        vadAccumulationBuffer = []
+    }
+
+    /// Feeds new audio samples to VadManager and detects speech end events. Waits for a drain
+    /// already in flight, so two never work on the same buffered audio.
     func processVadChunks() async {
+        let previous = vadDrainTask
+        let epoch = vadDrainEpoch
+        let drain = Task { [weak self] in
+            await previous?.value
+            guard let self, epoch == self.vadDrainEpoch else { return }
+            await self.drainVadChunks(epoch: epoch)
+        }
+        vadDrainTask = drain
+        await drain.value
+        if vadDrainTask == drain { vadDrainTask = nil }
+    }
+
+    private func drainVadChunks(epoch: Int) async {
         guard let vadManager = self.vadManager, var state = self.vadStreamState else { return }
 
         // Calculate how many new samples have arrived since last VAD processing
@@ -236,6 +280,8 @@ extension TranscriptionService {
                 let result = try await vadManager.processStreamingChunk(
                     chunk, state: state, config: segConfig
                 )
+                // VAD stopped or restarted while this chunk ran: its result belongs to nothing now.
+                guard epoch == vadDrainEpoch, self.vadManager === vadManager else { return }
                 state = result.state
                 self.vadStreamState = state
                 consecutiveVadErrors = 0
@@ -266,13 +312,12 @@ extension TranscriptionService {
                     }
                 }
             } catch {
+                guard epoch == vadDrainEpoch, self.vadManager === vadManager else { return }
                 SWLog.note("[TranscriptionService] VAD chunk error (non-fatal): \(error.localizedDescription)")
                 consecutiveVadErrors += 1
                 if consecutiveVadErrors >= Self.maxVadErrors {
                     SWLog.note("[TranscriptionService] VAD disabled after \(consecutiveVadErrors) consecutive errors")
-                    self.vadManager = nil
-                    self.vadStreamState = nil
-                    self.vadAccumulationBuffer = []
+                    disableVadForSession()
                     vadConsumed = 0 // buffer already cleared
                 }
                 break

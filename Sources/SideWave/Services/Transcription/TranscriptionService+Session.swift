@@ -164,6 +164,8 @@ extension TranscriptionService {
         dualEngineActive = false
         currentEngineForOverlay = .undecided
         eouPartialAccumulated = ""
+        vadDrainEpoch += 1
+        vadDrainTask = nil
         vadManager = nil
         vadStreamState = nil
         vadAccumulationBuffer = []

@@ -345,25 +345,14 @@ extension TranscriptionService {
             if activeSamples.count <= 240_000 {
                 // Short enough for clean final transcription
                 do {
-                    let finalResult = try await withThrowingTaskGroup(of: ASRResult.self) { group in
-                        group.addTask {
-                            // A new decoder state per call, so each transcribe starts clean.
-                            var decoderState = try TdtDecoderState()
-                            return try await finalManager.transcribe(activeSamples, decoderState: &decoderState)
-                        }
-                        group.addTask {
-                            // 15s timeout: matches max segment duration (14.8s) plus CTC rescoring overhead
-                            try await Task.sleep(nanoseconds: 15_000_000_000)
-                            throw CancellationError()
-                        }
-                        guard let first = try await group.next() else {
-                            // Group cancelled before either task reported. Treat
-                            // as timeout so the outer catch falls back cleanly.
-                            throw CancellationError()
-                        }
-                        group.cancelAll()
-                        return first
+                    // 15 s matches the longest segment (14.8 s) plus CTC rescoring. A hard race, not a
+                    // task group, which would wait out a transcribe that ignores cancellation.
+                    let raced = await Self.raceWithHardTimeout(seconds: 15) { () async -> ASRResult? in
+                        // A new decoder state per call, so each transcribe starts clean.
+                        guard var decoderState = try? TdtDecoderState() else { return nil }
+                        return try? await finalManager.transcribe(activeSamples, decoderState: &decoderState)
                     }
+                    guard let finalResult = raced ?? nil else { throw CancellationError() }
 
                     // Apply CTC vocabulary rescoring before phantom word filter and text processing
                     let rescoredText = await applyCtcRescoring(result: finalResult, audioSamples: activeSamples)
@@ -415,6 +404,40 @@ extension TranscriptionService {
         return finalText
     }
 
+    /// Runs EOU's `finish()` with a hard 2 s limit, so a residual chunk is processed without ever
+    /// stalling the stop. A finish that times out may still be running inside the actor and would
+    /// clear or fill the next session's state when it resumes, so that actor is retired instead of
+    /// reset for reuse: it leaves the cache, its callback goes nowhere, and a fresh one loads.
+    private func finishEouForStop(_ eou: StreamingEouAsrManager) async {
+        let finished: Void? = await Self.raceWithHardTimeout(seconds: 2) { _ = try? await eou.finish() }
+        // Yield once so callbacks scheduled before `finish()` returned can update `liveEouTail`
+        // before paste assembly reads it.
+        await Task.yield()
+        // Clearing `eouAsr` keeps cleanupRecordingState() from resetting it again.
+        eouAsr = nil
+        if finished != nil {
+            // Reset, don't clean up, so the cached actor stays loaded; the next session waits on
+            // `eouResetTask`.
+            eouResetTask = Task { await eou.reset() }
+        } else {
+            SWLog.note("[TranscriptionService] EOU finish timed out; retiring that streaming engine")
+            if cachedEouAsr === eou { cachedEouAsr = nil }
+            Task { await eou.setPartialTranscriptCallback { _ in } }
+            Task { [weak self] in await self?.warmUpModelsIfNeeded() }
+        }
+    }
+
+    /// Transcribes a whole session's audio when the live stages produced nothing. Nil on failure
+    /// or after 30 s.
+    nonisolated private static func recoverTranscript(_ samples: [Float], with manager: AsrManager) async -> String? {
+        let result = await raceWithHardTimeout(seconds: 30) { () async -> String? in
+            guard var decoderState = try? TdtDecoderState(),
+                  let recovered = try? await manager.transcribe(samples, decoderState: &decoderState) else { return nil }
+            return recovered.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return result ?? nil
+    }
+
     /// Dual-engine stop. With `preferFastResult` (push-to-talk release) it returns EOU's text after
     /// a bounded `finish()`. Otherwise (toggle) it tears EOU down and continues with the standard
     /// polling stop, so vocabulary boosting and the final transcribe still run.
@@ -460,27 +483,7 @@ extension TranscriptionService {
                 // during finish()) land in stagedTranscript instead of
                 // being rejected by the `isRecording` guard.
                 isStoppingDrain = true
-                // Bounded finish so a residual chunk gets processed without
-                // ever stalling the stop path. 2s covers the longest realistic
-                // tail-end EOU forward pass.
-                _ = try? await withThrowingTaskGroup(of: String.self) { group in
-                    group.addTask { try await eou.finish() }
-                    group.addTask {
-                        try await Task.sleep(nanoseconds: 2_000_000_000)
-                        throw CancellationError()
-                    }
-                    let first = try await group.next()
-                    group.cancelAll()
-                    return first ?? ""
-                }
-                // Yield once so callbacks scheduled before `eou.finish()` returned can update
-                // `liveEouTail` before paste assembly reads it.
-                await Task.yield()
-                // Reset, don't clean up, so the cached actor stays loaded. Clearing `eouAsr` keeps
-                // cleanupRecordingState() from resetting it again; the next session waits on
-                // `eouResetTask`.
-                eouAsr = nil
-                eouResetTask = Task { await eou.reset() }
+                await finishEouForStop(eou)
                 isStoppingDrain = false
             }
 
@@ -514,13 +517,11 @@ extension TranscriptionService {
                     if totalSamples > 16000 { // at least 1s of audio recorded
                         DictationTracingService.shared.log(.engineState, .warning, "Smart PTT release: Staged transcript is empty. Running full offline ASR recovery...")
                         let samples = audioBuffers.allSamples()
-                        do {
-                            var decoderState = try TdtDecoderState()
-                            let recovered = try await pollManager.transcribe(samples, decoderState: &decoderState)
-                            processed = recovered.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if let recovered = await Self.recoverTranscript(samples, with: pollManager) {
+                            processed = recovered
                             DictationTracingService.shared.log(.engineState, .info, "ASR Recovery Succeeded: \"\(transcriptMetrics(processed))\"")
-                        } catch {
-                            DictationTracingService.shared.log(.engineState, .error, "ASR Recovery failed: \(error.localizedDescription)")
+                        } else {
+                            DictationTracingService.shared.log(.engineState, .error, "ASR Recovery failed or timed out")
                         }
                     }
                 }
@@ -564,7 +565,7 @@ extension TranscriptionService {
             //
             // Drain VAD first so its frontier covers the trailing audio. Otherwise the pause guard fails open
             // and a breath before the stop can come back as "Yeah."
-            await processVadChunks()
+            await drainVadWithinLimit()
             let bufferCount = audioBuffers.sampleCount()
             let activeStart = frozenSampleCount - totalDroppedSamples
             let activeCount = bufferCount - activeStart
@@ -577,12 +578,16 @@ extension TranscriptionService {
                                         && speechEndConsumed
                                         && !vadCurrentlySpeaking
             if activeCount >= 3200 && !trailingIsPhantomSilence {
-                await finalizeCurrentSegment(
-                    vadTriggered: true,
-                    activeSampleCount: activeCount,
-                    speechEndSample: lastSpeechEndSampleIndex,
-                    isFinalStop: true
-                )
+                // A hard limit like the other stop steps. finalizeCurrentSegment drops a late
+                // result itself once recording has stopped, and the EOU tail still has these words.
+                let speechEnd = lastSpeechEndSampleIndex
+                let finalized: Void? = await Self.raceWithHardTimeout(seconds: 15) { [weak self] in
+                    await self?.finalizeCurrentSegment(vadTriggered: true, activeSampleCount: activeCount,
+                                                       speechEndSample: speechEnd, isFinalStop: true)
+                }
+                if finalized == nil {
+                    SWLog.note("[TranscriptionService] Final segment timed out; using the streaming tail")
+                }
             } else if trailingIsPhantomSilence {
                 dictationTraceLog.notice("stop: skip force-finalize (trailing silence after recent VAD finalize, activeCount=\(activeCount, privacy: .public))")
             }
@@ -610,21 +615,7 @@ extension TranscriptionService {
 
             if let eou = eouActor {
                 isStoppingDrain = true
-                _ = try? await withThrowingTaskGroup(of: String.self) { group in
-                    group.addTask { try await eou.finish() }
-                    group.addTask {
-                        try await Task.sleep(nanoseconds: 2_000_000_000)
-                        throw CancellationError()
-                    }
-                    let first = try await group.next()
-                    group.cancelAll()
-                    return first ?? ""
-                }
-                await Task.yield()
-                // Nil out eouAsr so cleanupRecordingState() doesn't duplicate
-                // the reset, and track it in eouResetTask so the next session awaits it.
-                eouAsr = nil
-                eouResetTask = Task { await eou.reset() }
+                await finishEouForStop(eou)
                 isStoppingDrain = false
             }
 
@@ -648,12 +639,10 @@ extension TranscriptionService {
                 if totalSamples > 16000 { // at least 1s of audio recorded
                     dictationTraceLog.warning("stop toggle: Staged transcript is empty. Running full offline ASR recovery...")
                     let samples = audioBuffers.allSamples()
-                    do {
-                        var decoderState = try TdtDecoderState()
-                        let recovered = try await pollManager.transcribe(samples, decoderState: &decoderState)
-                        processed = recovered.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    } catch {
-                        dictationTraceLog.error("ASR recovery failed in toggle stop: \(error.localizedDescription)")
+                    if let recovered = await Self.recoverTranscript(samples, with: pollManager) {
+                        processed = recovered
+                    } else {
+                        dictationTraceLog.error("ASR recovery failed or timed out in toggle stop")
                     }
                 }
             }
@@ -805,6 +794,8 @@ extension TranscriptionService {
         dualEngineActive = false
         currentEngineForOverlay = .undecided
         eouPartialAccumulated = ""
+        vadDrainEpoch += 1
+        vadDrainTask = nil
         vadManager = nil
         vadStreamState = nil
         vadAccumulationBuffer = []

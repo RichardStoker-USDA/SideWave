@@ -55,7 +55,7 @@ extension TranscriptionService {
                 }
 
                 // Feed new audio to VAD for speech boundary detection
-                await self.processVadChunks()
+                await self.drainVadWithinLimit()
 
                 // Check if segment finalization is needed.
                 // Two triggers: VAD-detected speech end (natural pause) or fixed ceiling (safety net).

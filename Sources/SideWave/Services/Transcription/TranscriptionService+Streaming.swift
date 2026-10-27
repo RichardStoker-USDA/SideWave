@@ -152,6 +152,9 @@ extension TranscriptionService {
         // below the mark and gets dropped by the seq guard below.
         lastAppliedEouPartialSeq = eouPartialSeqGen.peek()
 
+        // Partials count only while this engine is the session's. One retired after a stop timed
+        // out can still deliver words late, and they must not reach the next session.
+        let source = ObjectIdentifier(eou)
         await eou.setPartialTranscriptCallback { [weak self] (partial: String) in
             // Stamp the partial here, in delivery order. The actor calls this closure serially; the
             // hop to the main actor is what can reorder. `eouPartialSeqGen` is nonisolated, so no
@@ -162,7 +165,8 @@ extension TranscriptionService {
                 // Also accept partials during the stop drain. `isRecording` turns false before
                 // `eou.finish()` delivers the last 100 to 300 ms, and those final words would
                 // otherwise be lost.
-                guard let self, (self.isRecording || self.isStoppingDrain) else { return }
+                guard let self, (self.isRecording || self.isStoppingDrain),
+                      self.eouAsr.map(ObjectIdentifier.init) == source else { return }
                 // Swift doesn't guarantee FIFO order for cross-actor hops at equal priority, so
                 // drop anything at or below the high-water mark. The gray preview never moves back
                 // to older text.
