@@ -237,6 +237,27 @@ final class DictationHomeRenderingTests: XCTestCase {
         }
     }
 
+    func testClipboardPrivacySettingsFit() async throws {
+        let state = AppState()
+        let defaults = UserDefaults.standard
+        let keys = ["showAdvancedControls", TypingService.restoreClipboardKey]
+        let saved = keys.map { ($0, defaults.object(forKey: $0)) }
+        defer {
+            for (key, value) in saved {
+                if let value { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+            }
+        }
+        for (advanced, restore, label) in [(false, false, "simple"), (true, false, "advanced_off"), (true, true, "advanced_on")] {
+            defaults.set(advanced, forKey: "showAdvancedControls")
+            defaults.set(restore, forKey: TypingService.restoreClipboardKey)
+            for scheme in [ColorScheme.light, .dark] {
+                try await render(SettingsContentView(category: .settingsPrivacy, appState: state).environment(state),
+                                 scheme: scheme, name: "settings_privacy_clipboard_\(label)_\(scheme == .dark ? "dark" : "light")",
+                                 width: 540, height: 620)
+            }
+        }
+    }
+
     func testShortcutHelpAndInitialSettingsDeepLinkFit() async throws {
         let state = AppState()
         for scheme in [ColorScheme.light, .dark] {

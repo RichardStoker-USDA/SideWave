@@ -133,22 +133,33 @@ extension AppState {
         return result
     }
 
-    /// Assign a specific app as the permanent paste target.
+    /// Assign a specific app as the permanent paste target. A menu built before the app quit can
+    /// still offer it; picking it then does nothing.
     func assignTarget(pid: pid_t, name: String) {
+        guard let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated else { return }
+        assignmentRevision += 1
         assignedAppPID = pid
         assignedAppName = name
+        assignedBundleID = app.bundleIdentifier
         assignedWindowID = nil
         assignedWindowTitle = nil
+        assignedWindowChosen = false
+        assignedFieldFingerprint = nil
         borderOverlay.detach()
     }
 
-    /// Sets one window of an app as the paste target, and fingerprints the focused field so it can
-    /// be found at paste.
-    func assignWindow(_ window: WindowInfo) {
+    /// Sets the paste target to an app's window, and fingerprints the focused field so it can be
+    /// found at paste. `chosen` is true when the user picked this window from the app's window
+    /// list; otherwise they picked the app, and the target follows the app if the window closes.
+    func assignWindow(_ window: WindowInfo, chosen: Bool) {
+        guard WindowTargetingService.windowExists(window.windowID, pid: window.pid) else { return }
+        assignmentRevision += 1
         assignedAppPID = window.pid
         assignedAppName = window.appName
+        assignedBundleID = NSRunningApplication(processIdentifier: window.pid)?.bundleIdentifier
         assignedWindowID = window.windowID
         assignedWindowTitle = window.title
+        assignedWindowChosen = chosen
         assignedFieldFingerprint = WindowTargetingService.captureFocusedFieldFingerprint(
             pid: window.pid,
             windowID: window.windowID
@@ -158,10 +169,13 @@ extension AppState {
 
     /// Clear the assigned target (reverts to focused-window behavior even in assigned mode).
     func clearAssignedTarget() {
+        assignmentRevision += 1
         assignedAppPID = nil
         assignedAppName = nil
+        assignedBundleID = nil
         assignedWindowID = nil
         assignedWindowTitle = nil
+        assignedWindowChosen = false
         assignedFieldFingerprint = nil
         borderOverlay.detach()
     }
@@ -177,18 +191,42 @@ extension AppState {
         }
     }
 
-    /// Validate that the assigned app/window is still running. If it quit or window closed, clear.
-    func validateAssignedTarget() {
-        guard let pid = assignedAppPID else { return }
-        guard let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated else {
-            clearAssignedTarget()
-            return
+    /// Checks the chosen app or window before text is sent there. Returns why it can't go there,
+    /// as a sentence for a toast, or nil when it can (or when nothing is chosen).
+    ///
+    /// A minimized window or one on another Space still counts; delivery brings it back. An app
+    /// that quit and reopened is found again by its bundle ID. When the user picked the app and its
+    /// window was replaced, the choice follows the app.
+    func checkAssignedTarget() -> String? {
+        guard let name = assignedAppName else { return nil }
+        let alive = { (pid: pid_t) in NSRunningApplication(processIdentifier: pid).map { !$0.isTerminated } ?? false }
+        if assignedAppPID.map(alive) != true, let bundleID = assignedBundleID,
+           let reopened = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+               .first(where: { !$0.isTerminated }) {
+            assignedAppPID = reopened.processIdentifier
         }
-        // If a specific window was assigned, check if it's still on screen
-        if let wid = assignedWindowID, !WindowTargetingService.isWindowOnScreen(wid) {
+        let pid = assignedAppPID
+        let check = AssignedTargetCheck.evaluate(
+            appRunning: pid.map(alive) ?? false,
+            windowID: assignedWindowID,
+            windowExists: pid.flatMap { p in assignedWindowID.map { WindowTargetingService.windowExists($0, pid: p) } } ?? false,
+            windowChosen: assignedWindowChosen,
+            windowCount: pid.flatMap(WindowTargetingService.windowCount(pid:)))
+        switch check {
+        case .ready:
+            return nil
+        case .followApp:
             assignedWindowID = nil
             assignedWindowTitle = nil
             borderOverlay.detach()
+            return nil
+        case .chosenWindowClosed:
+            clearAssignedTarget()
+            return "The \(name) window you chose closed."
+        case .appNotOpen:
+            return "\(name) isn't open."
+        case .noOpenWindow:
+            return "\(name) has no open window."
         }
     }
 }

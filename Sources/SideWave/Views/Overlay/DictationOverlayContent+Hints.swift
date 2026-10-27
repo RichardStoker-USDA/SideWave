@@ -44,9 +44,9 @@ extension DictationOverlayContent {
                             Divider()
                             ForEach(windows) { window in
                                 Button {
-                                    appState.assignWindow(window)
+                                    appState.assignWindow(window, chosen: true)
                                 } label: {
-                                    Label(window.title, systemImage: "macwindow.on.rectangle")
+                                    Label(window.menuTitle, systemImage: "macwindow.on.rectangle")
                                 }
                             }
                         } label: {
@@ -56,18 +56,19 @@ extension DictationOverlayContent {
                                 Label(app.name, systemImage: "macwindow")
                             }
                         }
-                    } else {
+                    } else if !windows.isEmpty || !WindowTargetingService.hasNoWindows(pid: app.pid) {
+                        let title = windows.first?.isMinimized == true ? "\(app.name) (minimized)" : app.name
                         Button {
                             if let window = windows.first {
-                                appState.assignWindow(window)
+                                appState.assignWindow(window, chosen: false)
                             } else {
                                 appState.assignTarget(pid: app.pid, name: app.name)
                             }
                         } label: {
                             if let icon = app.icon {
-                                Label { Text(app.name) } icon: { Image(nsImage: icon) }
+                                Label { Text(title) } icon: { Image(nsImage: icon) }
                             } else {
-                                Label(app.name, systemImage: "macwindow")
+                                Label(title, systemImage: "macwindow")
                             }
                         }
                     }

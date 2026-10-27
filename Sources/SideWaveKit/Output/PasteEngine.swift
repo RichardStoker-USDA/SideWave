@@ -16,18 +16,21 @@ import Synchronization
 /// - failed: every method ran and Accessibility reported nothing landed.
 /// - blockedSecureInput: another process holds secure keyboard input, so synthetic key events are
 ///   dropped everywhere.
+/// - timedOut: nothing reached the target before the paste deadline, and the stalled attempt is
+///   barred from pasting later.
 enum PasteOutcome: Sendable, Equatable {
     case verified
     case assumed
     case failed
     case blockedSecureInput
+    case timedOut
 
     /// True when the text is (probably) in the target. Drives the success
     /// chime + history vs. the error sound + failure toast in AppState.
     var landed: Bool {
         switch self {
         case .verified, .assumed: return true
-        case .failed, .blockedSecureInput: return false
+        case .failed, .blockedSecureInput, .timedOut: return false
         }
     }
 
@@ -38,7 +41,62 @@ enum PasteOutcome: Sendable, Equatable {
         case .assumed: return "assumed"
         case .failed: return "failed"
         case .blockedSecureInput: return "blocked-secure-input"
+        case .timedOut: return "timed-out"
         }
+    }
+}
+
+/// Delivery state of one paste request, shared by the paste worker and the deadline timer.
+/// Whichever finishes first reports the outcome; the other is ignored.
+final class PasteTicket: Sendable {
+    private enum Stage { case waiting, sending, abandoned }
+    private struct State {
+        var stage: Stage = .waiting
+        var completion: (@Sendable (PasteOutcome) -> Void)?
+    }
+    private let state: OSAllocatedUnfairLock<State>
+
+    init(completion: (@Sendable (PasteOutcome) -> Void)?) {
+        state = OSAllocatedUnfairLock(initialState: State(completion: completion))
+    }
+
+    /// Call right before anything reaches the target or the clipboard. Returns false once the
+    /// deadline passed, so a late worker can't paste into whatever has focus then, and a paste
+    /// that was already sending can't start a second method after the caller moved on.
+    func beginSending() -> Bool {
+        state.withLock { s in
+            if s.stage == .abandoned { return false }
+            s.stage = .sending
+            return true
+        }
+    }
+
+    var isAbandoned: Bool { state.withLock { $0.stage == .abandoned } }
+
+    /// Reports `outcome` unless the ticket already reported.
+    func report(_ outcome: PasteOutcome) {
+        let completion = state.withLock { s -> (@Sendable (PasteOutcome) -> Void)? in
+            defer { s.completion = nil }
+            return s.completion
+        }
+        completion?(outcome)
+    }
+
+    /// The deadline passed before the worker reported. A paste that sent nothing is reported as
+    /// timed out. One already sending is reported as assumed and its current method may finish,
+    /// since its text is on the way. Either way no new method can start. Returns true when nothing
+    /// had been sent, so the caller can free the typing slot.
+    @discardableResult
+    func expire() -> Bool {
+        let (completion, abandoned) = state.withLock { s -> ((@Sendable (PasteOutcome) -> Void)?, Bool) in
+            guard let completion = s.completion else { return (nil, false) }
+            s.completion = nil
+            let unsent = s.stage == .waiting
+            s.stage = .abandoned
+            return (completion, unsent)
+        }
+        completion?(abandoned ? .timedOut : .assumed)
+        return abandoned
     }
 }
 
@@ -94,18 +152,30 @@ final class PasteEngine: @unchecked Sendable {
     /// Command-V. The app can override it; 0 uses the default.
     nonisolated(unsafe) static var clipboardRestoreDelayOverrideMs: Int = 0
     static func clipboardRestoreDelayMs() -> Int {
+        // At most 5 s, so a saved clipboard is put back well before its copy expires.
         let v = clipboardRestoreDelayOverrideMs
-        return v > 0 ? v : 600
+        return v > 0 ? min(v, 5000) : 600
     }
 
-    // Thread-safe typing guard -- written from background queue, read from main thread
-    private let isCurrentlyTyping = Mutex(false)
+    /// Restore the clipboard after a clipboard paste. The app can turn it on; off by default, and
+    /// the clipboard is never read while it's off.
+    nonisolated(unsafe) static var restoresClipboard = false
+
+    /// How long a caller waits for a paste to report, counted from the request. A normal paste
+    /// reports within about 2 s, including the clipboard backup limit. A stall, such as a target
+    /// app that stops answering Accessibility, reports `.timedOut` here instead of holding the
+    /// session open.
+    static let pasteDeadline: TimeInterval = 6
+
+    /// The paste that owns the typing slot. One paste runs at a time so two can't interleave. A
+    /// paste abandoned at its deadline gives up the slot; its worker can no longer send anything.
+    private let activeTicket = Mutex<PasteTicket?>(nil)
 
     struct TypingRequest: Sendable {
         let text: String
         let preferredTargetPID: pid_t?
         let appendTrailingSpace: Bool
-        let completion: (@Sendable (PasteOutcome) -> Void)?
+        let ticket: PasteTicket
     }
     
     private let pendingRequests = Mutex<[TypingRequest]>([])
@@ -209,47 +279,65 @@ final class PasteEngine: @unchecked Sendable {
             return
         }
 
+        let ticket = PasteTicket(completion: completion)
         let request = TypingRequest(
             text: text,
             preferredTargetPID: preferredTargetPID,
             appendTrailingSpace: appendTrailingSpace,
-            completion: completion
+            ticket: ticket
         )
 
-        // Add to queue to prevent concurrent drops (P0-B #1)
+        // Queue so concurrent pastes run one at a time.
         pendingRequests.withLock { $0.append(request) }
 
-        // Process queue
+        // Every paste reports by the deadline, including one queued behind a stalled paste.
+        let targetApp = Self.appName(for: preferredTargetPID)
+        let length = text.count
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + Self.pasteDeadline) { [self] in
+            guard ticket.expire() else { return }
+            Logger(subsystem: "com.sidewave.kit", category: "paste").notice("Paste to \(targetApp, privacy: .private) sent nothing within \(Int(Self.pasteDeadline), privacy: .public) s; abandoned")
+            PasteTracer.record(PasteTracer.Trace(
+                timestamp: Date(),
+                targetPID: preferredTargetPID ?? 0,
+                targetApp: targetApp,
+                textLength: length,
+                attempts: ["deadline"],
+                outcome: "deadline",
+                verdict: PasteOutcome.timedOut.traceLabel
+            ))
+            releaseSlot(ifHeldBy: ticket)
+        }
+
         processQueue()
     }
 
-    private func processQueue() {
-        let hasWork = pendingRequests.withLock { !$0.isEmpty }
-        guard hasWork else { return }
-        
-        let acquired = isCurrentlyTyping.withLock { isTyping -> Bool in
-            if isTyping {
-                return false
-            }
-            isTyping = true
+    /// Frees the typing slot if `ticket` holds it, then starts the next queued paste.
+    private func releaseSlot(ifHeldBy ticket: PasteTicket) {
+        let released = activeTicket.withLock { active -> Bool in
+            guard active === ticket else { return false }
+            active = nil
             return true
         }
-        
-        guard acquired else { return }
-        
-        let nextRequest: TypingRequest? = pendingRequests.withLock { queue in
-            if queue.isEmpty {
+        if released { processQueue() }
+    }
+
+    private func processQueue() {
+        // Claim the slot and take the next live request together. Requests that passed their
+        // deadline while queued already reported and are skipped.
+        let nextRequest: TypingRequest? = activeTicket.withLock { active in
+            guard active == nil else { return nil }
+            let next = pendingRequests.withLock { queue -> TypingRequest? in
+                while !queue.isEmpty {
+                    let candidate = queue.removeFirst()
+                    if !candidate.ticket.isAbandoned { return candidate }
+                }
                 return nil
-            } else {
-                return queue.removeFirst()
             }
+            active = next?.ticket
+            return next
         }
-        
-        guard let request = nextRequest else {
-            isCurrentlyTyping.withLock { $0 = false }
-            return
-        }
-        
+        guard let request = nextRequest else { return }
+
         // Immutable so the background paste closure below captures a value, not
         // a mutable var (which the concurrency checker flags as a data race).
         // The trailing-space decision is made once, here, before dispatch.
@@ -283,21 +371,20 @@ final class PasteEngine: @unchecked Sendable {
                     verdict: pasteOutcome.traceLabel
                 ))
 
-                request.completion?(pasteOutcome)
-
-                isCurrentlyTyping.withLock { $0 = false }
-
-                // Process next in queue
-                processQueue()
+                request.ticket.report(pasteOutcome)
+                releaseSlot(ifHeldBy: request.ticket)
             }
 
-            pasteOutcome = insertTextInstantly(textToInsert, preferredTargetPID: request.preferredTargetPID, attempts: &attempts)
+            pasteOutcome = insertTextInstantly(textToInsert, preferredTargetPID: request.preferredTargetPID,
+                                               attempts: &attempts, ticket: request.ticket)
         }
     }
 
     // MARK: - Private cascade
 
-    private func insertTextInstantly(_ text: String, preferredTargetPID: pid_t?, attempts: inout [String]) -> PasteOutcome {
+    private func insertTextInstantly(
+        _ text: String, preferredTargetPID: pid_t?, attempts: inout [String], ticket: PasteTicket
+    ) -> PasteOutcome {
         guard let expectedPID = preferredTargetPID ?? NSWorkspace.shared.frontmostApplication?.processIdentifier,
               Self.targetStillFocused(expectedPID) else {
             attempts.append("target-changed")
@@ -310,38 +397,62 @@ final class PasteEngine: @unchecked Sendable {
         // toast.
         if IsSecureEventInputEnabled() {
             attempts.append("secure-input-ax-only")
-            if insertTextViaAccessibility(text, expectedPID: expectedPID) { return .verified }
+            switch insertTextViaAccessibility(text, expectedPID: expectedPID, ticket: ticket) {
+            case .inserted: return .verified
+            case .maybeSent: return .assumed
+            case .notSent: break
+            }
             attempts.append("secure-input-blocked")
             return .blockedSecureInput
         }
 
-        // Long text goes straight to clipboard paste (PID-targeted when possible)
+        // Long text: too long for one key event, so it goes through Accessibility or the clipboard.
         if text.utf16.count > Self.cgEventUnicodeLimit {
+            // Native apps take it at the caret through Accessibility, which leaves the clipboard
+            // alone. Only a confirmed miss moves on to the clipboard, so nothing is pasted twice.
+            if let pid = preferredTargetPID, pid > 0, Self.acceptsAccessibilityInsertion(pid: pid) {
+                attempts.append("ax-insertion-long")
+                let baseline = Self.capturePasteBaseline(targetPID: pid)
+                switch insertTextViaAccessibility(text, expectedPID: expectedPID, ticket: ticket, caretOnly: true) {
+                case .inserted:
+                    switch Self.verifyPasteDelivery(expectedText: text, targetPID: pid, baseline: baseline) {
+                    case .landed: return .verified
+                    case .unverifiable: return .assumed
+                    case .notLanded: break
+                    }
+                case .maybeSent:
+                    // The app didn't answer in time and may still insert it; a clipboard paste
+                    // now could put the text in twice.
+                    return .assumed
+                case .notSent:
+                    break
+                }
+            }
             if let pid = preferredTargetPID, pid > 0 {
                 attempts.append("clipboard-pid-long")
-                let r = insertTextViaClipboard(text, targetPID: pid)
+                let r = insertTextViaClipboard(text, targetPID: pid, ticket: ticket)
                 if r != .failed { return r } // Landed or unverifiable; avoid fallback double-paste
             }
             attempts.append("clipboard-hid-long")
-            let r = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID)
+            let r = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID, ticket: ticket)
             if r != .failed { return r }
             attempts.append("char-by-char-long")
-            return typeCharByCharAndVerify(text, expectedPID: expectedPID)
+            return typeCharByCharAndVerify(text, expectedPID: expectedPID, ticket: ticket)
         }
 
         // Electron + browser fast path: skip CGEvent unicode insertion
         if let pid = preferredTargetPID, pid > 0, Self.requiresClipboardPaste(pid: pid) {
             attempts.append("clipboard-pid-electron")
-            let r1 = insertTextViaClipboard(text, targetPID: pid)
+            let r1 = insertTextViaClipboard(text, targetPID: pid, ticket: ticket)
             if r1 != .failed { return r1 }
             // PID-targeted Cmd+V positively did not land. Try the HID-tap
             // Cmd+V variant before giving up; some Electron builds accept the
             // global tap when the direct postToPid is dropped.
             attempts.append("clipboard-hid-electron")
-            let r2 = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID)
+            let r2 = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID, ticket: ticket)
             if r2 != .failed { return r2 }
             attempts.append("char-by-char-electron")
-            return typeCharByCharAndVerify(text, expectedPID: expectedPID)
+            return typeCharByCharAndVerify(text, expectedPID: expectedPID, ticket: ticket)
         }
 
         // Short text: try CGEvent cascade (PID-targeted first)
@@ -350,7 +461,7 @@ final class PasteEngine: @unchecked Sendable {
         if let pid = bulkTargetPID {
             attempts.append("cgevent-bulk-pid")
             let baseline = Self.capturePasteBaseline(targetPID: pid)
-            if insertTextBulk(text, targetPID: pid) {
+            if insertTextBulk(text, targetPID: pid, ticket: ticket) {
                 didTryBulk = true
                 // Browsers accept the unicode event but don't reflect it in
                 // kAXValueAttribute synchronously; verifying would false-fail
@@ -376,7 +487,7 @@ final class PasteEngine: @unchecked Sendable {
         if let focusedPID = Self.focusedElementPID(), focusedPID == expectedPID, focusedPID != bulkTargetPID {
             attempts.append("cgevent-bulk-focused")
             let baseline = Self.capturePasteBaseline(targetPID: focusedPID)
-            if insertTextBulk(text, targetPID: focusedPID) {
+            if insertTextBulk(text, targetPID: focusedPID, ticket: ticket) {
                 didTryBulk = true
                 if Self.isWebBrowser(pid: focusedPID) { return .assumed }
                 switch Self.verifyPasteDelivery(expectedText: text, targetPID: focusedPID, baseline: baseline) {
@@ -389,14 +500,18 @@ final class PasteEngine: @unchecked Sendable {
 
         // Try Accessibility insertion; a successful set means the text is there.
         attempts.append("ax-insertion")
-        if insertTextViaAccessibility(text, expectedPID: expectedPID) { return .verified }
+        switch insertTextViaAccessibility(text, expectedPID: expectedPID, ticket: ticket) {
+        case .inserted: return .verified
+        case .maybeSent: return .assumed
+        case .notSent: break
+        }
 
         // System-wide key events only if nothing was already sent to a process, or the text would
         // be typed twice.
         if !didTryBulk {
             attempts.append("cgevent-bulk-hid")
             let baseline = Self.capturePasteBaseline()
-            if insertTextBulkHID(text, expectedPID: expectedPID) {
+            if insertTextBulkHID(text, expectedPID: expectedPID, ticket: ticket) {
                 switch Self.verifyPasteDelivery(expectedText: text, baseline: baseline) {
                 case .landed: return .verified
                 case .unverifiable: return .assumed
@@ -408,23 +523,23 @@ final class PasteEngine: @unchecked Sendable {
         // Clipboard fallback (PID-targeted when possible)
         if let pid = preferredTargetPID, pid > 0 {
             attempts.append("clipboard-pid")
-            let r = insertTextViaClipboard(text, targetPID: pid)
+            let r = insertTextViaClipboard(text, targetPID: pid, ticket: ticket)
             if r != .failed { return r }
         }
         attempts.append("clipboard-hid")
-        let rHid = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID)
+        let rHid = insertTextViaClipboard(text, targetPID: nil, expectedPID: expectedPID, ticket: ticket)
         if rHid != .failed { return rHid }
 
         // Last resort
         attempts.append("char-by-char-fallback")
-        return typeCharByCharAndVerify(text, expectedPID: expectedPID)
+        return typeCharByCharAndVerify(text, expectedPID: expectedPID, ticket: ticket)
     }
 
     /// Character-by-character HID typing followed by an AX delivery check.
     /// The last-resort layer still has to report a truthful verdict so a real
     /// failure reaches the user instead of a silent success chime.
-    private func typeCharByCharAndVerify(_ text: String, expectedPID: pid_t) -> PasteOutcome {
-        guard Self.targetStillFocused(expectedPID) else { return .failed }
+    private func typeCharByCharAndVerify(_ text: String, expectedPID: pid_t, ticket: PasteTicket) -> PasteOutcome {
+        guard Self.targetStillFocused(expectedPID), ticket.beginSending() else { return .failed }
         let baseline = Self.capturePasteBaseline()
         typeCharacterByCharacter(text, expectedPID: expectedPID)
         switch Self.verifyPasteDelivery(expectedText: text, baseline: baseline) {
@@ -479,6 +594,14 @@ final class PasteEngine: @unchecked Sendable {
         return false
     }
 
+    /// Apps that can take long text through Accessibility instead of the clipboard: native apps.
+    /// Terminals don't accept it, Electron apps and TextEdit are known to need the clipboard, and
+    /// browsers update their field value late, so a read-back there can look like a miss and paste
+    /// twice.
+    private static func acceptsAccessibilityInsertion(pid: pid_t) -> Bool {
+        !isTerminal(pid: pid) && !isWebBrowser(pid: pid) && !requiresClipboardPaste(pid: pid)
+    }
+
     /// Terminal apps. They accept typed text and Command-V reliably but usually don't expose the
     /// text through Accessibility, so delivery can't be confirmed. verifyPasteDelivery treats them
     /// as unverifiable rather than not landed, which would trigger a second method and paste the
@@ -525,7 +648,7 @@ final class PasteEngine: @unchecked Sendable {
     }
 
     /// CGEvent bulk insertion targeting a specific PID
-    private func insertTextBulk(_ text: String, targetPID: pid_t) -> Bool {
+    private func insertTextBulk(_ text: String, targetPID: pid_t, ticket: PasteTicket) -> Bool {
         guard Self.targetStillFocused(targetPID) else { return false }
         guard targetPID > 0 else { return false }
 
@@ -535,6 +658,7 @@ final class PasteEngine: @unchecked Sendable {
         guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
               let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
         else { return false }
+        guard ticket.beginSending() else { return false }
 
         // Clear the flags. A new event inherits the current modifier state, which can still include
         // the hotkey's modifier or the Command from our own paste, turning typed characters into
@@ -553,7 +677,7 @@ final class PasteEngine: @unchecked Sendable {
     }
 
     /// CGEvent bulk insertion via HID tap (no PID target)
-    private func insertTextBulkHID(_ text: String, expectedPID: pid_t) -> Bool {
+    private func insertTextBulkHID(_ text: String, expectedPID: pid_t, ticket: PasteTicket) -> Bool {
         guard Self.targetStillFocused(expectedPID) else { return false }
         let utf16 = Array(text.utf16)
         guard utf16.count <= Self.cgEventUnicodeLimit else { return false }
@@ -561,6 +685,7 @@ final class PasteEngine: @unchecked Sendable {
         guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
               let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
         else { return false }
+        guard ticket.beginSending() else { return false }
 
         // Explicit empty flags; same inherited-modifier hazard as
         // insertTextBulk above.
@@ -583,8 +708,12 @@ final class PasteEngine: @unchecked Sendable {
     /// when selected text can't be set: then the current value is read and the text appended, or
     /// replaced if the field is empty. Secure fields read back as bullets, so they are replaced,
     /// never appended to.
-    private func insertTextViaAccessibility(_ text: String, expectedPID: pid_t) -> Bool {
-        guard Self.targetStillFocused(expectedPID) else { return false }
+    /// With `caretOnly`, only the insert at the caret is tried, never the append to the field's end.
+    /// A write the app didn't answer in time may still apply, so it stops there as `.maybeSent`.
+    private func insertTextViaAccessibility(
+        _ text: String, expectedPID: pid_t, ticket: PasteTicket, caretOnly: Bool = false
+    ) -> AXInsertResult {
+        guard Self.targetStillFocused(expectedPID) else { return .notSent }
         let systemWide = AXUIElementCreateSystemWide()
         var focusedRef: CFTypeRef?
 
@@ -593,12 +722,13 @@ final class PasteEngine: @unchecked Sendable {
             kAXFocusedUIElementAttribute as CFString,
             &focusedRef
         )
-        guard result == .success, let focusedRef else { return false }
-        guard CFGetTypeID(focusedRef) == AXUIElementGetTypeID() else { return false }
+        guard result == .success, let focusedRef else { return .notSent }
+        guard CFGetTypeID(focusedRef) == AXUIElementGetTypeID() else { return .notSent }
 
         let element = unsafeBitCast(focusedRef, to: AXUIElement.self)
         var elementPID: pid_t = 0
-        guard AXUIElementGetPid(element, &elementPID) == .success, elementPID == expectedPID else { return false }
+        guard AXUIElementGetPid(element, &elementPID) == .success, elementPID == expectedPID else { return .notSent }
+        guard ticket.beginSending() else { return .notSent }
 
         // Preferred path: insert at the selection/caret without touching the
         // rest of the field.
@@ -607,7 +737,9 @@ final class PasteEngine: @unchecked Sendable {
             kAXSelectedTextAttribute as CFString,
             text as CFTypeRef
         )
-        if insertResult == .success { return true }
+        if insertResult == .success { return .inserted }
+        if Self.axWriteMayStillApply(insertResult) { return .maybeSent }
+        if caretOnly { return .notSent }
 
         // Selected-text isn't settable here. For a secure field the value reads
         // back as bullets, so appending would corrupt it; keep the replace
@@ -615,7 +747,7 @@ final class PasteEngine: @unchecked Sendable {
         var roleRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef) == .success,
            (roleRef as? String) == "AXSecureTextField" {
-            return AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, text as CFTypeRef) == .success
+            return Self.axInsertResult(AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, text as CFTypeRef))
         }
 
         // Otherwise read the current value and append, so a half-typed draft or a
@@ -629,7 +761,18 @@ final class PasteEngine: @unchecked Sendable {
             existing = ""
         }
         let combined = existing.isEmpty ? text : existing + text
-        return AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, combined as CFTypeRef) == .success
+        return Self.axInsertResult(AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, combined as CFTypeRef))
+    }
+
+    enum AXInsertResult { case inserted, notSent, maybeSent }
+
+    /// Whether an Accessibility write that returned `error` could still be applied by the app.
+    /// Only a timeout can: the app may process it once it answers. Other errors mean it rejected
+    /// the write.
+    static func axWriteMayStillApply(_ error: AXError) -> Bool { error == .cannotComplete }
+
+    private static func axInsertResult(_ error: AXError) -> AXInsertResult {
+        error == .success ? .inserted : axWriteMayStillApply(error) ? .maybeSent : .notSent
     }
 
 }

@@ -6,6 +6,10 @@ import SwiftUI
 
 struct PrivacySettingsPane: View {
     @AppStorage("historyRetentionDays") private var historyRetentionDays = 7
+    @AppStorage("showAdvancedControls") private var showAdvancedControls = false
+    @AppStorage(TypingService.restoreClipboardKey) private var restoreClipboard = false
+    @State private var confirmingRestore = false
+    @State private var clipboardAccess = NSPasteboard.general.accessBehavior
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -13,6 +17,38 @@ struct PrivacySettingsPane: View {
             Text("Speech recognition and Refine run on this Mac. Dictation audio is processed in memory and isn't saved; meeting audio is saved locally so a recording can be recovered. Microphone standby, when on, keeps the input open between dictations. SideWave downloads models and, when you choose, glossary bundles and app updates. It sends no usage analytics or crash reports.")
                 .settingsCaption()
                 .fixedSize(horizontal: false, vertical: true)
+        }
+
+        SettingsCard("Clipboard") {
+            Text("Most apps, including Terminal, take dictation without the clipboard. Electron apps such as Slack, and long dictations in a browser, get a clipboard paste, and the dictation replaces what you had copied. SideWave doesn't read your clipboard unless you turn on restore.")
+                .settingsCaption()
+                .fixedSize(horizontal: false, vertical: true)
+            if showAdvancedControls {
+                SettingsDivider()
+                SettingsToggleRow("Restore clipboard after pasting",
+                                  caption: "Reads what you copied right before a clipboard paste and puts it back afterward. The copy stays on this Mac, encrypted in memory, for at most 10 seconds.",
+                                  isOn: Binding(get: { restoreClipboard },
+                                                set: { on in if on { confirmingRestore = true } else { restoreClipboard = false } }))
+                if restoreClipboard {
+                    clipboardAccessStatus
+                }
+            } else if restoreClipboard {
+                Text("Restore clipboard after pasting is on. Turn on Advanced view to change it.")
+                    .settingsCaption()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .alert("Let SideWave read your clipboard?", isPresented: $confirmingRestore) {
+            Button("Cancel", role: .cancel) {}
+            Button("Turn On") {
+                restoreClipboard = true
+                requestClipboardAccess()
+            }
+        } message: {
+            Text("Before a clipboard paste, SideWave reads what you copied so it can put it back afterward. The copy stays on this Mac, in memory only, and is never saved to disk or logged. Each part is encrypted as soon as it's read, with a key made for that copy alone. The key is erased when your clipboard is put back, and no more than 10 seconds after it was read. After that, no one can decrypt the copy, including you. What's put back stays local to this Mac.\n\nmacOS may ask whether SideWave can paste from other apps. SideWave restores your clipboard only after you allow it.")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            clipboardAccess = NSPasteboard.general.accessBehavior
         }
 
         SettingsCard("History") {
@@ -54,6 +90,52 @@ struct PrivacySettingsPane: View {
                     .actionButton()
                 Spacer()
             }
+        }
+    }
+
+    /// What macOS currently allows. SideWave reads the clipboard only when macOS already allows it,
+    /// so a macOS alert can't appear in the middle of a paste.
+    @ViewBuilder private var clipboardAccessStatus: some View {
+        switch clipboardAccess {
+        case .alwaysAllow:
+            statusCaption("macOS allows SideWave to read the clipboard.")
+        case .default:
+            HStack(alignment: .firstTextBaseline) {
+                statusCaption("macOS hasn't allowed SideWave to read the clipboard yet, so it isn't restored. Ask macOS, then allow SideWave in Privacy & Security under Paste from Other Apps.")
+                Spacer(minLength: Spacing.md)
+                Button("Ask macOS") { requestClipboardAccess() }
+                    .actionButton()
+            }
+        case .ask, .alwaysDeny:
+            HStack(alignment: .firstTextBaseline) {
+                statusCaption(clipboardAccess == .ask
+                    ? "macOS asks before each clipboard read, and SideWave won't let that interrupt a paste, so your clipboard isn't restored yet. Allow SideWave in Privacy & Security under Paste from Other Apps."
+                    : "macOS blocks SideWave from reading the clipboard, so it isn't restored. Allow SideWave in Privacy & Security under Paste from Other Apps.")
+                Spacer(minLength: Spacing.md)
+                Button("Open Privacy & Security") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .actionButton()
+            }
+        @unknown default:
+            EmptyView()
+        }
+    }
+
+    private func statusCaption(_ text: String) -> some View {
+        Text(text)
+            .settingsCaption()
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Reads the clipboard once now, so a macOS permission alert, if any, appears here rather
+    /// than during a paste. The read can wait on that alert, so it runs off the main thread.
+    private func requestClipboardAccess() {
+        Task {
+            await Task.detached(priority: .userInitiated) { TypingService.requestClipboardAccess() }.value
+            clipboardAccess = NSPasteboard.general.accessBehavior
         }
     }
 }

@@ -117,25 +117,30 @@ extension TypingService {
     func sendReturnKey(targetPID: pid_t?, withShift: Bool) {
         guard AXIsProcessTrusted() else { return }
         DispatchQueue.global(qos: .userInitiated).async {
-            // keyCode 36 = Return
-            guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 36, keyDown: true),
-                  let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 36, keyDown: false)
-            else { return }
+            Self.postReturnKey(targetPID: targetPID, withShift: withShift)
+        }
+    }
 
-            // Set flags on both paths; an unshifted Return sent right at hotkey release could
-            // otherwise go out as Option-Return.
-            keyDown.flags = withShift ? .maskShift : []
-            keyUp.flags = withShift ? .maskShift : []
+    /// Posts Return and returns once it's sent. Blocks for about 10 ms.
+    static func postReturnKey(targetPID: pid_t?, withShift: Bool) {
+        // keyCode 36 = Return
+        guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 36, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 36, keyDown: false)
+        else { return }
 
-            if let pid = targetPID, pid > 0 {
-                keyDown.postToPid(pid)
-                usleep(10_000) // 10ms
-                keyUp.postToPid(pid)
-            } else {
-                keyDown.post(tap: .cghidEventTap)
-                usleep(10_000)
-                keyUp.post(tap: .cghidEventTap)
-            }
+        // Set flags on both paths; an unshifted Return sent right at hotkey release could
+        // otherwise go out as Option-Return.
+        keyDown.flags = withShift ? .maskShift : []
+        keyUp.flags = withShift ? .maskShift : []
+
+        if let pid = targetPID, pid > 0 {
+            keyDown.postToPid(pid)
+            usleep(10_000) // 10ms
+            keyUp.postToPid(pid)
+        } else {
+            keyDown.post(tap: .cghidEventTap)
+            usleep(10_000)
+            keyUp.post(tap: .cghidEventTap)
         }
     }
 }

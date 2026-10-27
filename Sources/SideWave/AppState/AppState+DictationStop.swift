@@ -134,19 +134,28 @@ extension AppState {
         // In "finish window" mode, capture the currently focused window now.
         let savedPID: pid_t?
         let savedAppName: String
-        let savedFieldFP: TextFieldFingerprint?
+        let savedTarget: DeliveryTarget?
         if targetPID == nil && pasteTargetTiming == "finish" {
-            savedPID = TypingService.captureSystemFocusedPID()
+            savedTarget = DeliveryTarget.captureFocused()
+            savedPID = savedTarget?.pid
             savedAppName = TypingService.appName(for: savedPID)
-            if let pid = savedPID {
-                savedFieldFP = WindowTargetingService.captureFocusedFieldFingerprint(pid: pid)
-            } else {
-                savedFieldFP = nil
-            }
+        } else if DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow,
+                  assignmentRevision != targetAssignmentRevision,
+                  checkAssignedTarget() == nil, let pid = assignedAppPID {
+            // The user picked another target in the overlay while dictating; the text goes there.
+            let name = assignedAppName ?? TypingService.appName(for: pid)
+            savedTarget = DeliveryTarget(pid: pid, appName: name, windowID: assignedWindowID, element: nil,
+                                         fingerprint: assignedFieldFingerprint, selection: nil)
+            savedPID = pid
+            savedAppName = name
         } else {
             savedPID = targetPID
             savedAppName = targetAppName
-            savedFieldFP = targetFieldFingerprint
+            savedTarget = targetPID.map { pid in
+                DeliveryTarget(pid: pid, appName: targetAppName, windowID: targetWindowID,
+                               element: targetFocusedElement.flatMap { DeliveryTarget.elementPID($0) == pid ? $0 : nil },
+                               fingerprint: targetFieldFingerprint, selection: targetSelection)
+            }
         }
 
         // Prepend accumulated text from a "continue" session
@@ -441,11 +450,6 @@ extension AppState {
             return
         }
 
-        // Use the assigned window only in assigned mode and only when the paste target is the
-        // assigned app. Otherwise a stale window ID could raise the wrong window and paste there.
-        let sessionWindowID: CGWindowID? = (DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow
-            && activePID == assignedAppPID) ? assignedWindowID : nil
-
         // Without a resolved target, a paste while SideWave is frontmost would type into SideWave's
         // own window. Save the text and warn instead.
         if activePID == nil,
@@ -469,211 +473,87 @@ extension AppState {
         // is still that app. If the assigned app quit, the paste goes to whatever is focused, and
         // auto-submitting there could run the text as a command or send a half-written message, so
         // it becomes a plain paste.
-        let hasExplicitTarget = DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow
-            && assignedAppPID != nil
-            && activePID == assignedAppPID
+        let assignedMode = DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow
+        let hasExplicitTarget = assignedMode && assignedAppPID != nil && activePID == assignedAppPID
         if relayModeEnabled, hasExplicitTarget, await typingService.injectAndSubmit(finalText, targetPID: activePID, windowTitle: assignedWindowTitle) {
             // Injection delivered the text. Still record the entry and clear the target state, as
             // every other delivery path does.
-            let actualAppName = (activePID != savedPID) ? TypingService.appName(for: activePID) : savedAppName
             let backendForHistory = sessionRefineBackendForHistory
-            historyStore.addEntry(text: finalText, appName: actualAppName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
+            historyStore.addEntry(text: finalText, appName: savedAppName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
             isOverlayVisible = false
             targetPID = nil
             targetAppName = "Unknown"
             targetFocusedElement = nil
-        } else {
-            // Standard path: activate target window, hide overlay, then paste.
-            // Activation must happen BEFORE hiding overlay so macOS doesn't
-            // refocus an unrelated window when the overlay disappears.
-            if let wid = sessionWindowID, let pid = activePID {
-                // raiseWindow reports whether it worked; if not, activate the app so the check
-                // below can still succeed.
-                if !WindowTargetingService.raiseWindow(windowID: wid, pid: pid) {
-                    TypingService.activateApp(pid: pid)
-                }
-            } else if let pid = activePID {
-                TypingService.activateApp(pid: pid)
-            }
+            return
+        }
 
-            // Wait for the target app to become frontmost, up to 500 ms in 50 ms steps. Electron
-            // apps can take longer than 150 ms, and a Command-V sent too early is dropped.
-            if let pid = activePID {
-                var focusConfirmed = false
-                for _ in 0..<10 {
-                    try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-                    if let front = NSWorkspace.shared.frontmostApplication,
-                       front.processIdentifier == pid {
-                        focusConfirmed = true
-                        break
-                    }
-                }
-                if !focusConfirmed {
-                    // One last attempt to force focus. When a specific window is
-                    // in play, re-raise it; activate alone won't reorder windows
-                    // within an already-frontmost app.
-                    if let wid = sessionWindowID {
-                        _ = WindowTargetingService.raiseWindow(windowID: wid, pid: pid)
-                    } else {
-                        TypingService.activateApp(pid: pid)
-                    }
-                    try? await Task.sleep(nanoseconds: 100_000_000)
-                }
-            } else {
-                try? await Task.sleep(nanoseconds: 150_000_000)
-            }
-
-            // Focus the field the user was in:
-            // 1. The saved element; if AX focus fails (common for web content), click its center.
-            // 2. The fingerprint.
-            // 3. ensureTextFieldFocused, which focuses the largest text input in the window, for a window that
-            //    was hovered but never clicked.
-            // 4. The app's own focus restoration.
-            if let pid = activePID {
-                try? await Task.sleep(nanoseconds: 100_000_000)
-                var focused = false
-                
-                DictationTracingService.shared.log(.pasteCascade, .info, "Paste Cascade started for PID \(pid), Target Window ID: \(sessionWindowID?.description ?? "none")")
-
-                if let savedElement = targetFocusedElement {
-                    // Only refocus the saved element if it belongs to the paste target, or its
-                    // click fallback would hit whatever window is there now.
-                    let elementPID = Self.elementPID(savedElement)
-                    if elementPID == pid {
-                        let startLayer1 = Date()
-                        focused = WindowTargetingService.refocusElement(savedElement)
-                        let duration = Date().timeIntervalSince(startLayer1) * 1000.0
-                        if focused {
-                            DictationTracingService.shared.log(.pasteCascade, .info, "Layer 1: Direct AXUIElement refocusing succeeded.", durationMs: duration)
-                            try? await Task.sleep(nanoseconds: 80_000_000)
-                        } else {
-                            DictationTracingService.shared.log(.pasteCascade, .warning, "Layer 1: Direct AXUIElement refocusing failed.", durationMs: duration)
-                        }
-                    } else {
-                        DictationTracingService.shared.log(.pasteCascade, .warning, "Layer 1: Saved focus element belongs to PID \(elementPID), not target \(pid); skipping direct refocus.")
-                    }
-                }
-
-                if !focused, let fp = savedFieldFP {
-                    let startLayer2 = Date()
-                    focused = WindowTargetingService.focusFieldByFingerprint(
-                        fp, pid: pid, windowID: sessionWindowID
-                    )
-                    let duration = Date().timeIntervalSince(startLayer2) * 1000.0
-                    if focused {
-                        DictationTracingService.shared.log(.pasteCascade, .info, "Layer 2: Fingerprint autofind matching succeeded.", durationMs: duration)
-                        try? await Task.sleep(nanoseconds: 80_000_000)
-                    } else {
-                        DictationTracingService.shared.log(.pasteCascade, .warning, "Layer 2: Fingerprint autofind matching failed.", durationMs: duration)
-                    }
-                }
-
-                if !focused {
-                    let startLayer3 = Date()
-                    // Last resort when the element and fingerprint are stale: focus the largest
-                    // text input in the target window.
-                    focused = WindowTargetingService.ensureTextFieldFocused(
-                        pid: pid, windowID: sessionWindowID
-                    )
-                    let duration = Date().timeIntervalSince(startLayer3) * 1000.0
-                    if focused {
-                        DictationTracingService.shared.log(.pasteCascade, .info, "Layer 3: Primary Window text field search fallback succeeded.", durationMs: duration)
-                        try? await Task.sleep(nanoseconds: 80_000_000)
-                    } else {
-                        DictationTracingService.shared.log(.pasteCascade, .error, "Layer 3: Primary Window text field search fallback failed. Refusing active focusing.", durationMs: duration)
-                        DictationTracingService.shared.log(.pasteCascade, .warning, "Layer 4: Falling back to OS-default window active typing (no target refocusing).")
-                        SWLog.note("[AppState] Paste focus could not be confirmed for pid \(pid); proceeding anyway and the paste may not land in the intended field")
-                    }
-                }
-            }
-
+        // Everything else goes through the delivery router: into the target field directly when the
+        // app allows it, otherwise with the target window brought forward and the user returned to
+        // where they were. With no captured target, the field focused now is used.
+        guard let deliveryTarget = savedTarget ?? DeliveryTarget.captureFocused() else {
+            SoundEffectService.play(.error)
+            recordDictationFailure(.delivery("No text field to paste into. This output is saved to history."))
+            showToast("No target window. Text saved to history", icon: "exclamationmark.triangle")
+            let backendForHistory = sessionRefineBackendForHistory
+            historyStore.addEntry(text: finalText, appName: savedAppName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
             isOverlayVisible = false
+            targetPID = nil
+            targetAppName = "Unknown"
+            targetFocusedElement = nil
+            return
+        }
+        // The router returns the user to their app afterward whenever it had to bring the target
+        // forward, in every mode: refining can take long enough to move on.
+        var options = DeliveryRouter.Options()
+        options.appendTrailingSpace = appendTrailingSpace
+        if relayModeEnabled && hasExplicitTarget {
+            options.submit = .returnKey
+        } else if smartPttActiveAtStop && smartPTTAutoSubmit {
+            options.submit = smartPTTAutoSubmitKey == "shift-return" ? .shiftReturn : .returnKey
+        }
+        let graceMs = UserDefaults.standard.integer(forKey: "autoSubmitDeliveryGraceMs")
+        options.submitGraceMs = graceMs > 0 ? graceMs : 400
 
-            // Post a mouse-moved event at the cursor before pasting. With the cursor resting over a
-            // window, the window server can keep stale focus tracking and drop the paste until the
-            // mouse moves. The cursor doesn't move. Then wait 30 ms.
-            nudgeMouseTrackingForPaste()
-            try? await Task.sleep(nanoseconds: 30_000_000)
-
-            let finalActivePID = activePID
-            // Play the sound when the paste is sent, not after verification, which can take 400 ms
-            // on apps whose text can't be read back. A real failure still plays the error sound
-            // with a toast.
+        // The overlay hides and the sound plays when the text is sent, not after verification,
+        // which can take 400 ms in apps whose text can't be read back. A failure still plays the
+        // error sound with a toast.
+        let report = await deliveryRouter.deliver(finalText, to: deliveryTarget, options: options) { [self] in
+            isOverlayVisible = false
             SoundEffectService.play(.promptConfirmed)
-            let outcome: PasteOutcome = await withCheckedContinuation { continuation in
-                typingService.typeTextInstantly(
-                    finalText,
-                    preferredTargetPID: finalActivePID,
-                    appendTrailingSpace: appendTrailingSpace
-                ) { continuation.resume(returning: $0) }
-            }
-            didFinishDictation = outcome.landed
-            if outcome.landed {
-                let actualAppName = (finalActivePID != savedPID) ? TypingService.appName(for: finalActivePID) : savedAppName
-                let backendForHistory = sessionRefineBackendForHistory
-                historyStore.addEntry(text: finalText, appName: actualAppName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
-
-                // Auto-submit waits for delivery. When the paste is unconfirmed (a slow Electron
-                // composer), an early Return would send an empty message, so wait the grace period
-                // (`autoSubmitDeliveryGraceMs`); when confirmed, 50 ms is enough.
-                let submitGraceNs: UInt64
-                if outcome == .verified {
-                    submitGraceNs = 50_000_000
-                } else {
-                    let g = UserDefaults.standard.integer(forKey: "autoSubmitDeliveryGraceMs")
-                    submitGraceNs = UInt64(g > 0 ? g : 400) * 1_000_000
-                }
-
-                // Send Enter/Shift+Enter if needed
-                if relayModeEnabled && hasExplicitTarget {
-                    if let pid = finalActivePID {
-                        TypingService.activateApp(pid: pid)
-                    }
-                    try? await Task.sleep(nanoseconds: submitGraceNs)
-                    typingService.sendReturnKey(targetPID: finalActivePID)
-                } else if smartPttActiveAtStop && smartPTTAutoSubmit {
-                    if let pid = finalActivePID {
-                        TypingService.activateApp(pid: pid)
-                    }
-                    try? await Task.sleep(nanoseconds: submitGraceNs)
-                    let useShift = (smartPTTAutoSubmitKey == "shift-return")
-                    typingService.sendReturnKey(targetPID: finalActivePID, withShift: useShift)
-                }
-            } else {
-                SoundEffectService.play(.error)
-                let failText = (outcome == .blockedSecureInput)
-                    ? "Paste blocked: another app is holding secure keyboard input. Text saved to history"
-                    : "Paste failed. Text saved to history"
-                recordDictationFailure(.delivery(failText))
-                showToast(failText, icon: "exclamationmark.triangle")
-
-                let actualAppName = (finalActivePID != savedPID) ? TypingService.appName(for: finalActivePID) : savedAppName
-                let backendForHistory = sessionRefineBackendForHistory
-                historyStore.addEntry(text: finalText, appName: actualAppName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
-            }
-
-            targetPID = nil
-            targetAppName = "Unknown"
-            targetFocusedElement = nil
         }
-    }
-
-    /// Posts a mouse-moved event at the cursor position, which makes the window server update focus
-    /// tracking without moving the cursor.
-    private func nudgeMouseTrackingForPaste() {
-        let nsLocation = NSEvent.mouseLocation
-        // NSEvent.mouseLocation uses bottom-left origin; CGEvent uses
-        // top-left. Convert by subtracting from the primary screen height.
-        let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        let cgPoint = CGPoint(x: nsLocation.x, y: primaryHeight - nsLocation.y)
-        if let nudge = CGEvent(
-            mouseEventSource: nil,
-            mouseType: .mouseMoved,
-            mouseCursorPosition: cgPoint,
-            mouseButton: .left
-        ) {
-            nudge.post(tap: .cghidEventTap)
+        isOverlayVisible = false
+        let outcome = report.outcome
+        didFinishDictation = outcome.landed
+        let backendForHistory = sessionRefineBackendForHistory
+        historyStore.addEntry(text: finalText, appName: deliveryTarget.appName, rawText: rawForHistory, eouText: eouForHistory, refineBackend: backendForHistory, outputLanguage: historyOutputLanguage(refined: backendForHistory != nil))
+        if !outcome.landed {
+            SoundEffectService.play(.error)
+            let failText: String
+            switch (report.problem, outcome) {
+            case (.appQuit?, _):
+                failText = "\(deliveryTarget.appName) quit before the text was sent. Text saved to history"
+            case (.windowClosed?, _):
+                failText = "The window you dictated into closed. Text saved to history"
+            case (.unsafeSelection?, _):
+                failText = "Couldn't place the cursor without replacing text. Text saved to history"
+            case (.notInFront?, _):
+                failText = "Couldn't bring \(deliveryTarget.appName) to the front. Text saved to history"
+            case (_, .blockedSecureInput):
+                failText = "Paste blocked: another app is holding secure keyboard input. Text saved to history"
+            case (_, .timedOut):
+                // Nothing reached the target, and the stalled attempt can't paste later. The
+                // user's clipboard is left alone; the text is in history.
+                failText = "Paste timed out. Text saved to history"
+            default:
+                failText = "Paste failed. Text saved to history"
+            }
+            recordDictationFailure(.delivery(failText))
+            showToast(failText, icon: "exclamationmark.triangle")
         }
+
+        targetPID = nil
+        targetAppName = "Unknown"
+        targetFocusedElement = nil
     }
 
     /// Process ID that owns an element, to check a saved element belongs to the paste target before

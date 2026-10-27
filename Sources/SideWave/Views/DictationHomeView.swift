@@ -224,17 +224,22 @@ struct DictationHomeView: View {
                                     appState.assignTarget(pid: app.pid, name: app.name)
                                 }
                                 ForEach(windows) { window in
-                                    Button(window.title) {
+                                    Button(window.menuTitle) {
                                         appState.dictationTargetMode = DictationTargetMode.assignedWindow.rawValue
-                                        appState.assignWindow(window)
+                                        appState.assignWindow(window, chosen: true)
                                     }
                                 }
                             }
-                        } else {
+                        } else if let window = windows.first {
+                            Button(window.isMinimized ? "\(app.name) (minimized)" : app.name) {
+                                appState.dictationTargetMode = DictationTargetMode.assignedWindow.rawValue
+                                appState.assignWindow(window, chosen: false)
+                            }
+                        } else if !WindowTargetingService.hasNoWindows(pid: app.pid) {
+                            // Its windows have no titles, or it didn't answer.
                             Button(app.name) {
                                 appState.dictationTargetMode = DictationTargetMode.assignedWindow.rawValue
-                                if let window = windows.first { appState.assignWindow(window) }
-                                else { appState.assignTarget(pid: app.pid, name: app.name) }
+                                appState.assignTarget(pid: app.pid, name: app.name)
                             }
                         }
                     }

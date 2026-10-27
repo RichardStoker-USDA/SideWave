@@ -58,6 +58,10 @@ public actor PasterCascade: Paster {
             return .failed(reason: "The text could not be inserted. It is on your clipboard; press Command-V to paste it.")
         case .blockedSecureInput:
             return .failed(reason: "Another app is blocking keyboard input (secure input). The text is on your clipboard.")
+        case .timedOut:
+            // Nothing reached the target, and the stalled attempt can't paste later. The user's
+            // clipboard is left alone; the shell records the text in history.
+            return .failed(reason: "The paste timed out. The text is saved in History.")
         }
     }
 }

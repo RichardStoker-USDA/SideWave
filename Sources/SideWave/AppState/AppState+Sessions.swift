@@ -37,86 +37,62 @@ extension AppState {
     // MARK: - Re-paste
 
     func handleRepaste() {
+        // The last entry isn't the one being finished, and two deliveries would contend for focus.
+        guard !isDictationBusy else {
+            showToast("Finishing the last dictation…", icon: "hourglass")
+            return
+        }
         guard let lastEntry = historyStore.entries.first else {
             showToast("Nothing to re-paste", icon: "doc.questionmark")
             return
         }
-        // Respect the target mode: raise and paste into the assigned window, or paste into whatever
-        // has focus, as the main paste path does.
-        let useAssigned = DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow
-            && assignedAppPID != nil
-        let targetPID: pid_t?
-        // Only honor the assigned window/field in assigned mode. In focused
-        // mode a stale assignment would raise + scope the field search to the
-        // wrong window (same defect as the main paste path's sessionWindowID).
-        let repasteWindowID: CGWindowID? = useAssigned ? assignedWindowID : nil
-        let repasteFieldFP: TextFieldFingerprint? = useAssigned ? assignedFieldFingerprint : nil
-        if useAssigned {
-            targetPID = assignedAppPID
-            if let wid = repasteWindowID, let pid = targetPID {
-                if !WindowTargetingService.raiseWindow(windowID: wid, pid: pid) {
-                    TypingService.activateApp(pid: pid)
-                }
-            } else if let pid = targetPID {
-                TypingService.activateApp(pid: pid)
+        // Respect the target mode, as the main paste path does: the assigned window's field, or the
+        // field focused now. Only the assigned window and field count in assigned mode; in focused
+        // mode a stale assignment would send the text to the wrong window.
+        let assignedMode = DictationTargetMode(rawValue: dictationTargetMode) == .assignedWindow
+        let unavailable = assignedMode ? checkAssignedTarget() : nil
+        if let unavailable {
+            showToast(unavailable + " Re-pasting into the app you're in.", icon: "arrow.uturn.backward", duration: 3.5)
+        }
+        let useAssigned = assignedMode && unavailable == nil && assignedAppPID != nil
+        let target: DeliveryTarget?
+        if useAssigned, let pid = assignedAppPID {
+            // The user is in the assigned window: use that field and its selection as they are.
+            if let focused = DeliveryTarget.captureFocused(), focused.pid == pid,
+               assignedWindowID == nil || focused.windowID == assignedWindowID {
+                target = focused
+            } else {
+                target = DeliveryTarget(pid: pid, appName: assignedAppName ?? TypingService.appName(for: pid),
+                                        windowID: assignedWindowID, element: nil,
+                                        fingerprint: assignedFieldFingerprint, selection: nil)
             }
         } else {
-            targetPID = TypingService.captureSystemFocusedPID()
-            if let targetPID {
-                TypingService.activateApp(pid: targetPID)
-            }
+            target = DeliveryTarget.captureFocused()
         }
+        guard let target else {
+            SoundEffectService.play(.error)
+            ToastController.shared.show(message: "No text field to paste into. Text still in history",
+                                        icon: "exclamationmark.triangle")
+            return
+        }
+        var options = DeliveryRouter.Options()
+        options.appendTrailingSpace = appendTrailingSpace
         Task {
-            if let pid = targetPID {
-                // Same focus verification as the primary paste path
-                var focusConfirmed = false
-                for _ in 0..<10 {
-                    try? await Task.sleep(nanoseconds: 50_000_000)
-                    if let front = NSWorkspace.shared.frontmostApplication,
-                       front.processIdentifier == pid {
-                        focusConfirmed = true
-                        break
-                    }
+            let report = await deliveryRouter.deliver(lastEntry.text, to: target, options: options) {}
+            if report.outcome.landed {
+                ToastController.shared.show(message: "Re-pasted last dictation", icon: "doc.on.clipboard")
+            } else {
+                // The entry is in history, so nothing is lost; tell the user the paste didn't land.
+                SoundEffectService.play(.error)
+                let msg: String
+                switch (report.problem, report.outcome) {
+                case (.appQuit?, _): msg = "\(target.appName) quit. Text still in history"
+                case (.windowClosed?, _): msg = "That window closed. Text still in history"
+                case (.notInFront?, _): msg = "Couldn't bring \(target.appName) to the front. Text still in history"
+                case (_, .blockedSecureInput): msg = "Re-paste blocked: another app is holding secure keyboard input"
+                default: msg = "Re-paste failed. Text still in history"
                 }
-                if !focusConfirmed {
-                    TypingService.activateApp(pid: pid)
-                    try? await Task.sleep(nanoseconds: 100_000_000)
-                }
-            }
-            // Re-focus the locked text field if available
-            if let pid = targetPID {
-                if let fp = repasteFieldFP {
-                    _ = WindowTargetingService.focusFieldByFingerprint(
-                        fp, pid: pid, windowID: repasteWindowID
-                    )
-                } else {
-                    _ = WindowTargetingService.ensureTextFieldFocused(
-                        pid: pid, windowID: repasteWindowID
-                    )
-                }
-            }
-
-            typingService.typeTextInstantly(
-                lastEntry.text,
-                preferredTargetPID: targetPID,
-                appendTrailingSpace: appendTrailingSpace
-            ) { outcome in
-                Task { @MainActor in
-                    if outcome.landed {
-                        ToastController.shared.show(
-                            message: "Re-pasted last dictation",
-                            icon: "doc.on.clipboard"
-                        )
-                    } else {
-                        // The entry is in history, so nothing is lost; tell the user the paste
-                        // didn't land.
-                        SoundEffectService.play(.error)
-                        let msg = (outcome == .blockedSecureInput)
-                            ? "Re-paste blocked: another app is holding secure keyboard input"
-                            : "Re-paste failed. Text still in history"
-                        ToastController.shared.show(message: msg, icon: "exclamationmark.triangle")
-                    }
-                }
+                ToastController.shared.show(message: msg, icon: "exclamationmark.triangle")
             }
         }
     }

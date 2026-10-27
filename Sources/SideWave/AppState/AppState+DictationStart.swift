@@ -34,6 +34,10 @@ extension AppState {
                 // A start is already running (the first run compiles the speech models). Say so, so
                 // the hotkey doesn't seem broken.
                 showToast("Warming up the speech engine. Starting in a moment", icon: "hourglass")
+            } else if isProcessingStop {
+                // The last dictation is finishing recognition or being pasted. Every step there
+                // has a deadline, so say what's happening rather than ignore the press.
+                showToast("Finishing the last dictation…", icon: "hourglass")
             }
             return
         }
@@ -132,24 +136,40 @@ extension AppState {
         // focus. This direct AXUIElement reference is the most reliable way to
         // re-find the exact field later. Fingerprint is the fallback.
         targetFocusedElement = WindowTargetingService.captureSystemFocusedElement()
+        targetWindowID = nil
+        targetSelection = nil
 
         // Determine paste target based on mode
         if dictationTargetMode == DictationTargetMode.assignedWindow.rawValue {
-            validateAssignedTarget()
-            if let pid = assignedAppPID {
+            let unavailable = checkAssignedTarget()
+            if let unavailable {
+                showToast(unavailable + " This dictation goes to the app you're in.",
+                          icon: "arrow.uturn.backward", duration: 3.5)
+            }
+            targetAssignmentRevision = assignmentRevision
+            if unavailable == nil, let pid = assignedAppPID {
                 targetPID = pid
                 targetAppName = assignedAppName ?? "Unknown"
                 targetFieldFingerprint = assignedFieldFingerprint
-                // In assigned mode, the element focused at start usually belongs to another app.
-                // Keep it for refocusing only if it belongs to the assigned app; otherwise it would
-                // take focus away or click the wrong window right before pasting.
-                if let el = targetFocusedElement, Self.elementPID(el) != pid {
+                targetWindowID = assignedWindowID
+                // In assigned mode, the element focused at start usually belongs to another app or
+                // window. Keep it only if it's in the assigned window; otherwise it would take focus
+                // away or send the text somewhere other than the assigned window.
+                if let el = targetFocusedElement, Self.elementPID(el) != pid
+                    || (assignedWindowID != nil && WindowTargetingService.containingWindowID(of: el) != assignedWindowID) {
                     targetFocusedElement = nil
                 }
+                targetSelection = targetFocusedElement.flatMap(WindowTargetingService.selectedRange(of:))
             } else {
-                targetPID = TypingService.captureSystemFocusedPID()
+                // Nothing chosen, or the choice can't take text now: behave like "where dictation
+                // started".
+                let captured = DeliveryTarget.captureFocused()
+                targetPID = captured?.pid
                 targetAppName = TypingService.appName(for: targetPID)
-                targetFieldFingerprint = nil
+                targetFieldFingerprint = captured?.fingerprint
+                targetFocusedElement = captured?.element
+                targetWindowID = captured?.windowID
+                targetSelection = captured?.selection
             }
         } else if pasteTargetTiming == "finish" {
             targetPID = nil
@@ -157,16 +177,18 @@ extension AppState {
             targetFieldFingerprint = nil
             // Finish mode resolves the real target at stop time, not now, so
             // the start-time focused element is stale. Drop it; the field
-            // captured at stop (savedFieldFP) drives refocus instead.
+            // captured at stop drives delivery instead.
             targetFocusedElement = nil
         } else {
-            targetPID = TypingService.captureSystemFocusedPID()
+            // Where dictation started: the app, its window, the field, and the caret, so the text
+            // goes back there however the user moves around before stopping.
+            let captured = DeliveryTarget.captureFocused()
+            targetPID = captured?.pid
             targetAppName = TypingService.appName(for: targetPID)
-            if let pid = targetPID {
-                targetFieldFingerprint = WindowTargetingService.captureFocusedFieldFingerprint(pid: pid)
-            } else {
-                targetFieldFingerprint = nil
-            }
+            targetFieldFingerprint = captured?.fingerprint
+            targetFocusedElement = captured?.element
+            targetWindowID = captured?.windowID
+            targetSelection = captured?.selection
         }
 
         // Show overlay

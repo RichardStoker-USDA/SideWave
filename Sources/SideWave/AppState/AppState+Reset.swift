@@ -28,7 +28,7 @@ extension AppState {
             "soundEffectsEnabled", "soundEffectsVolume",
             "soundEffect_recordingStart", "soundEffect_recordingStop", "soundEffect_promptConfirmed", "soundEffect_error",
             // Dictation behavior
-            "activationMode", "copyToClipboard", "appendTrailingSpace",
+            "activationMode", "copyToClipboard", "appendTrailingSpace", "restoreClipboardAfterPaste",
             "dictationTargetMode", "pasteTargetTiming",
             // History
             "historyRetentionDays",

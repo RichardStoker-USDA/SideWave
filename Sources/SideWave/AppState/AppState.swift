@@ -172,6 +172,14 @@ final class AppState {
     /// The focused text field at recording start. More reliable than the fingerprint; the
     /// fingerprint is the fallback if the element is gone (page navigation, app quit).
     var targetFocusedElement: AXUIElement?
+    /// The window that held the target field at recording start (or the assigned window), so
+    /// delivery brings back that window rather than whichever window of the app is in front.
+    var targetWindowID: CGWindowID?
+    /// The caret or selection in the target field at recording start. A background insert goes
+    /// ahead only while the field still has a plain caret or this selection.
+    var targetSelection: CFRange?
+    /// Puts finished text into the target field. Stateless apart from the paste engine.
+    @ObservationIgnored lazy var deliveryRouter = DeliveryRouter(typing: typingService)
 
     // Pending session: text from a soft-stopped recording awaiting resume or discard
     var pendingSessionText: String? = nil
@@ -496,8 +504,16 @@ final class AppState {
 
     var assignedAppPID: pid_t? = nil
     var assignedAppName: String? = nil
+    /// Finds the app again after it quits and reopens with a new process ID.
+    var assignedBundleID: String? = nil
     var assignedWindowID: CGWindowID? = nil
     var assignedWindowTitle: String? = nil
+    /// The user picked this window from the app's window list, rather than picking the app.
+    var assignedWindowChosen = false
+    /// Changes each time the user picks or clears a target, so the stop can tell a target picked
+    /// in the overlay during the dictation from the one captured at start.
+    @ObservationIgnored var assignmentRevision = 0
+    @ObservationIgnored var targetAssignmentRevision = 0
     /// Fingerprint of the field that was focused when the target window was chosen, to find it
     /// again at paste.
     var assignedFieldFingerprint: TextFieldFingerprint? = nil

@@ -66,6 +66,9 @@ extension AppState {
         // macOS 27 hard-asserts the TIS input-source APIs are main-queue;
         // first-touch from the paste queue was a SIGTRAP.
         TypingService.warmUpKeyboardLayoutCache()
+        // Every Accessibility call to another app waits at most 3 s (the macOS default is 6), so an
+        // app that stops answering can't hold targeting or delivery for long.
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 3)
         // Legacy tmp-dir cleanup only; the durable session store below is
         // never touched by it.
         MeetingTranscriptionService.cleanupStaleAudioFiles()

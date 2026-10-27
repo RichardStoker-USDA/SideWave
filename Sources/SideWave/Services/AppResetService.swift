@@ -49,7 +49,7 @@ enum AppResetService {
         "soundEffect_recordingStart", "soundEffect_recordingStop",
         "soundEffect_promptConfirmed",
         // Dictation behavior
-        "activationMode", "copyToClipboard", "appendTrailingSpace", "holdToRewriteEnabled",
+        "activationMode", "copyToClipboard", "appendTrailingSpace", "holdToRewriteEnabled", "restoreClipboardAfterPaste",
         "dictationTargetMode", "pasteTargetTiming",
         // Refine pipeline
         "skipRefine", "useRealTimeRefine", "useMultiStageRendering",

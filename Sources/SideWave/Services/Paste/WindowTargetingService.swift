@@ -13,6 +13,10 @@ struct WindowInfo: Identifiable, Hashable {
     let appName: String
     let appIcon: NSImage?
     let bounds: CGRect
+    /// In the Dock. Still a valid target: delivery restores it and minimizes it again.
+    var isMinimized = false
+
+    var menuTitle: String { isMinimized ? "\(title) (minimized)" : title }
 
     var id: CGWindowID { windowID }
 
@@ -53,7 +57,8 @@ enum WindowTargetingService {
         _ windowID: UnsafeMutablePointer<CGWindowID>
     ) -> AXError
 
-    /// List all visible windows for a specific app PID.
+    /// The app's titled windows, including minimized ones. Untitled windows (panels, popovers)
+    /// are left out.
     static func windows(for pid: pid_t) -> [WindowInfo] {
         let appElement = AXUIElementCreateApplication(pid)
         var windowsRef: CFTypeRef?
@@ -85,18 +90,14 @@ enum WindowTargetingService {
             // Get bounds
             let bounds = windowFrame(for: axWindow) ?? .zero
 
-            // Skip minimized windows
-            var minimizedRef: CFTypeRef?
-            AXUIElementCopyAttributeValue(axWindow, kAXMinimizedAttribute as CFString, &minimizedRef)
-            if (minimizedRef as? Bool) == true { return nil }
-
             return WindowInfo(
                 windowID: cgWindowID,
                 pid: pid,
                 title: title,
                 appName: appName,
                 appIcon: appIcon,
-                bounds: bounds
+                bounds: bounds,
+                isMinimized: isMinimized(axWindow)
             )
         }
     }
@@ -415,12 +416,29 @@ enum WindowTargetingService {
                 }
             }
         }
+        guard let target = findFieldByFingerprint(fingerprint, pid: pid, windowID: windowID) else {
+            return false
+        }
+        return AXUIElementSetAttributeValue(target, kAXFocusedAttribute as CFString, true as CFTypeRef) == .success
+    }
+
+    /// The text field in the window that best matches a saved fingerprint, without focusing it.
+    /// Nil when nothing matches on position or identifier.
+    static func findFieldByFingerprint(
+        _ fingerprint: TextFieldFingerprint,
+        pid: pid_t,
+        windowID: CGWindowID? = nil
+    ) -> AXUIElement? {
+        let appElement = AXUIElementCreateApplication(pid)
 
         // Collect all text fields in the target window
         var candidates: [(element: AXUIElement, fingerprint: TextFieldFingerprint)] = []
 
         let searchRoot: AXUIElement
-        if let wid = windowID, let axWin = axWindowForID(wid, pid: pid) {
+        if let wid = windowID {
+            // Only the requested window. If it's gone, a matching field in another window of the
+            // app is still the wrong place for the text.
+            guard let axWin = axWindowForID(wid, pid: pid) else { return nil }
             searchRoot = axWin
         } else {
             var mainWindowRef: CFTypeRef?
@@ -489,16 +507,82 @@ enum WindowTargetingService {
 
         // Require at least a position or identifier match (score >= 20)
         // to avoid focusing a random field that only matches on role
-        guard let target = bestElement, bestScore >= 20 else {
-            return false
-        }
+        guard let target = bestElement, bestScore >= 20 else { return nil }
+        return target
+    }
 
-        let focusResult = AXUIElementSetAttributeValue(
-            target,
-            kAXFocusedAttribute as CFString,
-            true as CFTypeRef
-        )
-        return focusResult == .success
+    /// Number of windows the app reports, titled or not, minimized or not. Nil when the app
+    /// doesn't answer, so a caller can treat it as unknown rather than as no windows.
+    static func windowCount(pid: pid_t) -> Int? {
+        var windowsRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(AXUIElementCreateApplication(pid), kAXWindowsAttribute as CFString,
+                                            &windowsRef) == .success,
+              let axWindows = windowsRef as? [AXUIElement] else { return nil }
+        return axWindows.count
+    }
+
+    /// True only when the app answered and has no windows at all, so a menu can leave it out.
+    static func hasNoWindows(pid: pid_t) -> Bool { windowCount(pid: pid) == 0 }
+
+    /// Whether the window is in the Dock. Nil when it can't be found.
+    static func isMinimized(windowID: CGWindowID, pid: pid_t) -> Bool? {
+        axWindowForID(windowID, pid: pid).map(isMinimized)
+    }
+
+    /// Minimizes or restores a window. Returns whether the app accepted the change.
+    @discardableResult
+    static func setMinimized(_ minimized: Bool, windowID: CGWindowID, pid: pid_t) -> Bool {
+        guard let window = axWindowForID(windowID, pid: pid) else { return false }
+        return AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString,
+                                            minimized as CFTypeRef) == .success
+    }
+
+    /// For an app whose windows are all minimized, the first of them (the most recent, in the
+    /// order the app lists them). Nil when any window is open or none can be read.
+    static func onlyMinimizedWindow(pid: pid_t) -> CGWindowID? {
+        var windowsRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(AXUIElementCreateApplication(pid), kAXWindowsAttribute as CFString,
+                                            &windowsRef) == .success,
+              let axWindows = windowsRef as? [AXUIElement], !axWindows.isEmpty,
+              axWindows.allSatisfy(isMinimized) else { return nil }
+        var wid: CGWindowID = 0
+        return _AXUIElementGetWindow(axWindows[0], &wid) == .success ? wid : nil
+    }
+
+    private static func isMinimized(_ window: AXUIElement) -> Bool {
+        var ref: CFTypeRef?
+        AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &ref)
+        return (ref as? Bool) == true
+    }
+
+    /// Whether a window with this ID still exists and belongs to the app, including minimized
+    /// windows and windows on other Spaces. The window server's full list is asked first, since it
+    /// doesn't wait on the app; the app's own window list is the second check, for a minimized
+    /// window the window server no longer reports by ID.
+    static func windowExists(_ windowID: CGWindowID, pid: pid_t) -> Bool {
+        let all = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]] ?? []
+        if all.contains(where: { ($0[kCGWindowNumber as String] as? CGWindowID) == windowID
+            && ($0[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value == pid }) { return true }
+        return axWindowForID(windowID, pid: pid) != nil
+    }
+
+    /// The window an app has focused, or nil.
+    static func focusedWindowID(pid: pid_t) -> CGWindowID? {
+        var windowRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            AXUIElementCreateApplication(pid), kAXFocusedWindowAttribute as CFString, &windowRef
+        ) == .success, let window = windowRef, CFGetTypeID(window) == AXUIElementGetTypeID() else { return nil }
+        var wid: CGWindowID = 0
+        return _AXUIElementGetWindow(unsafeBitCast(window, to: AXUIElement.self), &wid) == .success ? wid : nil
+    }
+
+    /// The caret or selection in a text element, or nil when it isn't readable.
+    static func selectedRange(of element: AXUIElement) -> CFRange? {
+        var rangeRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &rangeRef) == .success,
+              let value = rangeRef, CFGetTypeID(value) == AXValueGetTypeID() else { return nil }
+        var range = CFRange()
+        return AXValueGetValue(unsafeBitCast(value, to: AXValue.self), .cfRange, &range) ? range : nil
     }
 
     /// Check if two fingerprints likely refer to the same field.
@@ -519,7 +603,7 @@ enum WindowTargetingService {
 
     /// ID of the window containing an element, from kAXWindowAttribute. Nil for elements without a
     /// window (menu bar items, some web content) or when the lookup fails.
-    private static func containingWindowID(of element: AXUIElement) -> CGWindowID? {
+    static func containingWindowID(of element: AXUIElement) -> CGWindowID? {
         var winRef: CFTypeRef?
         guard AXUIElementCopyAttributeValue(
             element, kAXWindowAttribute as CFString, &winRef
@@ -671,11 +755,4 @@ enum WindowTargetingService {
         )
     }
 
-    /// Check if a window is still visible on screen.
-    static func isWindowOnScreen(_ windowID: CGWindowID) -> Bool {
-        guard let infoList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
-            return false
-        }
-        return infoList.contains { ($0[kCGWindowNumber as String] as? CGWindowID) == windowID }
-    }
 }

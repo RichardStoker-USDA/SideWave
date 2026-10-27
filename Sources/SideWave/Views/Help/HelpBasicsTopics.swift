@@ -225,7 +225,7 @@ struct HelpHowDictationWorksContent: View {
 
                 HelpItem(
                     title: "Paste",
-                    content: "SideWave picks a delivery method for the target field: Accessibility, simulated keys, or a clipboard paste. It checks the result when the app exposes its text. If delivery fails, the text is saved to History."
+                    content: "SideWave remembers the exact field you were in: when you start, when you finish, or in the app you chose under Send to. In Mac apps with standard text fields the text goes straight into that field without bringing its window forward, even if you've moved to another app. Otherwise SideWave brings that window back, types or pastes, and returns you to where you were. A minimized window comes back for the paste and returns to the Dock. If the app or window you chose under Send to is closed or has quit, SideWave says so when you start and sends that dictation to the app you're in. Terminal and short dictations are typed in. Electron apps such as Slack, and long dictations in a browser, get a clipboard paste, and the dictation replaces what you had copied. SideWave doesn't read your clipboard unless you turn on Restore clipboard after pasting in Settings > Privacy, in Advanced view. It checks the result when the app exposes its text. If delivery fails, the text is saved to History."
                 )
             }
         }
