@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.6</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Fixed</h3>
+<ul><li>Stopping a dictation no longer adds words you didn&#x27;t say at the end, such as &quot;Yeah.&quot; followed by your last word a second time (&quot;...see you then. Yeah. then&quot;). SideWave now lets the gray draft finish before it confirms your last words, and drops a trailing word only when the draft didn&#x27;t hear it and there was no speech where it starts.</li></ul>
+</body>
+</html>
