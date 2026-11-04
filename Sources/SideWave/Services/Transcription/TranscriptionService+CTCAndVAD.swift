@@ -166,11 +166,13 @@ extension TranscriptionService {
     /// passes the limit is abandoned and VAD is turned off for the rest of the session, so the
     /// recording and the stop keep going; segments then end at the fixed length, as they do when VAD
     /// isn't available.
-    func drainVadWithinLimit(seconds: Double = vadDrainLimit) async {
+    /// `flushTail` (stop only) also runs the last partial chunk, which FluidAudio pads, so VAD covers
+    /// the audio right up to the stop key.
+    func drainVadWithinLimit(seconds: Double = vadDrainLimit, flushTail: Bool = false) async {
         guard vadManager != nil || vadDrainTask != nil else { return }
         let epoch = vadDrainEpoch
         let finished: Void? = await Self.raceWithHardTimeout(seconds: seconds) { [weak self] in
-            await self?.processVadChunks()
+            await self?.processVadChunks(flushTail: flushTail)
         }
         // A session that ended during the wait already reset VAD; the next session's is not ours.
         if finished == nil, epoch == vadDrainEpoch {
@@ -191,20 +193,20 @@ extension TranscriptionService {
 
     /// Feeds new audio samples to VadManager and detects speech end events. Waits for a drain
     /// already in flight, so two never work on the same buffered audio.
-    func processVadChunks() async {
+    func processVadChunks(flushTail: Bool = false) async {
         let previous = vadDrainTask
         let epoch = vadDrainEpoch
         let drain = Task { [weak self] in
             await previous?.value
             guard let self, epoch == self.vadDrainEpoch else { return }
-            await self.drainVadChunks(epoch: epoch)
+            await self.drainVadChunks(epoch: epoch, flushTail: flushTail)
         }
         vadDrainTask = drain
         await drain.value
         if vadDrainTask == drain { vadDrainTask = nil }
     }
 
-    private func drainVadChunks(epoch: Int) async {
+    private func drainVadChunks(epoch: Int, flushTail: Bool) async {
         guard let vadManager = self.vadManager, var state = self.vadStreamState else { return }
 
         // Calculate how many new samples have arrived since last VAD processing
@@ -238,22 +240,31 @@ extension TranscriptionService {
             vadAccumulationBuffer.removeFirst(excess)
         }
 
-        // Process complete 4096-sample chunks through the streaming VAD.
-        // Track consumed offset and slice once at the end to avoid repeated O(n) removeFirst calls.
+        // Process complete 4096-sample chunks through the streaming VAD, then with `flushTail` the
+        // partial chunk left over. Track consumed offset and slice once at the end to avoid
+        // repeated O(n) removeFirst calls.
         let chunkSize = Self.vadChunkSize
         var vadConsumed = 0
         // Reuse one chunk buffer instead of copying a new 4096-sample array per chunk.
         var reusableChunk = [Float](repeating: 0, count: chunkSize)
-        while (vadAccumulationBuffer.count - vadConsumed) >= chunkSize {
-            vadAccumulationBuffer.withUnsafeBufferPointer { src in
-                reusableChunk.withUnsafeMutableBufferPointer { dst in
-                    let srcStart = src.baseAddress! + vadConsumed
-                    let dstStart = dst.baseAddress!
-                    dstStart.update(from: srcStart, count: chunkSize)
+        while true {
+            let available = vadAccumulationBuffer.count - vadConsumed
+            let chunk: [Float]
+            if available >= chunkSize {
+                vadAccumulationBuffer.withUnsafeBufferPointer { src in
+                    reusableChunk.withUnsafeMutableBufferPointer { dst in
+                        let srcStart = src.baseAddress! + vadConsumed
+                        let dstStart = dst.baseAddress!
+                        dstStart.update(from: srcStart, count: chunkSize)
+                    }
                 }
+                chunk = reusableChunk
+            } else if flushTail, available > 0 {
+                chunk = Array(vadAccumulationBuffer[vadConsumed...])
+            } else {
+                break
             }
-            let chunk = reusableChunk
-            vadConsumed += chunkSize
+            vadConsumed += chunk.count
 
             do {
                 // Multi-stage waits for 5 s of silence so ordinary thinking pauses don't finalize a
@@ -289,6 +300,9 @@ extension TranscriptionService {
                 // (same derivation as the speech-end stamp below).
                 let chunkFrontier = currentTotalSamples - (vadAccumulationBuffer.count - vadConsumed)
                 vadConsumedFrontierSampleIndex = chunkFrontier
+                if result.probability >= TrailingGhostFilter.voicedProbability {
+                    lastVadVoicedSampleIndex = chunkFrontier
+                }
                 if state.triggered {
                     lastVadSpeechSampleIndex = chunkFrontier
                     if !vadSawSpeechThisSession {

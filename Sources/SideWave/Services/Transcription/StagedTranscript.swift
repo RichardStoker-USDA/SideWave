@@ -256,23 +256,38 @@ final class StagedTranscript {
         return accPrefix == refPrefix
     }
 
+    /// Streaming words after the last TDT commit, without the overlap strip. The stop path compares
+    /// them with the last segment's words.
+    func uncommittedStreamingWords() -> [String] {
+        let start = min(max(0, eouTailStartIndex), eouAccumulatedWords.count)
+        return eouAccumulatedWords.dropFirst(start).map(String.init)
+    }
+
     /// Promotes a chunk of TDT-confirmed text to a new span. Called when a
     /// segment finalizes (or, in v2, when a sentence-ender appears mid-poll).
     /// Returns the new span's ID so callers can track it for refinement.
+    ///
+    /// `coversRemainingStreamingWords` is for the last segment of a stop, after the streaming
+    /// engine finished: TDT transcribed all the audio left, so every streaming word after the last
+    /// commit describes that same audio and joins this span instead of the paste tail. Without it,
+    /// a late streaming word the overlap strip couldn't match repeated the end of the confirmed
+    /// text ("...to pause. Yeah. pause").
     @discardableResult
-    func ingestTdtCommitted(_ text: String) -> UUID {
+    func ingestTdtCommitted(_ text: String, coversRemainingStreamingWords: Bool = false) -> UUID {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return UUID() }
-        
+
         // Coverage follows the accumulator, independent of preview visibility
         // and any echo stripping applied by the renderer.
         let startIndex = min(max(0, eouTailStartIndex), eouAccumulatedWords.count)
         let liveEouWords = Array(eouAccumulatedWords.dropFirst(startIndex))
-        let coverage = Self.findEouCoverage(tdtText: trimmed, eouWords: liveEouWords)
+        let coverage = coversRemainingStreamingWords
+            ? liveEouWords.count
+            : Self.findEouCoverage(tdtText: trimmed, eouWords: liveEouWords)
         // The alignment only looks at the first n + 20 tail words. A tail much longer than the
         // segment means coverage is drifting, so trace it.
         let tdtWordCount = trimmed.split(whereSeparator: \.isWhitespace).count
-        if liveEouWords.count > tdtWordCount + 20 {
+        if !coversRemainingStreamingWords, liveEouWords.count > tdtWordCount + 20 {
             stagedLog.warning("tdt commit against oversized tail: tdtWords=\(tdtWordCount, privacy: .public) tailWords=\(liveEouWords.count, privacy: .public) coverage=\(coverage, privacy: .public)")
         }
 
@@ -302,7 +317,9 @@ final class StagedTranscript {
         // ("in-house" as two) and an index past the end would dump the whole accumulator into the
         // tail.
         let currentEouWordCount = eouAccumulatedWords.count
-        eouTailStartIndex = min(confirmedWordCount, currentEouWordCount)
+        eouTailStartIndex = coversRemainingStreamingWords
+            ? currentEouWordCount
+            : min(confirmedWordCount, currentEouWordCount)
         recomputeLiveTail()
         return span.id
     }

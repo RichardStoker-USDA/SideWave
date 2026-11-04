@@ -461,4 +461,38 @@ final class StagedTranscriptTests: XCTestCase {
         XCTAssertEqual(layout.words.map(\.refinedAt), updated.refinementRevealStarts)
     }
 
+    // MARK: - Last segment of a stop
+
+    func testLastSegmentAfterStreamingFinishedLeavesNoTail() {
+        // Streaming finished first, then TDT confirmed the rest with an extra word at the end. The
+        // paste is TDT's text alone; the last streamed word doesn't follow it again.
+        let t = StagedTranscript()
+        t.ingestEouPartial("label each tube")
+        t.ingestTdtCommitted("Label each tube.")
+        t.ingestEouPartial("label each tube before you freeze it")
+        XCTAssertEqual(t.uncommittedStreamingWords(), ["before", "you", "freeze", "it"])
+        t.ingestTdtCommitted("Before you freeze it. Yeah.", coversRemainingStreamingWords: true)
+        XCTAssertEqual(t.originalText(), "Label each tube. Before you freeze it. Yeah.")
+        XCTAssertEqual(t.finalText(), "Label each tube. Before you freeze it. Yeah.")
+        XCTAssertEqual(t.liveEouTail, "")
+        XCTAssertEqual(t.uncommittedStreamingWords(), [])
+        XCTAssertEqual(t.eouRawText(), "label each tube before you freeze it")
+    }
+
+    func testLastSegmentTakesStreamingWordsThatEndDifferently() {
+        // Mid-session, streaming words past TDT's alignment wait for the next segment. At the
+        // stop there's no next segment, so the last one takes them.
+        let words = "we sort a sample"
+        let live = StagedTranscript()
+        live.ingestEouPartial(words)
+        live.ingestTdtCommitted("We sort samples.")
+        XCTAssertTrue(live.originalText().hasSuffix("samples. sample"), live.originalText())
+
+        let last = StagedTranscript()
+        last.ingestEouPartial(words)
+        last.ingestTdtCommitted("We sort samples.", coversRemainingStreamingWords: true)
+        XCTAssertEqual(last.finalText(), "We sort samples.")
+        XCTAssertEqual(last.finalPassRuns(), [StagedTranscript.FinalPassRun(text: "We sort samples.", pending: true)])
+    }
+
 }

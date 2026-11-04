@@ -56,6 +56,9 @@ extension TranscriptionService {
 
                 // Feed new audio to VAD for speech boundary detection
                 await self.drainVadWithinLimit()
+                // A stop that arrived during the drain cancelled this task and finalizes the last
+                // segment itself; finalizing here too would transcribe the same audio twice.
+                if Task.isCancelled { break }
 
                 // Check if segment finalization is needed.
                 // Two triggers: VAD-detected speech end (natural pause) or fixed ceiling (safety net).

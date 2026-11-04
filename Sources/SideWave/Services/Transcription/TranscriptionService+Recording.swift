@@ -95,6 +95,7 @@ extension TranscriptionService {
             audioBuffers.resetSpeechDetector()
             vadSawSpeechThisSession = false
             lastVadSpeechSampleIndex = -1
+            lastVadVoicedSampleIndex = -1
             vadConsumedFrontierSampleIndex = 0
             hasAttemptedRecovery = false
             consecutivePollingErrors = 0
@@ -407,8 +408,10 @@ extension TranscriptionService {
     /// Runs EOU's `finish()` with a hard 2 s limit, so a residual chunk is processed without ever
     /// stalling the stop. A finish that times out may still be running inside the actor and would
     /// clear or fill the next session's state when it resumes, so that actor is retired instead of
-    /// reset for reuse: it leaves the cache, its callback goes nowhere, and a fresh one loads.
-    private func finishEouForStop(_ eou: StreamingEouAsrManager) async {
+    /// reset for reuse: it leaves the cache and its callback goes nowhere. Returns false after a
+    /// timeout; the caller then loads a fresh one once recording is off (warm-up skips while
+    /// recording).
+    private func finishEouForStop(_ eou: StreamingEouAsrManager) async -> Bool {
         let finished: Void? = await Self.raceWithHardTimeout(seconds: 2) { _ = try? await eou.finish() }
         // Yield once so callbacks scheduled before `finish()` returned can update `liveEouTail`
         // before paste assembly reads it.
@@ -423,8 +426,8 @@ extension TranscriptionService {
             SWLog.note("[TranscriptionService] EOU finish timed out; retiring that streaming engine")
             if cachedEouAsr === eou { cachedEouAsr = nil }
             Task { await eou.setPartialTranscriptCallback { _ in } }
-            Task { [weak self] in await self?.warmUpModelsIfNeeded() }
         }
+        return finished != nil
     }
 
     /// Transcribes a whole session's audio when the live stages produced nothing. Nil on failure
@@ -483,7 +486,9 @@ extension TranscriptionService {
                 // during finish()) land in stagedTranscript instead of
                 // being rejected by the `isRecording` guard.
                 isStoppingDrain = true
-                await finishEouForStop(eou)
+                if !(await finishEouForStop(eou)) {
+                    Task { [weak self] in await self?.warmUpModelsIfNeeded() }
+                }
                 isStoppingDrain = false
             }
 
@@ -554,6 +559,23 @@ extension TranscriptionService {
             isPollingInProgress = true
             pollingTask?.cancel()
             pollingTask = nil
+            let stopBeganAt = CFAbsoluteTimeGetCurrent()
+
+            // Finish the streaming engine before TDT confirms the last segment. finish() delivers its
+            // last words; when TDT committed first, those words became a paste tail after the
+            // confirmed text, and the overlap strip missed them whenever TDT's ending differed
+            // ("...to pause. Yeah. pause"). The microphone keeps running, and TDT's audio is read
+            // after this, so TDT hears everything streaming heard, including words said while the
+            // stop key went down.
+            eouFeederTask?.cancel(); eouFeederTask = nil
+            streamingAudioQueue?.finish()
+            let streamingFinished = eouActor != nil
+            var streamingTimedOut = false
+            if let eou = eouActor {
+                isStoppingDrain = true
+                streamingTimedOut = !(await finishEouForStop(eou))
+                isStoppingDrain = false
+            }
 
             // Finalize the trailing audio so the last words become a TDT span instead of living only in the
             // EOU tail. Pass vadTriggered: true so finalizeCurrentSegment uses activeSampleCount; with false
@@ -563,15 +585,15 @@ extension TranscriptionService {
             // silence between the pause and the stop key, and TDT tends to repeat the last word from it.
             // A stop mid-sentence still finalizes, because VAD is in speech then.
             //
-            // Drain VAD first so its frontier covers the trailing audio. Otherwise the pause guard fails open
-            // and a breath before the stop can come back as "Yeah."
-            await drainVadWithinLimit()
+            // Drain VAD after reading the audio, through its last partial chunk, so VAD covers the whole
+            // segment. Otherwise the pause guard fails open and a breath before the stop can come back as
+            // "Yeah.", and the trailing-word check can't see the end.
             let bufferCount = audioBuffers.sampleCount()
             let activeStart = frozenSampleCount - totalDroppedSamples
             let activeCount = bufferCount - activeStart
-            let nowSec = CFAbsoluteTimeGetCurrent()
+            await drainVadWithinLimit(flushTail: true)
             let aFinalizeHasFired = frozenSampleCount > 0
-            let recentlyFinalized = aFinalizeHasFired && (nowSec - lastFinalizeWallTime) < 1.5
+            let recentlyFinalized = aFinalizeHasFired && (stopBeganAt - lastFinalizeWallTime) < 1.5
             let speechEndConsumed = (lastSpeechEndSampleIndex == nil)
             let vadCurrentlySpeaking = vadStreamState?.triggered ?? false
             let trailingIsPhantomSilence = vadStreamState != nil && recentlyFinalized
@@ -583,7 +605,8 @@ extension TranscriptionService {
                 let speechEnd = lastSpeechEndSampleIndex
                 let finalized: Void? = await Self.raceWithHardTimeout(seconds: 15) { [weak self] in
                     await self?.finalizeCurrentSegment(vadTriggered: true, activeSampleCount: activeCount,
-                                                       speechEndSample: speechEnd, isFinalStop: true)
+                                                       speechEndSample: speechEnd, isFinalStop: true,
+                                                       streamingFinished: streamingFinished)
                 }
                 if finalized == nil {
                     SWLog.note("[TranscriptionService] Final segment timed out; using the streaming tail")
@@ -607,20 +630,16 @@ extension TranscriptionService {
             liveTailPollingTask?.cancel(); liveTailPollingTask = nil
             boostSetupTask?.cancel(); boostSetupTask = nil
             vadSetupTask?.cancel(); vadSetupTask = nil
-            eouFeederTask?.cancel(); eouFeederTask = nil
             tearDownRefineWorker()
             audioLevel = 0
             teardownEngine()
-            streamingAudioQueue?.finish()
-
-            if let eou = eouActor {
-                isStoppingDrain = true
-                await finishEouForStop(eou)
-                isStoppingDrain = false
+            if streamingTimedOut {
+                Task { [weak self] in await self?.warmUpModelsIfNeeded() }
             }
 
-            // Always include the EOU tail for toggle stop so that any trailing spoken words
-            // not captured by TDT's finalization are still pasted.
+            // Include the EOU tail for toggle stop, so words TDT didn't confirm (the last segment was
+            // skipped, dropped, or timed out) are still pasted. After a last segment that covered the
+            // remaining audio, the tail is empty.
             let includeRawEouTail = true
             let skipRefine = UserDefaults.standard.bool(forKey: "skipRefine")
 

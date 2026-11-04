@@ -78,11 +78,17 @@ extension TranscriptionService {
     /// - the segment reaches segmentDurationSamples (14.8 s), or
     /// - VAD detects the end of speech and the segment has at least 3 s of audio.
     /// A VAD finalize uses the actual length (3 to 14.8 s); a fixed one always uses the full length.
+    ///
+    /// `streamingFinished` is for the stop's last segment, after the streaming engine finished on
+    /// the same audio: trailing words only TDT produced, after VAD heard the speaker stop, are
+    /// removed, and when the segment holds all the remaining audio the span takes the streaming
+    /// words left after the last commit.
     func finalizeCurrentSegment(
         vadTriggered: Bool = false,
         activeSampleCount: Int? = nil,
         speechEndSample: Int? = nil,
         isFinalStop: Bool = false,
+        streamingFinished: Bool = false,
         triggerLabelOverride: String? = nil
     ) async {
         guard isRecording else { return }
@@ -170,13 +176,21 @@ extension TranscriptionService {
 
             // Strip words TDT predicted in the silent part of a long segment before they reach the
             // transcript or refine. Runs only when the speech end is known within this segment.
-            let filteredText = Self.applyPhantomWordFilter(
+            var filteredText = Self.applyPhantomWordFilter(
                 text: rescoredText,
                 tokenTimings: result.tokenTimings,
                 vadWasSpeaking: false,
                 speechEndSample: speechEndSample,
                 frozenSampleCount: frozenSampleCount
             )
+            if isFinalStop && streamingFinished {
+                filteredText = removeTrailingGhostWords(
+                    from: filteredText,
+                    tokenTimings: result.tokenTimings ?? [],
+                    segmentStart: segmentStart,
+                    segmentEnd: segmentEnd
+                )
+            }
 
             var text = filteredText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else {
@@ -284,7 +298,10 @@ extension TranscriptionService {
             // optionally queue it for refine. Direct mode commits EOU text from the VAD handler
             // instead, so TDT committing too would duplicate spans.
             if multiStageActive && !directEouRefineActive {
-                let spanID = stagedTranscript.ingestTdtCommitted(text)
+                // The stop's last segment, when it holds all the audio left: streaming words still
+                // uncommitted describe that audio, so they join this span rather than the paste tail.
+                let coversRest = isFinalStop && streamingFinished && activeSampleCount == segmentSize
+                let spanID = stagedTranscript.ingestTdtCommitted(text, coversRemainingStreamingWords: coversRest)
                 if refineRealTimeActive && !isFinalStop {
                     enqueueRefine(spanID: spanID)
                 }
@@ -341,5 +358,42 @@ extension TranscriptionService {
                 }
             }
         }
+    }
+
+    /// Runs `TrailingGhostFilter` on the stop's last segment with this session's VAD state and the
+    /// finished streaming words. Needs VAD; without it the text is kept. Logs counts and timings
+    /// only.
+    func removeTrailingGhostWords(
+        from text: String,
+        tokenTimings: [TokenTiming],
+        segmentStart: Int,
+        segmentEnd: Int
+    ) -> String {
+        guard vadManager != nil, vadStreamState != nil, !tokenTimings.isEmpty else { return text }
+        let words = TrailingGhostFilter.words(from: tokenTimings)
+        let heard = stagedTranscript.uncommittedStreamingWords()
+        let voicedEnd: TimeInterval? = lastVadVoicedSampleIndex > segmentStart
+            ? Double(lastVadVoicedSampleIndex - segmentStart) / 16_000
+            : nil
+        let vadThrough = Double(min(vadConsumedFrontierSampleIndex, segmentEnd) - segmentStart) / 16_000
+        let count = TrailingGhostFilter.ghostCount(
+            words: words, heard: heard, voicedEnd: voicedEnd, vadThrough: vadThrough
+        )
+        let unheard = words.count - 1 - TrailingGhostFilter.lastHeardIndex(segment: words.map(\.text), heard: heard)
+        let lastStart = words.last?.start ?? 0
+        let gap = voicedEnd.map { lastStart - $0 } ?? -1
+        guard count > 0 else {
+            if unheard > 0 {
+                TrailingGhostFilter.log.notice("Last segment: kept \(unheard, privacy: .public) trailing word(s) only TDT heard; last starts \(gap, format: .fixed(precision: 2), privacy: .public) s after voiced audio, VAD through \(vadThrough - lastStart, format: .fixed(precision: 2), privacy: .public) s past it")
+            }
+            return text
+        }
+        let stripped = TrailingGhostFilter.strip(text, words: words, count: count)
+        if stripped == text {
+            TrailingGhostFilter.log.notice("Last segment: \(count, privacy: .public) trailing ghost word(s) kept; text ending didn't match the tokens")
+        } else {
+            TrailingGhostFilter.log.notice("Last segment: removed \(count, privacy: .public) trailing word(s) only TDT heard; last starts \(gap, format: .fixed(precision: 2), privacy: .public) s after voiced audio")
+        }
+        return stripped
     }
 }

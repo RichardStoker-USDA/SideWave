@@ -415,6 +415,11 @@ final class TranscriptionService {
     /// -1 before any. A finalizing segment with no speech inside it is a pause, and its transcript
     /// is dropped as a hallucination.
     var lastVadSpeechSampleIndex: Int = -1
+    /// End (same sample space) of the latest VAD chunk at or above
+    /// `TrailingGhostFilter.voicedProbability`, -1 before any. Unlike `lastVadSpeechSampleIndex` it
+    /// has no hangover: VAD stays triggered for seconds of silence, this stops at the last voiced
+    /// chunk. The stop path uses it to find words TDT placed after the speaker stopped.
+    var lastVadVoicedSampleIndex: Int = -1
     /// How far VAD has processed, in the same sample space. The per-window guard acts only when VAD
     /// has covered the whole window, so a lagging VAD never drops real words.
     var vadConsumedFrontierSampleIndex: Int = 0
