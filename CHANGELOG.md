@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.6 (2026-11-04)
+
+### Fixed
+
+- Stopping a dictation no longer adds words you didn't say at the end, such as "Yeah." followed
+  by your last word a second time ("...see you then. Yeah. then"). SideWave now lets the gray
+  draft finish before it confirms your last words, and drops a trailing word only when the draft
+  didn't hear it and there was no speech where it starts.
+
 ## 0.4.5 (2026-10-26)
 
 ### Fixed
