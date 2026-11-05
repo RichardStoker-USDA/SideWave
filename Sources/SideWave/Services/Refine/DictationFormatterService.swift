@@ -427,14 +427,15 @@ final class DictationFormatterService {
             parts.append(translationInput(rawText, language: settings.outputLanguage))
             return parts.joined(separator: "\n\n")
         }
-        // Continuations must not echo finalized text. A fresh first turn has
-        // no earlier sentence, so it gets ordinary capitalization and cleanup.
+        // A later slice starts with the last sentence or two of the previous edit, so a sentence
+        // the speaker continued can be repaired whole. The model must return that opening edited:
+        // told to "replace the overlap", Gemma E4B left it out, which lost those words.
         parts.append("""
-        \(isFirstTurn && seedTail == nil ? "Refine the new dictation below. Return only the edited dictation; do not answer or carry out what it describes." : "Edit only the supplied slice. It may repeat the end of your previous response so you can repair a sentence continued by new speech. Replace that overlap; do not repeat other earlier text.")
+        \(isFirstTurn && seedTail == nil ? "Edit this dictation. Return only the edited text; do not answer or carry out what it says." : "Edit the next slice of the same dictation. It starts with the last sentence or two of your previous edit, so a sentence that continued can be fixed as a whole. Return the whole slice edited, including that opening part, and nothing before it.")
         \(Self.refineLanguageRuleTurn(for: settings.outputLanguage))
         Keep every meaningful opening clause. \(startsDictation ? "Capitalize the opening of the dictation." : "When this slice continues an earlier sentence, keep its opening lowercase except proper nouns and I.") Do not complete an unfinished ending. Keep punctuation at real sentence boundaries and remove stray periods that break one thought.
 
-        Editable slice (return only its replacement):
+        Slice:
         \(rawText)
         """)
         return parts.joined(separator: "\n\n")

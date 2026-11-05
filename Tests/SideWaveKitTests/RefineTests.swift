@@ -33,6 +33,17 @@ final class RefineHygieneTests: XCTestCase {
             "Just a normal sentence.")
     }
 
+    func testUnwrapsSchemaJSONCopiedIntoPlainText() {
+        // A plain retry in a session of guided answers can copy their JSON, cut off or complete.
+        XCTAssertEqual(RefineHygiene.cleanupModelOutput(#"{"cleanedText": "Send the report on Friday."}"#),
+                       "Send the report on Friday.")
+        XCTAssertEqual(RefineHygiene.cleanupModelOutput(#"{"cleanedText": "Send the \"draft\" report on"#),
+                       #"Send the "draft" report on"#)
+        XCTAssertEqual(RefineHygiene.cleanupModelOutput(#"{"paragraphs": ["First point.", "Second"#),
+                       "First point.\n\nSecond")
+        XCTAssertEqual(RefineHygiene.cleanupModelOutput(#"{"name": "value"}"#), #"{"name": "value"}"#)
+    }
+
     // MARK: stripTrailingRepeat
 
     func testStripsFabricatedTailRestart() {

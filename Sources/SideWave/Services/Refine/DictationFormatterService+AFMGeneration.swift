@@ -519,7 +519,7 @@ extension DictationFormatterService {
                 output = partial.content
                 let now = CFAbsoluteTimeGetCurrent()
                 if now - lastStreamUpdate > 0.1 {
-                    onStream(output)
+                    onStream(unwrapEchoedSchema(output))
                     lastStreamUpdate = now
                 }
             }

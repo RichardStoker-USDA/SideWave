@@ -25,6 +25,18 @@ final class RefineValidationTests: XCTestCase {
         XCTAssertTrue(released)
     }
 
+    func testUnwrapsSchemaJSONCopiedIntoPlainText() {
+        // A plain retry in a session of guided answers can copy their JSON, cut off or complete.
+        XCTAssertEqual(DictationFormatterService.cleanupModelOutput(#"{"cleanedText": "Send the report on Friday."}"#),
+                       "Send the report on Friday.")
+        XCTAssertEqual(DictationFormatterService.cleanupModelOutput(#"{"cleanedText": "Send the \"draft\" report on"#),
+                       #"Send the "draft" report on"#)
+        XCTAssertEqual(DictationFormatterService.cleanupModelOutput(#"{"paragraphs": ["First point.", "Second"#),
+                       "First point.\n\nSecond")
+        XCTAssertEqual(DictationFormatterService.cleanupModelOutput(#"{"name": "value"}"#), #"{"name": "value"}"#)
+        XCTAssertEqual(DictationFormatterService.unwrapEchoedSchema("Plain text."), "Plain text.")
+    }
+
     func testCachedInstructionsInvalidateWhenUserContextChanges() {
         func identity(custom: String = "", profile: String = "", vocabulary: VocabularyStore.Snapshot = .empty,
                       prior: String? = nil, fillers: Bool = true, customFillers: [String] = [],

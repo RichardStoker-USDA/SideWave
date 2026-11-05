@@ -16,7 +16,7 @@ import Tokenizers
 @MainActor
 extension DictationFormatterService {
     nonisolated static func cleanupModelOutput(_ text: String) -> String {
-        var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleaned = unwrapEchoedSchema(text).trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Strip wrapping quotes
         if cleaned.count > 2,
@@ -64,6 +64,51 @@ extension DictationFormatterService {
         cleaned = mergeMidSentenceConjunctions(cleaned)
 
         return cleaned
+    }
+
+    /// Apple Intelligence asked for plain text in a session whose earlier answers were guided
+    /// copies their JSON shape, `{"cleanedText": "..."}`, often cut off before the closing brace.
+    /// Returns the text inside. Only the prose schemas' own fields count, so dictated JSON with
+    /// other keys stays as spoken.
+    nonisolated static func unwrapEchoedSchema(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("{"),
+              let pattern = try? Regex(#"^\{\s*"(cleanedText|paragraphs)"\s*:\s*"#),
+              let key = try? pattern.prefixMatch(in: trimmed) else { return text }
+        if let data = trimmed.data(using: .utf8),
+           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            if let value = object["cleanedText"] as? String { return value }
+            if let value = object["paragraphs"] as? [String] { return value.joined(separator: "\n\n") }
+        }
+        // Cut off: read each string literal that is there.
+        let body = trimmed[key.range.upperBound...]
+        var pieces: [String] = []
+        var current = ""
+        var inString = false
+        var escaped = false
+        for character in body {
+            if !inString {
+                if character == "\"" { inString = true; current = "" }
+                continue
+            }
+            if escaped {
+                switch character {
+                case "n": current.append("\n")
+                case "t": current.append("\t")
+                default: current.append(character)
+                }
+                escaped = false
+            } else if character == "\\" {
+                escaped = true
+            } else if character == "\"" {
+                pieces.append(current)
+                inString = false
+            } else {
+                current.append(character)
+            }
+        }
+        if inString, !current.isEmpty { pieces.append(current) }
+        return pieces.isEmpty ? text : pieces.joined(separator: "\n\n")
     }
 
     /// Merges `<clause of 8 words or fewer>. (And|But|Or|So|Yet|Nor) <word>` into one sentence.
