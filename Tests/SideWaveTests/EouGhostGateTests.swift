@@ -97,6 +97,54 @@ final class EouGhostGateTests: XCTestCase {
                        "a soft voice well above a quiet-room background must count")
     }
 
+    // MARK: - Judging a late partial by its own audio
+
+    func testLastSpeechAtOrBeforeFindsSpeechNearOlderAudio() {
+        // The streaming engine runs behind while Refine holds the GPU. Its partial for audio at
+        // 10.5 s must see the speech at 10.4 s, not the silence that followed until 13 s.
+        let store = AudioBufferStore()
+        store.resetSpeechDetector()
+        for i in 0..<30 { store.noteAudioLevel(0.001, peak: 0.002, at: 9.0 + Double(i) * 0.016) }
+        store.noteAudioLevel(0.05, peak: 0.1, at: 10.0)
+        store.noteAudioLevel(0.05, peak: 0.1, at: 10.4)
+        for i in 0..<100 { store.noteAudioLevel(0.001, peak: 0.002, at: 10.5 + Double(i) * 0.025) }
+        XCTAssertEqual(store.lastSpeech(atOrBefore: 10.5) ?? 0, 10.4, accuracy: 1e-9)
+        XCTAssertEqual(store.lastSpeech(atOrBefore: 10.2) ?? 0, 10.0, accuracy: 1e-9)
+    }
+
+    func testSpeechAfterAPauseDoesNotVouchForAudioInThePause() {
+        // A partial for pause audio stays a pause even when speech has resumed since.
+        let store = AudioBufferStore()
+        store.resetSpeechDetector()
+        for i in 0..<30 { store.noteAudioLevel(0.001, peak: 0.002, at: 9.0 + Double(i) * 0.016) }
+        store.noteAudioLevel(0.05, peak: 0.1, at: 10.0)
+        store.noteAudioLevel(0.05, peak: 0.1, at: 14.0)
+        XCTAssertEqual(store.lastSpeech(atOrBefore: 12.0) ?? 0, 10.0, accuracy: 1e-9)
+    }
+
+    func testQueueReportsWhenTheBufferItHandedOutWasCaptured() async {
+        let queue = StreamingAudioQueue()
+        let first = TranscriptionService.makePCMBuffer16k(samples: [Float](repeating: 0, count: 160))!
+        let second = TranscriptionService.makePCMBuffer16k(samples: [Float](repeating: 0, count: 160))!
+        queue.enqueue(first, capturedAt: 100)
+        queue.enqueue(second, capturedAt: 101)
+        XCTAssertEqual(queue.lastDequeuedCaptureTime, 0)
+        _ = await queue.dequeue()
+        XCTAssertEqual(queue.lastDequeuedCaptureTime, 100)
+        _ = await queue.dequeue()
+        XCTAssertEqual(queue.lastDequeuedCaptureTime, 101)
+    }
+
+    func testQueueStampsABufferHandedStraightToAWaitingReader() async {
+        let queue = StreamingAudioQueue()
+        let buffer = TranscriptionService.makePCMBuffer16k(samples: [Float](repeating: 0, count: 160))!
+        async let received = queue.dequeue()
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        queue.enqueue(buffer, capturedAt: 42)
+        _ = await received
+        XCTAssertEqual(queue.lastDequeuedCaptureTime, 42)
+    }
+
     // MARK: - Per-window silence guard (mid-dictation pause hallucinations)
 
     // Pins the drop decision for segments whose window contains no

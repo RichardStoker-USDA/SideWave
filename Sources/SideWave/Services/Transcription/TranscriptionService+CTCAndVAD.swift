@@ -300,8 +300,13 @@ extension TranscriptionService {
                 // (same derivation as the speech-end stamp below).
                 let chunkFrontier = currentTotalSamples - (vadAccumulationBuffer.count - vadConsumed)
                 vadConsumedFrontierSampleIndex = chunkFrontier
-                if result.probability >= TrailingGhostFilter.voicedProbability {
-                    lastVadVoicedSampleIndex = chunkFrontier
+                if result.probability >= GhostWordFilter.voicedProbability {
+                    let chunkStart = chunkFrontier - chunk.count
+                    if let last = vadVoicedRanges.last, last.upperBound >= chunkStart {
+                        vadVoicedRanges[vadVoicedRanges.count - 1] = last.lowerBound..<max(last.upperBound, chunkFrontier)
+                    } else {
+                        vadVoicedRanges.append(chunkStart..<chunkFrontier)
+                    }
                 }
                 if state.triggered {
                     lastVadSpeechSampleIndex = chunkFrontier
@@ -311,6 +316,11 @@ extension TranscriptionService {
                     }
                 }
 
+                // Speech resumed, so an earlier pause no longer marks where speech ended. Left in
+                // place, a later finalize treated everything spoken after the pause as silence.
+                if let event = result.event, event.kind == .speechStart {
+                    lastSpeechEndSampleIndex = nil
+                }
                 if let event = result.event, event.kind == .speechEnd {
                     // Absolute sample index where speech ended: everything not yet consumed comes
                     // after it.

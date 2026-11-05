@@ -105,6 +105,8 @@ extension TranscriptionService {
 
         let segmentStart = frozenSampleCount
         let segmentEnd = segmentStart + segmentSize
+        // Voiced audio more than a second before this segment can't matter to it or later ones.
+        vadVoicedRanges.removeAll { $0.upperBound < segmentStart - 16_000 }
 
         // Position within the buffer, after samples already dropped.
         let bufferStart = segmentStart - totalDroppedSamples
@@ -174,21 +176,25 @@ extension TranscriptionService {
             let rescoredText = await applyCtcRescoring(result: result, audioSamples: segmentSamples)
             guard sessionGeneration == generation, isRecording, !Task.isCancelled else { return }
 
-            // Strip words TDT predicted in the silent part of a long segment before they reach the
-            // transcript or refine. Runs only when the speech end is known within this segment.
-            var filteredText = Self.applyPhantomWordFilter(
-                text: rescoredText,
-                tokenTimings: result.tokenTimings,
-                vadWasSpeaking: false,
-                speechEndSample: speechEndSample,
-                frozenSampleCount: frozenSampleCount
-            )
-            if isFinalStop && streamingFinished {
-                filteredText = removeTrailingGhostWords(
-                    from: filteredText,
+            // Strip words TDT predicted from silence before they reach the transcript or refine.
+            // With the streaming engine to compare against, any word in a pause can go. Without
+            // it, only words after a known speech end in this segment.
+            let filteredText: String
+            if multiStageActive && !directEouRefineActive && (!isFinalStop || streamingFinished) {
+                filteredText = removeGhostWords(
+                    from: rescoredText,
                     tokenTimings: result.tokenTimings ?? [],
                     segmentStart: segmentStart,
-                    segmentEnd: segmentEnd
+                    segmentEnd: segmentEnd,
+                    isFinalStop: isFinalStop
+                )
+            } else {
+                filteredText = Self.applyPhantomWordFilter(
+                    text: rescoredText,
+                    tokenTimings: result.tokenTimings,
+                    vadWasSpeaking: false,
+                    speechEndSample: speechEndSample,
+                    frozenSampleCount: frozenSampleCount
                 )
             }
 
@@ -360,39 +366,42 @@ extension TranscriptionService {
         }
     }
 
-    /// Runs `TrailingGhostFilter` on the stop's last segment with this session's VAD state and the
-    /// finished streaming words. Needs VAD; without it the text is kept. Logs counts and timings
-    /// only.
-    func removeTrailingGhostWords(
+    /// Runs `GhostWordFilter` on a finished segment with this session's VAD state and the streaming
+    /// words no earlier segment took. Needs VAD; without it the text is kept. Logs counts and
+    /// timings only.
+    func removeGhostWords(
         from text: String,
         tokenTimings: [TokenTiming],
         segmentStart: Int,
-        segmentEnd: Int
+        segmentEnd: Int,
+        isFinalStop: Bool
     ) -> String {
         guard vadManager != nil, vadStreamState != nil, !tokenTimings.isEmpty else { return text }
-        let words = TrailingGhostFilter.words(from: tokenTimings)
+        let words = GhostWordFilter.words(from: tokenTimings)
         let heard = stagedTranscript.uncommittedStreamingWords()
-        let voicedEnd: TimeInterval? = lastVadVoicedSampleIndex > segmentStart
-            ? Double(lastVadVoicedSampleIndex - segmentStart) / 16_000
-            : nil
+        let voiced = vadVoicedRanges
+            .filter { $0.upperBound > segmentStart - 16_000 && $0.lowerBound < segmentEnd + 16_000 }
+            .map { Double($0.lowerBound - segmentStart) / 16_000 ..< Double($0.upperBound - segmentStart) / 16_000 }
         let vadThrough = Double(min(vadConsumedFrontierSampleIndex, segmentEnd) - segmentStart) / 16_000
-        let count = TrailingGhostFilter.ghostCount(
-            words: words, heard: heard, voicedEnd: voicedEnd, vadThrough: vadThrough
-        )
-        let unheard = words.count - 1 - TrailingGhostFilter.lastHeardIndex(segment: words.map(\.text), heard: heard)
-        let lastStart = words.last?.start ?? 0
-        let gap = voicedEnd.map { lastStart - $0 } ?? -1
-        guard count > 0 else {
-            if unheard > 0 {
-                TrailingGhostFilter.log.notice("Last segment: kept \(unheard, privacy: .public) trailing word(s) only TDT heard; last starts \(gap, format: .fixed(precision: 2), privacy: .public) s after voiced audio, VAD through \(vadThrough - lastStart, format: .fixed(precision: 2), privacy: .public) s past it")
+        let ghosts = GhostWordFilter.ghostIndices(words: words, heard: heard, voiced: voiced, vadThrough: vadThrough)
+        let label = isFinalStop ? "Last segment" : "Segment"
+        guard !ghosts.isEmpty else {
+            if isFinalStop {
+                let unheard = words.indices.count - GhostWordFilter.heardIndices(segment: words.map(\.text), heard: heard).count
+                if unheard > 0 {
+                    GhostWordFilter.log.notice("\(label, privacy: .public): kept \(unheard, privacy: .public) word(s) only TDT heard, each inside voiced audio or past VAD")
+                }
             }
             return text
         }
-        let stripped = TrailingGhostFilter.strip(text, words: words, count: count)
+        let stripped = GhostWordFilter.strip(text, words: words, removing: ghosts)
+        let first = words[ghosts[0]].start
+        let gap = voiced.map { first >= $0.upperBound ? first - $0.upperBound : ($0.lowerBound - first) }
+            .filter { $0 >= 0 }.min() ?? -1
         if stripped == text {
-            TrailingGhostFilter.log.notice("Last segment: \(count, privacy: .public) trailing ghost word(s) kept; text ending didn't match the tokens")
+            GhostWordFilter.log.notice("\(label, privacy: .public): \(ghosts.count, privacy: .public) word(s) in silence kept; the text didn't line up with the tokens")
         } else {
-            TrailingGhostFilter.log.notice("Last segment: removed \(count, privacy: .public) trailing word(s) only TDT heard; last starts \(gap, format: .fixed(precision: 2), privacy: .public) s after voiced audio")
+            GhostWordFilter.log.notice("\(label, privacy: .public): removed \(ghosts.count, privacy: .public) word(s) only TDT heard, in silence \(gap, format: .fixed(precision: 2), privacy: .public) s from voiced audio")
         }
         return stripped
     }

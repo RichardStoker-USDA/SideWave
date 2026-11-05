@@ -103,10 +103,7 @@ extension TranscriptionService {
         } else {
             DictationTracingService.shared.log(.modelLoad, .warning, "Dual-engine EOU: Cold-loading streaming models (download/compilation path)...")
             let startLoad = Date()
-            let fresh = StreamingEouAsrManager(
-                chunkSize: .ms160,
-                eouDebounceMs: 1280
-            )
+            let fresh = Self.makeEouManager()
             do {
                 try await fresh.loadModels(to: nil, configuration: nil, progressHandler: nil)
                 // Fresh install: warm-up never ran, so the next inference would be the cold one, on
@@ -155,7 +152,11 @@ extension TranscriptionService {
         // Partials count only while this engine is the session's. One retired after a stop timed
         // out can still deliver words late, and they must not reach the next session.
         let source = ObjectIdentifier(eou)
+        let audioQueue = streamingAudioQueue
         await eou.setPartialTranscriptCallback { [weak self] (partial: String) in
+            // When the audio behind this partial was captured. Read now, on the engine's turn,
+            // before the hop to the main actor.
+            let audioTime = audioQueue?.lastDequeuedCaptureTime ?? 0
             // Stamp the partial here, in delivery order. The actor calls this closure serially; the
             // hop to the main actor is what can reorder. `eouPartialSeqGen` is nonisolated, so no
             // hop is needed.
@@ -180,12 +181,19 @@ extension TranscriptionService {
 
                 // Ghost gate: streaming recognition produces low-confidence tokens from silence,
                 // breathing, and room noise. While the mic is quiet, freeze the visible tail at the
-                // last speech-backed word count. TDT runs separately and keeps its own phantom
+                // last speech-backed word count. TDT runs separately and has its own ghost-word
                 // filter. Downstream always receives a prefix of the EOU text, never a shorter one.
                 let ghostGateOn = self.eouGhostSuppressionActive
                 let processed: String
                 if ghostGateOn {
-                    let sinceSpeech = Date().timeIntervalSince1970 - self.audioBuffers.lastSpeechAt
+                    // Judge the partial by when its audio was captured, not by when it arrived.
+                    // While Refine holds the GPU the streaming engine runs behind, and a partial
+                    // for words already spoken can arrive after the speaker paused; measured from
+                    // now, those words looked like silence and were held back.
+                    let now = Date().timeIntervalSince1970
+                    let heardAt = audioTime > 0 ? min(audioTime, now) : now
+                    let speechAt = self.audioBuffers.lastSpeech(atOrBefore: heardAt) ?? 0
+                    let sinceSpeech = heardAt - speechAt
                     let recentSpeech = sinceSpeech < Self.eouGhostHangoverSeconds
                     // Never freeze during the stop drain. `eou.finish()` decodes the last real
                     // speech, and the accumulator can flush words 2 to 3 s after `lastSpeechAt`,
@@ -200,14 +208,13 @@ extension TranscriptionService {
                         // and overrides the energy check, since silence hallucinations don't keep
                         // that pace but a very quiet mic chain does. When it triggers, open the
                         // gate and keep the detector on its adaptive floor for the session.
-                        let now = Date().timeIntervalSince1970
                         if self.ghostFreezeBeganAt == 0 {
                             self.ghostFreezeBeganAt = now
                             self.ghostFrozenWordsAtStart = self.eouSpeechBackedWordCount
                         }
                         if rawWords - self.ghostFrozenWordsAtStart >= 4,
                            now - self.ghostFreezeBeganAt <= 3.0 {
-                            self.audioBuffers.relaxFloorForQuietChain(at: now)
+                            self.audioBuffers.relaxFloorForQuietChain(at: heardAt)
                             self.eouSpeechBackedWordCount = rawWords
                             processed = rawProcessed
                             self.ghostFreezeBeganAt = 0

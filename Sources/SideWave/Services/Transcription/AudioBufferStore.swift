@@ -54,6 +54,10 @@ final class AudioBufferStore: @unchecked Sendable {
     /// quieter than the fixed floor, so keep the floor pinned to the adaptive
     /// path for the session remainder.
     private var _quietChainMode = false
+    /// Capture times of recent speech buffers, oldest first, so the ghost gate can ask about the
+    /// audio a late partial came from rather than about now.
+    private var _recentSpeechTimes: [Double] = []
+    private static let speechHistorySeconds: Double = 30
 
     /// Records a buffer's RMS/peak AND advances the adaptive speech detector.
     /// Called from the audio-tap thread. `now` is a monotonic-enough wall clock
@@ -81,12 +85,31 @@ final class AudioBufferStore: @unchecked Sendable {
             effectiveFloor = Self.silenceFloorRMS
         }
         let speechThreshold = max(effectiveFloor, _backgroundRMS * Self.speechMargin)
-        if rms > speechThreshold { _lastSpeechAt = now }
+        if rms > speechThreshold {
+            _lastSpeechAt = now
+            recordSpeech(at: now)
+        }
     }
 
-    /// Time of the latest buffer classified as speech. The EOU ghost gate holds the gray tail while
-    /// `now - lastSpeechAt` exceeds its hangover window, so tokens produced during silence never reach
-    /// the preview or the paste.
+    /// Adds `time` to the speech history. Caller holds the lock.
+    private func recordSpeech(at time: Double) {
+        let position = (_recentSpeechTimes.lastIndex { $0 <= time } ?? -1) + 1
+        guard position == 0 || _recentSpeechTimes[position - 1] != time else { return }
+        _recentSpeechTimes.insert(time, at: position)
+        let cutoff = time - Self.speechHistorySeconds
+        if let first = _recentSpeechTimes.first, first < cutoff {
+            _recentSpeechTimes.removeAll { $0 < cutoff }
+        }
+    }
+
+    /// The latest speech at or before `time`, or nil when none is in the recent history.
+    func lastSpeech(atOrBefore time: Double) -> Double? {
+        lock.lock(); defer { lock.unlock() }
+        return _recentSpeechTimes.last { $0 <= time }
+    }
+
+    /// Time of the latest buffer classified as speech. The EOU ghost gate uses
+    /// `lastSpeech(atOrBefore:)` instead, so a late partial is judged by its own audio.
     var lastSpeechAt: Double { lock.lock(); defer { lock.unlock() }; return _lastSpeechAt }
 
     /// The ghost gate's text-growth release proved the chain is quieter than
@@ -95,7 +118,8 @@ final class AudioBufferStore: @unchecked Sendable {
     func relaxFloorForQuietChain(at now: Double) {
         lock.lock(); defer { lock.unlock() }
         _quietChainMode = true
-        _lastSpeechAt = now
+        _lastSpeechAt = max(_lastSpeechAt, now)
+        recordSpeech(at: now)
     }
 
     /// Clears the detector between sessions. `_lastSpeechAt` starts at now, not zero, so the
@@ -104,6 +128,7 @@ final class AudioBufferStore: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         _backgroundRMS = 0.001
         _lastSpeechAt = Date().timeIntervalSince1970
+        _recentSpeechTimes = [_lastSpeechAt]
         _levelBufferCount = 0
         _quietChainMode = false
     }
@@ -154,14 +179,23 @@ final class AudioBufferStore: @unchecked Sendable {
 /// race the actor's executor and reorder audio.
 final class StreamingAudioQueue: @unchecked Sendable {
     private let lock = NSLock()
-    private var buffers: [AVAudioPCMBuffer] = []
+    private var buffers: [(buffer: AVAudioPCMBuffer, capturedAt: Double)] = []
     private var continuation: CheckedContinuation<AVAudioPCMBuffer?, Never>?
     private var finished = false
+    private var _lastDequeuedCaptureTime: Double = 0
     /// ~85s of 16k mono audio. Backstop against a wedged feeder leaking memory;
     /// in practice the feeder drains within ~70ms of arrival so depth stays at 0-1.
     private static let maxBuffered = 1024
 
-    func enqueue(_ buffer: AVAudioPCMBuffer) {
+    /// When the buffer handed out last was captured (wall clock), 0 before any. The streaming
+    /// engine works through buffers in order, so a partial describes audio up to about this time
+    /// even when the engine runs behind.
+    var lastDequeuedCaptureTime: Double {
+        lock.lock(); defer { lock.unlock() }
+        return _lastDequeuedCaptureTime
+    }
+
+    func enqueue(_ buffer: AVAudioPCMBuffer, capturedAt: Double = Date().timeIntervalSince1970) {
         lock.lock()
         if finished {
             lock.unlock()
@@ -169,6 +203,7 @@ final class StreamingAudioQueue: @unchecked Sendable {
         }
         if let cont = continuation {
             continuation = nil
+            _lastDequeuedCaptureTime = capturedAt
             lock.unlock()
             cont.resume(returning: buffer)
             return
@@ -176,7 +211,7 @@ final class StreamingAudioQueue: @unchecked Sendable {
         if buffers.count >= Self.maxBuffered {
             buffers.removeFirst(buffers.count - Self.maxBuffered + 1)
         }
-        buffers.append(buffer)
+        buffers.append((buffer, capturedAt))
         lock.unlock()
     }
 
@@ -194,8 +229,9 @@ final class StreamingAudioQueue: @unchecked Sendable {
                 }
                 if !buffers.isEmpty {
                     let next = buffers.removeFirst()
+                    _lastDequeuedCaptureTime = next.capturedAt
                     lock.unlock()
-                    cont.resume(returning: next)
+                    cont.resume(returning: next.buffer)
                     return
                 }
                 if finished {

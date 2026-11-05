@@ -6,6 +6,7 @@ import AppKit
 @preconcurrency import AVFAudio
 import CoreAudio
 import FluidAudio
+import CoreML
 import Foundation
 import os
 
@@ -242,7 +243,7 @@ extension TranscriptionService {
                 UserDefaults.standard.set(true, forKey: "modelLoaded_\(version.rawValue)")
             }
             if needsStreaming, self.cachedEouAsr == nil {
-                let eou = StreamingEouAsrManager(chunkSize: .ms160, eouDebounceMs: 1280)
+                let eou = Self.makeEouManager()
                 self.modelState = .loading
                 try await eou.loadModels(to: nil, configuration: nil) { [weak self] progress in
                     Task { @MainActor in
@@ -269,6 +270,16 @@ extension TranscriptionService {
             }
         }
         try await withTaskCancellationHandler(operation: { try await task.value }, onCancel: { task.cancel() })
+    }
+
+    /// The streaming model behind the gray text, on the Neural Engine. With Core ML's default
+    /// compute units its encoder ran wholly on the GPU, where Gemma refines, and fell up to 0.4 s
+    /// behind during a refine; on the Neural Engine the slowest 160 ms chunk took 26 ms with Gemma
+    /// and the confirming model running.
+    nonisolated static func makeEouManager() -> StreamingEouAsrManager {
+        let configuration = MLModelConfiguration()
+        configuration.computeUnits = .cpuAndNeuralEngine
+        return StreamingEouAsrManager(configuration: configuration, chunkSize: .ms160, eouDebounceMs: 1280)
     }
 
     // MARK: - Cold-inference warm-up decode

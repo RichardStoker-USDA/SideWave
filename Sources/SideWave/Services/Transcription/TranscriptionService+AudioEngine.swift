@@ -141,11 +141,12 @@ extension TranscriptionService {
                     vDSP_maxmgv(mono16k, 1, &peak, vDSP_Length(mono16k.count))
                     // Records level + peak AND advances the adaptive
                     // speech detector that gates EOU ghost words.
-                    bufs.noteAudioLevel(rms, peak: Double(peak), at: Date().timeIntervalSince1970)
+                    let capturedAt = Date().timeIntervalSince1970
+                    bufs.noteAudioLevel(rms, peak: Double(peak), at: capturedAt)
 
                     if let q = tapQueue,
                        let pcm = Self.makePCMBuffer16k(samples: mono16k) {
-                        q.enqueue(pcm)
+                        q.enqueue(pcm, capturedAt: capturedAt)
                     }
                 }
             }

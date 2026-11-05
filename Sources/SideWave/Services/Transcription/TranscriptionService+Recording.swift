@@ -95,7 +95,7 @@ extension TranscriptionService {
             audioBuffers.resetSpeechDetector()
             vadSawSpeechThisSession = false
             lastVadSpeechSampleIndex = -1
-            lastVadVoicedSampleIndex = -1
+            vadVoicedRanges = []
             vadConsumedFrontierSampleIndex = 0
             hasAttemptedRecovery = false
             consecutivePollingErrors = 0
