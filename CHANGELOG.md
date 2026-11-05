@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.8 (2026-11-05)
+
+### Fixed
+
+- Apple Intelligence on macOS 26 and 27 no longer leaves sentences or weekdays starting with a
+  lowercase letter ("range. and next week", "the friday meeting"). Names written in mixed case,
+  such as gVisor or iPhone, keep their spelling, and a slice that continues a sentence stays
+  lowercase.
+
 ## 0.4.7 (2026-11-05)
 
 ### Fixed
