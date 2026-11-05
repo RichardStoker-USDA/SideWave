@@ -194,6 +194,9 @@ final class AppState {
     /// The stop pass's model call. Tests replace it to simulate declines and slow output.
     @ObservationIgnored
     var finalPassRefine: (@MainActor (_ chunk: String, _ context: String) async -> DictationFormatterService.RefinementResult)?
+    /// Changes with each stop-pass request, so a streamed partial from a finished one is dropped.
+    @ObservationIgnored
+    var streamGate = 0
 
     // Guards against duplicate start/stop flow and duplicate startServices calls
     var captureStart = CaptureStartState()

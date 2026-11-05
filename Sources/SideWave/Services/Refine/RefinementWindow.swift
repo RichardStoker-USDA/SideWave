@@ -8,11 +8,22 @@ struct RefinementWindow: Sendable {
     let prefix: String
     let editable: String
 
+    /// How much refined text a request reopens before the new text.
+    struct Reopen: Sendable, Equatable {
+        var sentences: Int
+        var maxWords: Int
+        /// ASR can insert a period at a pause, so two sentences, up to 64 words.
+        static let standard = Reopen(sentences: 2, maxWords: 64)
+        /// The sentence at the junction only. Apple Intelligence writes slowly enough that the second
+        /// sentence doubled its stop pass.
+        static let junction = Reopen(sentences: 1, maxWords: 40)
+    }
+
     /// `lockedCount` characters at the start of `refinedBody` stay out of the editable part. The stop
     /// pass locks text the model declined, so the next request doesn't send it again.
-    init(refinedBody: String, unrefinedTail: String, lockedCount: Int = 0) {
+    init(refinedBody: String, unrefinedTail: String, lockedCount: Int = 0, reopen: Reopen = .standard) {
         let open = String(refinedBody.dropFirst(lockedCount))
-        let split = Self.splitBoundary(open)
+        let split = Self.splitBoundary(open, reopen: reopen)
         if lockedCount > 0 {
             // Keep the original gap after the locked text, such as a paragraph break. When nothing
             // after the lock reopens, the gap is the one before the tail.
@@ -33,18 +44,18 @@ struct RefinementWindow: Sendable {
         text.split(whereSeparator: \.isWhitespace).suffix(400).joined(separator: " ")
     }
 
-    /// ASR can insert a period at a pause, so retain two sentences, up to 64 words.
-    static func splitBoundary(_ text: String) -> (prefix: String, tail: String) {
+    /// Splits off the last `reopen.sentences` sentences, at most `reopen.maxWords` words.
+    static func splitBoundary(_ text: String, reopen: Reopen = .standard) -> (prefix: String, tail: String) {
         let words = text.split(whereSeparator: \.isWhitespace)
         guard !words.isEmpty else { return ("", "") }
-        let floor = max(0, words.count - 64)
+        let floor = max(0, words.count - reopen.maxWords)
         var start = floor
         var boundaries = 0
         if words.count > 1 {
             for index in stride(from: words.count - 2, through: floor, by: -1) {
                 if endsSentence(words[index]) {
                     boundaries += 1
-                    if boundaries == 2 { start = index + 1; break }
+                    if boundaries == reopen.sentences { start = index + 1; break }
                 }
             }
         }

@@ -6,12 +6,33 @@ import XCTest
 
 @MainActor
 final class FinalRefinementTests: XCTestCase {
+    func testStopPreviewReplacesCapturedWordsAsTheEndingStreams() {
+        let chunk = "um send the report. Before lunch on friday"
+        XCTAssertEqual(AppState.streamingPreview("", over: chunk), chunk)
+        XCTAssertEqual(AppState.streamingPreview("Send the", over: chunk), "Send the report. Before lunch on friday")
+        XCTAssertEqual(AppState.streamingPreview("Send the report before lunch on Friday.", over: chunk),
+                       "Send the report before lunch on Friday.")
+        // A word still streaming stands in for its captured word.
+        XCTAssertEqual(AppState.streamingPreview("Send the rep", over: chunk), "Send the rep Before lunch on friday")
+        XCTAssertEqual(AppState.streamingPreview("Send the report before lunch on Friday, please.", over: chunk),
+                       "Send the report before lunch on Friday, please.")
+    }
+
     func testFinalWindowCanRepairAFalseSentenceBreak() {
         let window = RefinementWindow(refinedBody: "The samples are frozen. The report is ready. Send it before.",
                                       unrefinedTail: "Lunch on Friday.")
         XCTAssertEqual(window.prefix, "The samples are frozen.")
         XCTAssertEqual(window.editable, "The report is ready. Send it before. Lunch on Friday.")
         XCTAssertEqual(window.context, window.prefix)
+    }
+
+    func testJunctionReopenKeepsOnlyTheSentenceBeforeTheNewText() {
+        let body = "The samples are frozen. The report is ready. Send it before."
+        let standard = RefinementWindow(refinedBody: body, unrefinedTail: "Lunch on Friday.")
+        XCTAssertEqual(standard.editable, "The report is ready. Send it before. Lunch on Friday.")
+        let junction = RefinementWindow(refinedBody: body, unrefinedTail: "Lunch on Friday.", reopen: .junction)
+        XCTAssertEqual(junction.prefix, "The samples are frozen. The report is ready.")
+        XCTAssertEqual(junction.editable, "Send it before. Lunch on Friday.")
     }
 
     func testEmptyTailStillChecksTheLastSentence() {

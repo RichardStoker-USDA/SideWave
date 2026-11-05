@@ -171,6 +171,9 @@ extension AppState {
         // after the first starts with the whitespace before it, which keeps paragraph breaks.
         var lockedRuns: [FinalPassRun] = []
         var locked = 0
+        let backend = dictationFormatter.activeBackend
+        let reopen: RefinementWindow.Reopen = backend == .appleIntelligence || backend == .appleIntelligenceLegacy
+            ? .junction : .standard
         func outcomeRuns(_ unfinished: [FinalPassRun]) -> [FinalPassRun] {
             FinalPassRun.merged(lockedRuns + [FinalPassRun(text: String(settled.dropFirst(locked)), pending: false)] + unfinished)
         }
@@ -184,7 +187,7 @@ extension AppState {
             let later = Array(runs[(index + 1)...])
             // Each later run joins with its own leading break, so the preview keeps paragraphs.
             func preview(_ text: String) -> String { later.reduce(text) { RefinementWindow.join($0, $1.text) } }
-            var window = RefinementWindow(refinedBody: settled, unrefinedTail: run.text, lockedCount: locked)
+            var window = RefinementWindow(refinedBody: settled, unrefinedTail: run.text, lockedCount: locked, reopen: reopen)
             // The part of this run no request has finished. A chunk always covers the reopened
             // sentences, so what remains after it is this run's own text.
             var unprocessed = run.text
@@ -192,7 +195,24 @@ extension AppState {
                 let next = RefinementWindow.nextChunk(window.editable)
                 var result: DictationFormatterService.RefinementResult?
                 if !cancelRequestedDuringStop {
-                    result = await finalPassChunk(next.chunk, context: window.context, deadline: deadline, clock: clock)
+                    // The preview shows the refined words replacing the captured ones as they stream,
+                    // so the ending is seen being refined. A partial that lands after its request
+                    // finished is dropped.
+                    streamGate &+= 1
+                    let gate = streamGate
+                    let head = window.prefix
+                    let chunk = next.chunk
+                    let tail = next.remaining
+                    let onPartial: @Sendable (String) -> Void = { [weak self] partial in
+                        Task { @MainActor [weak self] in
+                            guard let self, self.streamGate == gate else { return }
+                            onStream(preview(RefinementWindow.join(
+                                RefinementWindow.join(head, Self.streamingPreview(partial, over: chunk)), tail)))
+                        }
+                    }
+                    result = await finalPassChunk(next.chunk, context: window.context, deadline: deadline,
+                                                  clock: clock, onPartial: onPartial)
+                    streamGate &+= 1
                 }
                 if cancelRequestedDuringStop { outcome.cancelled = true } else if result == nil { outcome.timedOut = true }
                 if outcome.cancelled || outcome.timedOut {
@@ -215,7 +235,7 @@ extension AppState {
                 onStream(preview(RefinementWindow.join(settled, next.remaining)))
                 unprocessed = next.remaining
                 if next.remaining.isEmpty { break }
-                window = RefinementWindow(refinedBody: settled, unrefinedTail: next.remaining, lockedCount: locked)
+                window = RefinementWindow(refinedBody: settled, unrefinedTail: next.remaining, lockedCount: locked, reopen: reopen)
             }
         }
         outcome.text = settled.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -223,28 +243,55 @@ extension AppState {
         return outcome
     }
 
+    /// The refined words streamed so far, then the captured words they haven't reached yet. The
+    /// captured text resumes after the word matching the last streamed one, looked for near the
+    /// same position, so a removed filler doesn't repeat a word. The finished request replaces it.
+    nonisolated static func streamingPreview(_ partial: String, over chunk: String) -> String {
+        let done = partial.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !done.isEmpty else { return chunk }
+        func key(_ word: Substring) -> String { word.lowercased().filter { $0.isLetter || $0.isNumber } }
+        let doneWords = done.split(whereSeparator: \.isWhitespace)
+        let source = chunk.split(whereSeparator: \.isWhitespace)
+        let position = doneWords.count - 1
+        var resume = min(source.count, doneWords.count)
+        let last = key(doneWords[position])
+        if !last.isEmpty {
+            let window = max(0, position - 4)..<min(source.count, position + 5)
+            let nearest: ([Int]) -> Int? = { $0.min(by: { abs($0 - position) < abs($1 - position) }) }
+            // A word still streaming matches the start of its captured word.
+            if let match = nearest(window.filter { key(source[$0]) == last })
+                ?? nearest(window.filter { last.count >= 2 && key(source[$0]).hasPrefix(last) }) {
+                resume = match + 1
+            }
+        }
+        let rest = source.dropFirst(resume)
+        return rest.isEmpty ? done : done + " " + rest.joined(separator: " ")
+    }
+
     /// One stop-pass request, or nil when the deadline passed first.
     private func finalPassChunk(
         _ chunk: String,
         context: String,
         deadline: ContinuousClock.Instant?,
-        clock: ContinuousClock
+        clock: ContinuousClock,
+        onPartial: (@Sendable (String) -> Void)? = nil
     ) async -> DictationFormatterService.RefinementResult? {
-        guard let deadline else { return await finalPassModelCall(chunk, context: context) }
+        guard let deadline else { return await finalPassModelCall(chunk, context: context, onPartial: onPartial) }
         let remaining = clock.now.duration(to: deadline)
         guard remaining > .zero else { return nil }
         let seconds = Double(remaining.components.seconds) + Double(remaining.components.attoseconds) / 1e18
         let result = await TranscriptionService.raceWithHardTimeout(seconds: seconds) { [weak self] in
-            await self?.finalPassModelCall(chunk, context: context) ?? .original(chunk, failure: .cancelled)
+            await self?.finalPassModelCall(chunk, context: context, onPartial: onPartial) ?? .original(chunk, failure: .cancelled)
         }
         if result == nil { dictationFormatter.cancelGeneration() }
         return result
     }
 
-    private func finalPassModelCall(_ chunk: String, context: String) async -> DictationFormatterService.RefinementResult {
+    private func finalPassModelCall(_ chunk: String, context: String,
+                                    onPartial: (@Sendable (String) -> Void)?) async -> DictationFormatterService.RefinementResult {
         if let finalPassRefine { return await finalPassRefine(chunk, context) }
         return await dictationFormatter.refine(chunk, forceRefine: true, priorContext: context,
-                                               silentMode: true, finishing: true)
+                                               silentMode: true, finishing: true, onStream: onPartial)
     }
 
     /// Keeps the text on Home instead of pasting, for a final pass that can't deliver, such as a
