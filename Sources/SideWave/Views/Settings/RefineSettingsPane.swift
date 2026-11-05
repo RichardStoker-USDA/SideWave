@@ -60,9 +60,7 @@ struct RefineSettingsPane: View {
                     .disabled(isBackendSwitchLocked)
                     .help(backendSwitchLockedHelp)
                 }
-                Text("Apple Intelligence uses the model built into macOS. Gemma downloads once: E2B is the smallest and fastest (about 3 GB), E4B uses about 5.2 GB, and 12B uses about 6.8 GB and suits Macs with 24 GB of memory or more.")
-                    .settingsCaption()
-                    .fixedSize(horizontal: false, vertical: true)
+                RefineModelFitView(appState: appState)
 
                 SettingsDivider()
                 SettingsRow(label: "Status") { RefineStatusLabel(state: appState.dictationFormatter.state) }

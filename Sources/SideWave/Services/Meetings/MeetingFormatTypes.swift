@@ -197,11 +197,12 @@ enum MeetingFormatterBackend: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Download size, from the matching Refine backend.
     var diskSize: String {
         switch self {
-        case .gemma4E2B: return "3 GB"
-        case .gemma4E4B: return "5.2 GB"
-        case .gemma4_12B: return "6.8 GB"
+        case .gemma4E2B: return DictationFormatterService.Backend.gemma4E2B.diskSize
+        case .gemma4E4B: return DictationFormatterService.Backend.gemma4E4B.diskSize
+        case .gemma4_12B: return DictationFormatterService.Backend.gemma4_12B.diskSize
         case .appleIntelligence: return "0 GB"
         }
     }

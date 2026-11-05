@@ -234,12 +234,12 @@ struct HelpModelsContent: View {
                         .font(.headline)
                 }
 
-                Text("Google DeepMind's Gemma 4, about 3 GB on disk. It refines ordinary dictation one segment at a time as you speak, and formats document templates after you finish. It runs on the GPU through MLX. E2B is the lightest Gemma option.")
+                Text("Google DeepMind's Gemma 4, a 3.6 GB download that uses about 4 GB of memory while it refines. It refines ordinary dictation one segment at a time as you speak, and formats document templates after you finish. It runs on the GPU through MLX. E2B is the lightest Gemma option.")
                     .font(.callout)
                     .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Gemma 4 E4B (about 5.2 GB) and 12B (about 6.8 GB) are also available. 12B handles complex edits better but uses more memory and is slower; use it with 24 GB of memory or more.")
+                Text("Gemma 4 E4B (5.2 GB download, about 5.5 GB while refining) and 12B (6.8 GB, about 8.5 GB while refining) are also available. Settings > Refine shows which ones fit your Mac, from its memory and what is usually free while you dictate.")
                     .font(.caption)
                     .adaptiveSecondary()
                     .fixedSize(horizontal: false, vertical: true)
@@ -357,7 +357,7 @@ struct HelpModelsScanner: View {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     memorySpecRow("macOS and other apps", "Shared memory", "Available memory changes as other apps work.")
                     memorySpecRow("Speech engines", "Varies by model", "The selected recognizer, live preview, and optional vocabulary helper each use memory.")
-                    memorySpecRow("Gemma 4 E2B / E4B / 12B weights", "3 / 5.2 / 6.8 GB", "Inference also needs working memory. E2B uses the least; 24 GB or more is recommended for 12B.")
+                    memorySpecRow("Gemma 4 E2B / E4B / 12B while refining", "4 / 5.5 / 8.5 GB", "Downloads are 3.6, 5.2, and 6.8 GB. Settings > Refine shows which models fit this Mac.")
                 }
             }
             .padding(.top, Spacing.xs)

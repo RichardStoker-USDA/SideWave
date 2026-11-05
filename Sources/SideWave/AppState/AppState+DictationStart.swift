@@ -282,6 +282,10 @@ extension AppState {
         // Start recording. If it fails (mic denied, model error), revert state.
         // After start completes, check if a stop was queued during the async gap.
         let effectiveDeviceUID = resolveDictationInputUID()
+        // Free memory while dictating is what Refine competes for; sampled for the model fit
+        // shown in Settings > Refine. Off the start path.
+        let ownModelBytes = dictationFormatter.loadedModelMemoryBytes
+        Task.detached(priority: .utility) { RefineModelFit.recordSample(ownModelBytes: ownModelBytes) }
         appStateTraceLog.notice("AppState.handleStartRecording: dispatched audio side-effects, kicking off engine startRecording")
         let startKickoff = CACurrentMediaTime()
         recordingStartTask = Task { @MainActor [self] in
