@@ -11,6 +11,32 @@ final class CtcVocabBoosterTests: XCTestCase {
 
     private let floor: Float = 0.75
 
+    // MARK: ordinary words
+
+    func testOrdinaryWordsAreNotRespelledIntoATerm() {
+        let words: Set<String> = ["the", "visor", "vector", "open", "a", "shell", "deep", "to", "seek", "sense", "coat", "wire", "guard"]
+        let isWord = { words.contains($0) }
+        // Real words that only resemble or contain the term stay as spoken.
+        XCTAssertTrue(CtcVocabBooster.rewritesOrdinaryWords(span: "visor", term: "gVisor", isWord: isWord))
+        XCTAssertTrue(CtcVocabBooster.rewritesOrdinaryWords(span: "vector", term: "pgvector", isWord: isWord))
+        XCTAssertTrue(CtcVocabBooster.rewritesOrdinaryWords(span: "Open a shell", term: "OpenShell", isWord: isWord))
+        XCTAssertTrue(CtcVocabBooster.rewritesOrdinaryWords(span: "deep to seek", term: "DeepSeek", isWord: isWord))
+        // Joining or recasing the term's own letters, and fixing words that aren't English, still apply.
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "deep seek", term: "DeepSeek", isWord: isWord))
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "wire guard", term: "WireGuard", isWord: isWord))
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "Cloudflur", term: "Cloudflare", isWord: isWord))
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "OPN sense", term: "OPNsense", isWord: isWord))
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "CADA CLH", term: "Kata CLH", isWord: isWord))
+        XCTAssertFalse(CtcVocabBooster.rewritesOrdinaryWords(span: "G-visor", term: "gVisor", isWord: isWord))
+    }
+
+    @MainActor
+    func testSystemDictionaryKnowsCommonWordsButNotTerms() {
+        XCTAssertTrue(CtcVocabBooster.isDictionaryWord("visor"))
+        XCTAssertTrue(CtcVocabBooster.isDictionaryWord("vector"))
+        XCTAssertFalse(CtcVocabBooster.isDictionaryWord("cloudflur"))
+    }
+
     // MARK: stringSimilarity
 
     func testIdenticalStringsScoreOne() {

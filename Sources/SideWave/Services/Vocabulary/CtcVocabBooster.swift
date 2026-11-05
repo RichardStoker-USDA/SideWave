@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Richard Stoker. Apache License 2.0.
 // See LICENSE file for details.
 
+import AppKit
 import FluidAudio
 import Foundation
 
@@ -134,10 +135,17 @@ struct CtcVocabBooster: Sendable {
         // a word in the replaced span is at least `falsePositiveFloor` similar to the term, then
         // rebuild from the original transcript with just those. In testing, false positives went
         // from 11 to 0 while exact matches were kept.
-        let accepted = rescoreOutput.replacements.filter { r in
+        let similar = rescoreOutput.replacements.filter { r in
             guard r.shouldReplace, let rep = r.replacementWord, !rep.isEmpty else { return false }
             return Self.spanMatchesTerm(span: r.originalWord, term: rep, floor: falsePositiveFloor)
         }
+        // Similarity still let ordinary words turn into terms that contain them ("visor" into
+        // "gVisor", "Open a shell" into "OpenShell"). Plain English words are only joined or
+        // recased into a term, never respelled.
+        let ordinary = similar.isEmpty ? [] : await MainActor.run {
+            similar.map { Self.rewritesOrdinaryWords(span: $0.originalWord, term: $0.replacementWord ?? "", isWord: Self.isDictionaryWord) }
+        }
+        let accepted = zip(similar, ordinary).filter { !$0.1 }.map(\.0)
         guard !accepted.isEmpty else {
             return RescoreOutcome(text: transcript, replacementCount: 0, wasModified: false)
         }
@@ -299,6 +307,29 @@ struct CtcVocabBooster: Sendable {
             }
         }
         return false
+    }
+
+    /// True when the span is all ordinary English words and the term spells something else, so
+    /// a replacement would turn real words into the term instead of fixing how it was written.
+    /// Words with capitals throughout or digits count as names, not ordinary words.
+    static func rewritesOrdinaryWords(span: String, term: String, isWord: (String) -> Bool) -> Bool {
+        func letters(_ text: String) -> String { text.lowercased().filter { $0.isLetter || $0.isNumber } }
+        guard letters(span) != letters(term) else { return false }
+        let words = span.split(whereSeparator: \.isWhitespace)
+            .map { $0.trimmingCharacters(in: CharacterSet.alphanumerics.inverted) }
+            .filter { !$0.isEmpty }
+        guard !words.isEmpty else { return false }
+        return words.allSatisfy { word in
+            guard word.allSatisfy({ $0.isLetter || $0 == "'" }) else { return false }
+            if word.count > 1, word == word.uppercased() { return false }
+            return isWord(word.lowercased())
+        }
+    }
+
+    /// Whether macOS's English spelling dictionary knows the word.
+    @MainActor static func isDictionaryWord(_ word: String) -> Bool {
+        NSSpellChecker.shared.checkSpelling(of: word, startingAt: 0, language: "en", wrap: false,
+                                            inSpellDocumentWithTag: 0, wordCount: nil).location == NSNotFound
     }
 
     /// Lowercase and strip surrounding non-alphanumerics ("issue." -> "issue").
