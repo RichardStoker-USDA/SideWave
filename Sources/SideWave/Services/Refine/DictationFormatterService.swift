@@ -711,7 +711,13 @@ final class DictationFormatterService {
         }
 
         switch outcome {
-        case .value(let cleaned):
+        case .value(let modelText):
+            // Apple Intelligence often leaves sentence starts and weekdays lowercase (most on the
+            // macOS 26 prompt profile); Gemma doesn't. A plain rule fixes that for any model.
+            let cleaned = (capturedBackend == .appleIntelligence || capturedBackend == .appleIntelligenceLegacy)
+                && capturedSettings.outputLanguage == .matchInput
+                && [.standard, .professional, .concise].contains(capturedSettings.template)
+                ? RefineHygieneRules.restoreCapitals(modelText, after: priorContext) : modelText
             if capturedSettings.outputLanguage == .matchInput,
                [.standard, .professional, .concise].contains(capturedSettings.template),
                RefineValidation.changesSpeakerNumber(input: rawText, output: cleaned) {
