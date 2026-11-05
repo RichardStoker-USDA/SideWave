@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.4.7 (2026-11-05)
+
+### Fixed
+
+- Words you say after a long pause no longer go missing from the final text. A pause earlier in
+  the dictation could make SideWave treat everything said after it as silence.
+- Words you didn't say no longer appear during long pauses, anywhere in a dictation. A word is
+  dropped only when the gray draft didn't hear it and there was no speech where it starts.
+- The gray draft keeps up while Gemma refines. Its speech model now runs on the Neural Engine
+  instead of sharing the GPU with Gemma, which had left it up to 0.4 seconds behind.
+- Apple Intelligence no longer pastes `{"cleanedText": ...` into your text after it declines part
+  of a dictation and SideWave asks again.
+- Gemma E4B no longer leaves out the sentence or two that each refine reopens.
+- Vocabulary no longer turns ordinary words into your terms because they sound alike, such as
+  "the visor" into "the gVisor" or "Open a shell" into "OpenShell". Real words can still be joined
+  into a term ("deep seek" to "DeepSeek"), and misspellings are still fixed.
+
+### Changed
+
+- Apple Intelligence on macOS 27 uses shorter editing rules and fixes more stray periods, fillers,
+  and capitalization. macOS 26 is unchanged.
+- Finishing with Apple Intelligence is faster: the last refine rewrites one sentence before your
+  new words instead of two.
+- When you stop, the overlay shows the ending being refined instead of flashing the result.
+- Settings > Refine lists each model's download, the memory it uses while refining, and whether
+  it fits your Mac, and suggests one.
+
 ## 0.4.6 (2026-11-04)
 
 ### Fixed
