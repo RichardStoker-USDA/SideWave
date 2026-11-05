@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.7</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Fixed</h3>
+<ul><li>Words you say after a long pause no longer go missing from the final text. A pause earlier in the dictation could make SideWave treat everything said after it as silence.</li><li>Words you didn&#x27;t say no longer appear during long pauses, anywhere in a dictation. A word is dropped only when the gray draft didn&#x27;t hear it and there was no speech where it starts.</li><li>The gray draft keeps up while Gemma refines. Its speech model now runs on the Neural Engine instead of sharing the GPU with Gemma, which had left it up to 0.4 seconds behind.</li><li>Apple Intelligence no longer pastes <code>{&quot;cleanedText&quot;: ...</code> into your text after it declines part of a dictation and SideWave asks again.</li><li>Gemma E4B no longer leaves out the sentence or two that each refine reopens.</li><li>Vocabulary no longer turns ordinary words into your terms because they sound alike, such as &quot;the visor&quot; into &quot;the gVisor&quot; or &quot;Open a shell&quot; into &quot;OpenShell&quot;. Real words can still be joined into a term (&quot;deep seek&quot; to &quot;DeepSeek&quot;), and misspellings are still fixed.</li></ul>
+<h3>Changed</h3>
+<ul><li>Apple Intelligence on macOS 27 uses shorter editing rules and fixes more stray periods, fillers, and capitalization. macOS 26 is unchanged.</li><li>Finishing with Apple Intelligence is faster: the last refine rewrites one sentence before your new words instead of two.</li><li>When you stop, the overlay shows the ending being refined instead of flashing the result.</li><li>Settings &gt; Refine lists each model&#x27;s download, the memory it uses while refining, and whether it fits your Mac, and suggests one.</li></ul>
+</body>
+</html>
