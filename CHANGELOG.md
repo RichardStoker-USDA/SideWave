@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.9 (2026-11-07)
+
+### Added
+
+- Keep dictation audio, in Settings > Privacy in Advanced view and off by default. It saves the
+  microphone audio of each dictation on this Mac so missing or extra words can be checked against
+  what you said. SideWave keeps the newest 100 recordings, up to 2 GB, in a folder only your
+  account can open, with Show in Finder and Delete All. Nothing is uploaded.
+
+### Changed
+
+- Each dictation writes one line of gray text timing to the `recognition` log: when the
+  microphone, the streaming model, and the first gray words started after the hotkey, how far the
+  gray text trailed the audio, and the longest the app's main thread was busy. It contains numbers
+  only, never text.
+
 ## 0.4.8 (2026-11-05)
 
 ### Fixed
