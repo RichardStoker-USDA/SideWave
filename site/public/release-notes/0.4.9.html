@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SideWave 0.4.9</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 16px 20px; color: #1d1d1f; }
+  h3 { font-size: 13px; margin: 16px 0 6px; }
+  ul { padding-left: 18px; margin: 0; }
+  li { margin-bottom: 4px; }
+  a { color: #0a62c9; }
+  @media (prefers-color-scheme: dark) { body { color: #e8e8ed; } a { color: #6cb4ff; } }
+</style>
+</head>
+<body>
+<h3>Added</h3>
+<ul><li>Keep dictation audio, in Settings &gt; Privacy in Advanced view and off by default. It saves the microphone audio of each dictation on this Mac so missing or extra words can be checked against what you said. SideWave keeps the newest 100 recordings, up to 2 GB, in a folder only your account can open, with Show in Finder and Delete All. Nothing is uploaded.</li></ul>
+<h3>Changed</h3>
+<ul><li>Each dictation writes one line of gray text timing to the <code>recognition</code> log: when the microphone, the streaming model, and the first gray words started after the hotkey, how far the gray text trailed the audio, and the longest the app&#x27;s main thread was busy. It contains numbers only, never text.</li></ul>
+</body>
+</html>
