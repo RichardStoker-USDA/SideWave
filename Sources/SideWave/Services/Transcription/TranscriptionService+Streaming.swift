@@ -21,33 +21,6 @@ extension TranscriptionService {
         interleaved: false
     )
 
-    /// Optional raw audio capture (`keepSessionAudioRecordings`, default off). Writes the tap's 16
-    /// kHz mono samples to a WAV beside the session's segment log, so a real dictation can be
-    /// replayed through the same models when checking pipeline changes. Local only, in the 0700
-    /// sessions folder.
-    final class SessionAudioCapture: @unchecked Sendable {
-        private let lock = NSLock()
-        private var file: AVAudioFile?
-        init?(url: URL) {
-            guard let format = AVAudioFormat(
-                commonFormat: .pcmFormatFloat32, sampleRate: 16_000,
-                channels: 1, interleaved: false
-            ), let f = try? AVAudioFile(
-                forWriting: url, settings: format.settings,
-                commonFormat: .pcmFormatFloat32, interleaved: false
-            ) else { return nil }
-            file = f
-        }
-        func append(_ samples: [Float]) {
-            guard let buf = TranscriptionService.makePCMBuffer16k(samples: samples) else { return }
-            lock.lock(); defer { lock.unlock() }
-            try? file?.write(from: buf)
-        }
-        func close() {
-            lock.lock(); file = nil; lock.unlock()
-        }
-    }
-
     /// Wraps 16 kHz mono samples in a buffer for the streaming actor. Returns nil for empty input
     /// or if the shared format couldn't be created. Called on the audio tap thread.
     nonisolated static func makePCMBuffer16k(samples: [Float]) -> AVAudioPCMBuffer? {
@@ -239,6 +212,9 @@ extension TranscriptionService {
                     processed = rawProcessed
                 }
 
+                self.grayTextTiming.update(at: Date().timeIntervalSince1970, heardAt: audioTime,
+                                           hasWords: rawWords > 0, shown: !processed.isEmpty,
+                                           held: processed.utf8.count < rawProcessed.utf8.count)
                 let painted = self.currentEngineForOverlay == .eou
                 // Release-visible partial cadence line (cheap: no O(n) word
                 // scans) so gate/contention behavior is verifiable from
@@ -277,6 +253,7 @@ extension TranscriptionService {
             }
         }
 
+        grayTextTiming.attached(at: Date().timeIntervalSince1970)
         startEouFeeder(asr: eou)
     }
 

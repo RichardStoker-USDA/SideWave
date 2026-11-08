@@ -32,10 +32,16 @@ extension TranscriptionService {
 
         // Phase timestamps at notice level, so a slow start shows which phase took the time.
         let startEntryAt = CFAbsoluteTimeGetCurrent()
+        grayTextTiming = GrayTextTiming(pressedAt: hotkeyPressedAt, startedAt: Date().timeIntervalSince1970)
+        hotkeyPressedAt = nil
         dictationTraceLog.notice("startRecording entry")
 
         // Request mic permission if needed
+        #if DEBUG
+        let granted = replayInput != nil ? true : await requestMicPermission()
+        #else
         let granted = await requestMicPermission()
+        #endif
         dictationTraceLog.notice("startRecording permission checked elapsedMs=\((CFAbsoluteTimeGetCurrent() - startEntryAt) * 1000, format: .fixed(precision: 0), privacy: .public)")
         guard !Task.isCancelled else { return }
         guard granted else {
@@ -107,20 +113,10 @@ extension TranscriptionService {
             totalDroppedSamples = 0
             segmentFinalizationFailures = 0
             setupSessionPersistence()
-            // Raw audio capture for replay (see SessionAudioCapture). Compiled only into debug
-            // builds, so a release build can never write dictation audio to disk.
-            #if DEBUG
-            if UserDefaults.standard.bool(forKey: "keepSessionAudioRecordings"),
-               let dir = sessionDirectory, let id = sessionID {
-                sessionAudioCapture = SessionAudioCapture(
-                    url: dir.appendingPathComponent("\(id).wav")
-                )
-            } else {
-                sessionAudioCapture = nil
-            }
-            #else
-            sessionAudioCapture = nil
-            #endif
+            // Opt-in copy of the dictation audio for replay (DictationRecordings), off by default.
+            sessionAudioCapture?.close()
+            sessionAudioCapture = DictationRecordings.isEnabled
+                ? sessionID.flatMap { SessionAudioCapture(url: DictationRecordings.url(forSession: $0)) } : nil
             if useDualEngine {
                 streamingAudioQueue = StreamingAudioQueue()
             }
@@ -182,6 +178,7 @@ extension TranscriptionService {
             // Mark recording active. The polling loop wakes up, the audio level
             // task starts publishing levels, the wave visualizer animates.
             isRecording = true
+            startMainThreadWatch()
 
             // Dual-engine path: load EOU streaming actor in parallel and start
             // its feeder Task. Polling pipeline keeps running normally; the
@@ -405,6 +402,31 @@ extension TranscriptionService {
         return finalText
     }
 
+    /// Every 100 ms while recording, asks the main thread for a turn and notes how long it took.
+    /// A busy main thread holds back the preview even when recognition keeps up.
+    private func startMainThreadWatch() {
+        mainThreadWatchTask?.cancel()
+        mainThreadWatchTask = Task.detached(priority: .userInitiated) { [weak self] in
+            while !Task.isCancelled {
+                let asked = Date().timeIntervalSince1970
+                let recording = await MainActor.run { [weak self] () -> Bool in
+                    guard let self, self.isRecording else { return false }
+                    self.grayTextTiming.mainThreadDelay(Date().timeIntervalSince1970 - asked, at: asked)
+                    return true
+                }
+                guard recording else { return }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+        }
+    }
+
+    func logGrayTextTiming() {
+        mainThreadWatchTask?.cancel()
+        mainThreadWatchTask = nil
+        grayTextTiming.firstAudio(at: audioBuffers.firstBufferAt)
+        grayTextTiming.log()
+    }
+
     /// Runs EOU's `finish()` with a hard 2 s limit, so a residual chunk is processed without ever
     /// stalling the stop. A finish that times out may still be running inside the actor and would
     /// clear or fill the next session's state when it resumes, so that actor is retired instead of
@@ -453,6 +475,7 @@ extension TranscriptionService {
         let stoppingSession = sessionGeneration
         let eouActor = eouAsr
         let eouText = eouPartialAccumulated
+        logGrayTextTiming()
 
         if preferFastResult {
             // Let refines that are about to finish land before the worker stops; the worker exits

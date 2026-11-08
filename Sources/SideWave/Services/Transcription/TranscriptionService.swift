@@ -219,6 +219,18 @@ final class TranscriptionService {
     /// freezes the visible tail here, so words the streaming model invents from silence or room
     /// noise don't reach the preview or the paste. Reset with the EOU accumulator.
     var eouSpeechBackedWordCount: Int = 0
+    /// This dictation's gray-text timing, logged once at stop.
+    @ObservationIgnored var grayTextTiming = GrayTextTiming()
+    /// When the hotkey started the coming dictation; AppState sets it before `startRecording`.
+    @ObservationIgnored var hotkeyPressedAt: Double?
+    /// Measures how long the main thread stays busy while recording.
+    @ObservationIgnored var mainThreadWatchTask: Task<Void, Never>?
+    #if DEBUG
+    /// Test host only: 16 kHz mono audio fed through the microphone path in real time instead of
+    /// an input device, so a saved dictation can be replayed through the whole pipeline.
+    @ObservationIgnored var replayInput: [Float]?
+    @ObservationIgnored var replayFeedTask: Task<Void, Never>?
+    #endif
     /// Ghost-gate release window: when the freeze began and the word count then. Four or more new
     /// words within 3 s is a rate silence hallucinations don't sustain but quiet speech does. The
     /// window re-arms when it expires.
@@ -670,9 +682,8 @@ final class TranscriptionService {
     /// prewarm. startRecording waits for it, with a limit, and builds a new engine if it is stuck.
     var engineQuiesceTask: Task<Void, Never>?
 
-    /// Live capture for the current session; nil unless the opt-in default is
-    /// set. Written from the tap thread (internally locked), closed in
-    /// cleanupRecordingState.
+    /// The current dictation's audio copy; nil unless Keep dictation audio is on. Fed from the tap
+    /// thread, closed in cleanupRecordingState.
     @ObservationIgnored nonisolated(unsafe) var sessionAudioCapture: SessionAudioCapture?
 
     /// Throttled sidecar write: at most once per 1.5 s.

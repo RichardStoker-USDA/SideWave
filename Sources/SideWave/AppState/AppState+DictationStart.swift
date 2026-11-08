@@ -14,6 +14,7 @@ extension AppState {
     // MARK: - Dictation Flow
 
     func handleStartRecording() {
+        transcriptionService.hotkeyPressedAt = Date().timeIntervalSince1970
         let requestedTarget = nextDictationTarget
         nextDictationTarget = .auto
         // Hotkeys and menu actions must honor the same edit lock as the document controls.

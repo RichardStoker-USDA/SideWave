@@ -57,6 +57,9 @@ final class AudioBufferStore: @unchecked Sendable {
     /// Capture times of recent speech buffers, oldest first, so the ghost gate can ask about the
     /// audio a late partial came from rather than about now.
     private var _recentSpeechTimes: [Double] = []
+    private var _firstBufferAt: Double = 0
+    /// Capture time of the session's first buffer, 0 before it arrives.
+    var firstBufferAt: Double { lock.lock(); defer { lock.unlock() }; return _firstBufferAt }
     private static let speechHistorySeconds: Double = 30
 
     /// Records a buffer's RMS/peak AND advances the adaptive speech detector.
@@ -67,6 +70,7 @@ final class AudioBufferStore: @unchecked Sendable {
         _audioLevel = min(rms, 1.0)
         _audioPeak = peak
         _levelBufferCount += 1
+        if _levelBufferCount == 1 { _firstBufferAt = now }
         // Background estimate tracks quiet fast (drops toward true silence) and
         // rises slowly, clamped, so it represents room tone, not speech.
         if rms < _backgroundRMS {
@@ -130,6 +134,7 @@ final class AudioBufferStore: @unchecked Sendable {
         _lastSpeechAt = Date().timeIntervalSince1970
         _recentSpeechTimes = [_lastSpeechAt]
         _levelBufferCount = 0
+        _firstBufferAt = 0
         _quietChainMode = false
     }
 

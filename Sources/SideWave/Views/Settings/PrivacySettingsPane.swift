@@ -8,15 +8,46 @@ struct PrivacySettingsPane: View {
     @AppStorage("historyRetentionDays") private var historyRetentionDays = 7
     @AppStorage("showAdvancedControls") private var showAdvancedControls = false
     @AppStorage(TypingService.restoreClipboardKey) private var restoreClipboard = false
+    @AppStorage(DictationRecordings.enabledKey) private var keepDictationAudio = false
+    @State private var recordingsSummary = ""
     @State private var confirmingRestore = false
     @State private var clipboardAccess = NSPasteboard.general.accessBehavior
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         SettingsCard("On this Mac") {
-            Text("Speech recognition and Refine run on this Mac. Dictation audio is processed in memory and isn't saved; meeting audio is saved locally so a recording can be recovered. Microphone standby, when on, keeps the input open between dictations. SideWave downloads models and, when you choose, glossary bundles and app updates. It sends no usage analytics or crash reports.")
+            Text("Speech recognition and Refine run on this Mac. \(keepDictationAudio ? "Dictation audio is saved on this Mac while Keep dictation audio is on" : "Dictation audio is processed in memory and isn't saved"); meeting audio is saved locally so a recording can be recovered. Microphone standby, when on, keeps the input open between dictations. SideWave downloads models and, when you choose, glossary bundles and app updates. It sends no usage analytics or crash reports.")
                 .settingsCaption()
                 .fixedSize(horizontal: false, vertical: true)
+        }
+
+        if showAdvancedControls || keepDictationAudio {
+            SettingsCard("Dictation audio") {
+                SettingsToggleRow("Keep dictation audio",
+                                  caption: "Saves the microphone audio of each dictation on this Mac, so missing or extra words can be checked against what you said. Keeps the newest \(DictationRecordings.maxCount) recordings, up to 2 GB, in a folder only your account can open. Nothing is uploaded.",
+                                  isOn: $keepDictationAudio)
+                SettingsDivider()
+                HStack(alignment: .firstTextBaseline) {
+                    Text(recordingsSummary)
+                        .settingsCaption()
+                    Spacer(minLength: Spacing.md)
+                    Button("Show in Finder") {
+                        let directory = DictationRecordings.directory()
+                        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+                        NSWorkspace.shared.open(directory)
+                    }
+                    .actionButton()
+                    Button("Delete All") {
+                        DictationRecordings.deleteAll()
+                        refreshRecordingsSummary()
+                    }
+                    .actionButton()
+                    .disabled(DictationRecordings.files().isEmpty)
+                }
+            }
+            .onAppear { refreshRecordingsSummary() }
+            .onChange(of: keepDictationAudio) { _, _ in refreshRecordingsSummary() }
         }
 
         SettingsCard("Clipboard") {
@@ -122,6 +153,13 @@ struct PrivacySettingsPane: View {
         @unknown default:
             EmptyView()
         }
+    }
+
+    private func refreshRecordingsSummary() {
+        let files = DictationRecordings.files()
+        let bytes = files.reduce(Int64(0)) { $0 + $1.bytes }
+        recordingsSummary = files.isEmpty ? "No saved recordings."
+            : "\(files.count) saved \(files.count == 1 ? "recording" : "recordings"), \(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))."
     }
 
     private func statusCaption(_ text: String) -> some View {

@@ -15,6 +15,13 @@ extension TranscriptionService {
 
     func setupAudioEngine(deviceUID: String? = nil) async throws {
         try Task.checkCancellation()
+        #if DEBUG
+        if let samples = replayInput {
+            precondition(AppPaths.isTestHost)
+            startReplayFeed(samples)
+            return
+        }
+        #endif
         let engineSetupBegan = CFAbsoluteTimeGetCurrent()
         dictationTraceLog.notice("engine setup begin")
         let engineRef = engine
@@ -128,27 +135,7 @@ extension TranscriptionService {
                     selector: selector,
                     resampler: sessionResampler
                 )
-                if !mono16k.isEmpty {
-                    bufs.appendSamples(mono16k)
-                    audioCapture?.append(mono16k)
-                    var meanSquare: Float = 0
-                    vDSP_measqv(mono16k, 1, &meanSquare, vDSP_Length(mono16k.count))
-                    let rms = Double(sqrtf(meanSquare))
-                    // Track the loudest single sample in this buffer for
-                    // peak / clipping detection. abs is fine; vDSP_maxmgv
-                    // ignores sign.
-                    var peak: Float = 0
-                    vDSP_maxmgv(mono16k, 1, &peak, vDSP_Length(mono16k.count))
-                    // Records level + peak AND advances the adaptive
-                    // speech detector that gates EOU ghost words.
-                    let capturedAt = Date().timeIntervalSince1970
-                    bufs.noteAudioLevel(rms, peak: Double(peak), at: capturedAt)
-
-                    if let q = tapQueue,
-                       let pcm = Self.makePCMBuffer16k(samples: mono16k) {
-                        q.enqueue(pcm, capturedAt: capturedAt)
-                    }
-                }
+                Self.deliverCapturedSamples(mono16k, to: bufs, recording: audioCapture, queue: tapQueue)
             }
             prepared.tappedInput = input
             engineRef.prepare()
@@ -179,7 +166,60 @@ extension TranscriptionService {
         AudioDeviceManager.setSystemDefaultInputDevice(deviceID)
     }
 
+    /// One buffer of 16 kHz mono microphone audio: kept for TDT, copied to the optional recording,
+    /// measured for the level meter and the ghost gate's speech detector, and queued for the
+    /// streaming model. Called on the audio tap thread.
+    nonisolated static func deliverCapturedSamples(_ mono16k: [Float], to bufs: AudioBufferStore,
+                                                   recording: SessionAudioCapture?, queue: StreamingAudioQueue?) {
+        guard !mono16k.isEmpty else { return }
+        bufs.appendSamples(mono16k)
+        recording?.append(mono16k)
+        var meanSquare: Float = 0
+        vDSP_measqv(mono16k, 1, &meanSquare, vDSP_Length(mono16k.count))
+        let rms = Double(sqrtf(meanSquare))
+        // The loudest sample, for clipping detection. vDSP_maxmgv ignores sign.
+        var peak: Float = 0
+        vDSP_maxmgv(mono16k, 1, &peak, vDSP_Length(mono16k.count))
+        let capturedAt = Date().timeIntervalSince1970
+        bufs.noteAudioLevel(rms, peak: Double(peak), at: capturedAt)
+        if let queue, let pcm = makePCMBuffer16k(samples: mono16k) {
+            queue.enqueue(pcm, capturedAt: capturedAt)
+        }
+    }
+
+    #if DEBUG
+    /// Feeds `samples` in tap-sized buffers on the tap's schedule, then silence until the session
+    /// stops, as an open microphone would.
+    private func startReplayFeed(_ samples: [Float]) {
+        let bufs = audioBuffers
+        let queue = streamingAudioQueue
+        let recording = sessionAudioCapture
+        replayFeedTask?.cancel()
+        replayFeedTask = Task.detached(priority: .userInitiated) {
+            let step = 1_365
+            let start = Date()
+            var offset = 0
+            while !Task.isCancelled {
+                let end = offset + step
+                let wait = Double(end) / 16_000 - Date().timeIntervalSince(start)
+                if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1e9)) }
+                guard !Task.isCancelled else { return }
+                let chunk = offset < samples.count
+                    ? Array(samples[offset..<min(end, samples.count)])
+                    : [Float](repeating: 0, count: step)
+                bufs.lastBufferTime = Date().timeIntervalSince1970
+                Self.deliverCapturedSamples(chunk, to: bufs, recording: recording, queue: queue)
+                offset = end
+            }
+        }
+    }
+    #endif
+
     func teardownEngine(synchronous: Bool = false, destroyEngine: Bool = false) {
+        #if DEBUG
+        replayFeedTask?.cancel()
+        replayFeedTask = nil
+        #endif
         // Copy the engine and redirect state into locals and release them on the main thread right away,
         // so stop, removeTap, and the default-input restore run in the background.
         //
