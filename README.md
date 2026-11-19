@@ -48,6 +48,11 @@ if you allow it. Help > Data Transparency lists every download and update check.
 History, vocabulary, documents, and settings stay in your user folder. Text you send to another
 app follows that app's privacy rules. See the [privacy policy](https://sidewave.dev/privacy-policy/).
 
+Dictation audio is processed in memory by default. In Advanced view, Settings > Privacy >
+Keep dictation audio saves local copies for checking recognition errors. That section also has
+Show in Finder and Delete All. SideWave trims older copies to a limit of 100 recordings or 2 GiB,
+keeping the newest recording. Meeting recordings are saved locally for recovery.
+
 ## Building from source
 
 You need Xcode 27 and [XcodeGen](https://github.com/yonaskolb/XcodeGen). `project.yml` is the
